@@ -32,29 +32,29 @@ extern "C" {
 
 DataChannel::DataChannel(int dtype)
 {
-  dctype = dtype;
-  Initialize();
+	dctype = dtype;
+	Initialize();
 }
 
 DataChannel::DataChannel(int dtype, unsigned long dperiod)
 {
-  dctype = dtype;
+	dctype = dtype;
 	period = dperiod;
-  Initialize();
+	Initialize();
 }
 
 DataChannel::DataChannel(int dtype, int dpin)
 {
 	edge = 1;
-  dctype = dtype;
-  Initialize();
+	dctype = dtype;
+	Initialize();
 }
 
 DataChannel::DataChannel(int dtype, int dpin, int dedge)
 {
- 	edge = dedge;
+	edge = dedge;
 	dctype = dtype;
-  Initialize();
+	Initialize();
 }
 
 
@@ -83,6 +83,11 @@ void DataChannel::Action()
 	}
 }
 
+int DataChannel::endReached()
+{
+	return endReachedFlag;
+}
+
 void DataChannel::Read()
 {
   signed int c;
@@ -104,7 +109,8 @@ void DataChannel::Write()
 
 signed int DataChannel::Get()
 {
-  signed int c;
+	signed int c;
+	int i;
 	
 	if(dcmode == ANALOG_OUTPUT){
 		c = databuffer[readindex%maxndata];
@@ -112,11 +118,11 @@ signed int DataChannel::Get()
 	else{
 		c = databuffer[readindex%bufferlen];	
 	}
-  if(readindex<writeindex){
-    readindex++;
-  }
+	if(readindex<writeindex){
+		readindex++;
+	}
   
-  return c;
+	return c;
 }
 
 void DataChannel::Setup(unsigned long maxpoints, int maxrepeat)
@@ -252,6 +258,7 @@ int DataChannel::Datalen()
 
 void DataChannel::Enable()
 {
+	endReachedFlag = 0;
 	if(dcmode == ANALOG_INPUT)
 		//actionCallback = ReadAnalogIn;
 		actionCallback = ReadNADC;
@@ -276,54 +283,87 @@ void DataChannel::Enable()
 void DataChannel::Disable()
 {
 	state = CH_STOP;
+	endReachedFlag = 1;
+}
+
+void DataChannel::reset()
+{
+	writeindex=0;
+	readindex=0;
 }
 
 void DataChannel::Destroy()
 {
-	state = CH_IDLE;
-  dctype = INACTIVE_TYPE;
-
-	free (databuffer);
+  if(dctype != INACTIVE_TYPE){    //disable only if channel is enabled
+    state = CH_IDLE;
+    dctype = INACTIVE_TYPE;
+    free (databuffer);
+  }
 }
 
 void DataChannel::Flush()
 {
-  writeindex = 0;
-  readindex = 0;
+	writeindex = 0;
+	readindex = 0;
 	ndata = 0;
 	nrepeat = 0;
 }
 
 
+int dummyfunction(int j)
+{
+	int i;
+	i=j*2;
+	return i;
+}
+
+int DataChannel::waitStabilization()
+{
+	int dummy,i,j;
+	for(i=0;i<stabilizationTime;i++)
+	{
+		for(j=0;j<8000;j++)
+		{
+			dummy = dummyfunction(j);
+		}
+	}
+	return dummy;
+}
+
 // Private Methods /////////////////////////////////////////////////////////////
 
 void DataChannel::Initialize()
 {
-  state = CH_READY;
-	
+	stabilizationTime=100;	//100 veces 0.508 us
+
+	state = CH_READY;
+
 	dcmode = ANALOG_INPUT;
-	
+
 	trg_mode = Sw_TRG;
-	
+
 	maxndata = 0;
 	maxnrepeat = R_CONTINUOUS;
-	
-  writeindex = 0;
-  readindex = 0;
-	
+
+	writeindex = 0;
+	readindex = 0;
+
 	option = 1;
-	
 	ready = 0;
 	
-  if(dctype==BURST_TYPE){
-    bufferlen = 1200;
-  }
-  else{
-    bufferlen = 400;
-  }
+	if(dctype==BURST_TYPE){
+		bufferlen = 1000;
+	}
+	else{
+		bufferlen = 150;
+	}
 	
-	
-  databuffer = (signed int*) malloc( bufferlen * sizeof(int));
+    databuffer = (signed int*) malloc( bufferlen * sizeof(int));
+	#ifdef SERIAL_DEBUG
+	if(databuffer == NULL){
+		Serial.println("error malloc");
+	}  
+	#endif
   
 }
 

@@ -5,6 +5,7 @@
 
 
 
+
 ////////////////////////////////////////////
 //fake functionS for time counting verification
 void ActivateAnalogInput(int number)
@@ -175,6 +176,8 @@ signed int ReadNADC(int nsamples)
 {
 	uint8_t i=0;
 	int32_t sum=0;
+	
+	PORTA = PORTA | 0x10;
 		
 	do{
 		sum+=ReadADC();
@@ -182,6 +185,8 @@ signed int ReadNADC(int nsamples)
 	}while(i<=nsamples);
 	
 	sum /= nsamples+1;
+	
+	PORTA = PORTA & 0xEF;
 	
 	return (signed int) sum;
 }
@@ -206,11 +211,14 @@ signed int ReadAnalogIn(int n)
 void ConfigAnalogGain(uint8_t gain)
 {
 	PORTC &= ~0X03;
-	PORTC |= ((gain-1) & 0X03);
-
-	PORTC &= ~(0X01<<4); 
-  if(gain == 0)
-		PORTC |= 0X01<<4; 
+	PORTC &= ~(0X01<<4);
+ 
+  if(gain == 0){
+    PORTC |= (0X01<<4);
+  }
+  else{
+    PORTC |= ((gain-1) & 0X03);
+  }
 
 }
 

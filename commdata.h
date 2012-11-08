@@ -25,7 +25,6 @@
 
 //#define SERIAL_DEBUG
 
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/delay.h>
@@ -34,6 +33,7 @@
 #include "daqhw.h"
 #include "calibration.h"
 #include "odstream.h"
+#include "encoder.h"
 
 extern DataChannel Channel1, Channel2, Channel3, Channel4;
 
@@ -65,6 +65,10 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 #define C_CAPTURE_STOP	15
 #define C_GET_CAPTURE	16
 
+#define C_ENCODER_INIT	50
+#define C_ENCODER_STOP	51
+#define C_GET_ENCODER	52
+
 #define C_PWM_INIT	10
 #define C_PWM_STOP	11
 #define C_PWM_DUTY	12
@@ -92,6 +96,7 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 #define C_SET_CALIB	37				//Set device calibration
 #define C_RESET_CALIB	38				//Reset device calibration
 
+#define C_CHANNEL_DESTROY	57		//Delete channel structure
 
 #define C_STREAM_DATA	25			//Device writes a packet with measured data coming from one of the channels
 
@@ -179,7 +184,7 @@ class CommDataClass
 
 extern CommDataClass Comm;
 extern DStream ODStream;
-
+extern Encoder encoder;
 
 #endif
 

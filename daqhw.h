@@ -164,6 +164,10 @@ void captureInit(unsigned long microseconds);
 void captureStop();
 int  getCapture(int state);
 
+void encoderInit(unsigned int secondChannelPIO,unsigned int resolution);
+void encoderStop();
+int  getEncoder();
+
 void counterInit(int edge);
 int getCounter(int reset);
 

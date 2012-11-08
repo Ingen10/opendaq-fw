@@ -56,11 +56,12 @@ class DStream
 	\param void
 	\return void
 	*/
-  void Initialize();
-  void Start();
+	void Initialize();
+	void Start();
 	void Stop();
 	void Pause();
 	void Resume();
+
 	
 	void CreateStreamChannel(uint8_t nb, unsigned long ms_period);		//TODO: change second parameter to ms_period
 	void CreateExternalChannel(uint8_t nb, uint8_t edge);
@@ -78,7 +79,7 @@ class DStream
 	
 	void SetupChan(uint8_t nb, unsigned long maxpoints, int repeat);
 	
-	void DeleteAllExperiments();
+	void DeleteExperiments(uint8_t nb);
 	void FlushChan(uint8_t nb);
 
 };

@@ -82,10 +82,12 @@ class DataChannel
   // properties
 	int option;
   
-  
-  // methods
-  void Initialize();
-  void Begin();
+  	int stabilizationTime;
+	int endReachedFlag;
+
+	// methods
+	void Initialize();
+	void Begin();
 	signed int (*actionCallback)(signed int n);	///USAR FUNCION CON ARGUMENTO INT
 	
 
@@ -140,11 +142,14 @@ class DataChannel
 	\param ...
 	\return ...
 	 */
-  signed int Get();
+	signed int Get();
 	void Action();
 	
 	void Read();
 	void Write();
+	
+		
+	int waitStabilization();
 	
 	void Setup(unsigned long maxpoints, int maxrepeat);
 	
@@ -158,6 +163,9 @@ class DataChannel
 	void Configure(int mode, int channel);
 	
 	void Activate();
+	
+	int endReached();
+	void reset();
 	
 	void Enable();
 	void Disable();

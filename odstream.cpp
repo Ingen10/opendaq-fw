@@ -28,7 +28,7 @@ void DStream::Start()
 
 	if( (Channel1.dctype == EXTERNAL_TYPE) || (Channel2.dctype == EXTERNAL_TYPE) || 
 		(Channel3.dctype == EXTERNAL_TYPE) || (Channel4.dctype == EXTERNAL_TYPE) ){
-		PCICR |= _BV(PCIE3);						//Pin Change Interrupt Enable 3 (PCINT31..24)
+		PCICR |= _BV(PCIE0);						//Pin Change Interrupt Enable 0 (PCINT31..24)
 	}
 	
 	if(Channel1.dctype == BURST_TYPE){
@@ -42,7 +42,7 @@ void DStream::Start()
 void DStream::Stop()
 {
 	TIMSK2 &= ~_BV(OCIE2A);
-	PCICR &= ~_BV(PCIE3);
+	PCICR &= ~_BV(PCIE0);
 }
 
 void DStream::Pause()
@@ -79,7 +79,7 @@ void DStream::CreateStreamChannel(uint8_t nb, unsigned long ms_period)
 
 	TCCR2A = 0X82;            //CTC MODE, CLEAR OC2A ON COMPARE
 	TCCR2B = 4;               //Main clock /64 (2MHz)
-	OCR2A = 249;              //Prescaler: 250us per interrupt
+	OCR2A = 250;              //Prescaler: 250us per interrupt
 
 	tstreamCallback = stream_sm;
 	usingch = 0;
@@ -90,23 +90,29 @@ void DStream::CreateExternalChannel(uint8_t nb, uint8_t edge)
 
 	if(nb==1){
 		Channel1.Destroy();
-		Channel1=DataChannel(EXTERNAL_TYPE,1,edge);
+		Channel1=DataChannel(EXTERNAL_TYPE,1,edge);  
+		PCMSK0 |= _BV(PCINT7);  				//Pin Change Enable Mask
+		DDRA &= ~(_BV(DDA7));					//input direction
 	}
 	else if(nb==2){
 		Channel2.Destroy();
 		Channel2=DataChannel(EXTERNAL_TYPE,2,edge);
+		PCMSK0 |= _BV(PCINT6);  				//Pin Change Enable Mask
+		DDRA &= ~(_BV(DDA6));					//input direction
 	}
 	else if(nb==3){
 		Channel3.Destroy();
 		Channel3=DataChannel(EXTERNAL_TYPE,3,edge);
+		PCMSK0 |= _BV(PCINT5);  				//Pin Change Enable Mask
+		DDRA &= ~(_BV(DDA5));					//input direction
 	}
 	else if(nb==4){
 		Channel4.Destroy();
 		Channel4=DataChannel(EXTERNAL_TYPE,4,edge);
+		PCMSK0 |= _BV(PCINT4);  				//Pin Change Enable Mask
+		DDRA &= ~(_BV(DDA4));					//input direction
 	}
-  
-  //TODO: assign to real PIO entries
-	PCMSK3 |= _BV(PCINT27);  				//Pin Change Enable Mask 31:24 (PCINT31 & PCINT30 enabled)
+
 	
   //stores variable with actual external input
 	usingch = 0;
@@ -148,12 +154,28 @@ void DStream::CreateBurstChannel(unsigned long us_period)
 	tstreamCallback = burst_sm;
 }
 
-void DStream::DeleteAllExperiments()
+void DStream::DeleteExperiments(uint8_t nb)
 {
-	Channel1.Destroy();
-	Channel2.Destroy();
-	Channel3.Destroy();
-	Channel4.Destroy();
+	if(nb == 1){
+		Channel1.Destroy();
+	}
+	else if(nb == 2){
+		Channel2.Destroy();	
+	}
+	else if(nb == 3){
+		Channel3.Destroy();
+	
+	}
+	else if(nb == 4){
+		Channel4.Destroy();	
+	}
+	else{
+		Channel1.Destroy();
+		Channel2.Destroy();
+		Channel3.Destroy();
+		Channel4.Destroy();	
+	}
+
 }
 
 void DStream::CheckTriggers()
@@ -353,97 +375,46 @@ void stream_sm()
 	static int blocked=0;
 	int p;
 	int i,datapack=0;
-	
 	//ACTIVATIONS
 	if( (Channel1.state == CH_RUN) && (Channel1.dctype==STREAM_TYPE) ){
-		if(((nTemp+10)%Channel1.period)==0){
-			Channel1.ready = 1;
+		if(((nTemp)%(Channel1.period))==0){
+			Channel1.Activate();
 			ActivateAnalogInput(1);
+			Channel1.waitStabilization();
+			Channel1.Action();
+			ActivateAnalogInput(0);	
 		}
-		if((Channel1.ready)){ 
-			if(ODStream.usingch != 1){
-				if(!blocked){
-					Channel1.Activate();
-					ODStream.usingch = 1;
-					blocked = 1;
-				}
-			}
-			else{
-				Channel1.Action();
-				Channel1.ready = 0;
-				blocked = 0;
-				ActivateAnalogInput(0);
-			}
-		}	
 	}
 	
 	if( (Channel2.state == CH_RUN) && (Channel2.dctype==STREAM_TYPE) ){
-		if(((nTemp+10)%Channel2.period)==0){
-			Channel2.ready = 1;
+		if(((nTemp)%(Channel2.period))==0){
+			Channel2.Activate();
 			ActivateAnalogInput(2);
+			Channel2.waitStabilization();
+			Channel2.Action();
+			ActivateAnalogInput(0);	
 		}
-		if((Channel2.ready)){ 
-			if(ODStream.usingch != 2){
-				if(!blocked){
-					Channel2.Activate();
-					ODStream.usingch = 2;
-					blocked = 1;
-				}
-			}
-			else{
-				Channel2.Action();
-				Channel2.ready = 0;
-				blocked = 0;
-				ActivateAnalogInput(0);
-			}
-		}	
 	}
 	
 	if( (Channel3.state == CH_RUN) && (Channel3.dctype==STREAM_TYPE) ){
-		if(((nTemp+10)%Channel3.period)==0){
-			Channel3.ready = 1;
+		if(((nTemp)%(Channel3.period))==0){
+			Channel3.Activate();
 			ActivateAnalogInput(3);
-		}
-		if((Channel3.ready)){ 
-			if(ODStream.usingch != 3){
-				if(!blocked){
-					Channel3.Activate();
-					ODStream.usingch = 3;
-					blocked = 1;
-				}
-			}
-			else{
-				Channel3.Action();
-				Channel3.ready = 0;
-				blocked = 0;
-				ActivateAnalogInput(0);
-			}
+			Channel3.waitStabilization();
+			Channel3.Action();
+			ActivateAnalogInput(0);	
 		}	
 	}
 	
 	if( (Channel4.state == CH_RUN) && (Channel4.dctype==STREAM_TYPE) ){
-		if(((nTemp+10)%Channel4.period)==0){
-			Channel4.ready = 1;
+		if(((nTemp)%(Channel4.period))==0){
+			Channel4.Activate();
 			ActivateAnalogInput(4);
-		}
-		if((Channel4.ready)){ 
-			if(ODStream.usingch != 4){
-				if(!blocked){
-					Channel4.Activate();
-					ODStream.usingch = 4;
-					blocked = 1;
-				}
-			}
-			else{
-				Channel4.Action();
-				Channel4.ready = 0;
-				blocked = 0;
-				ActivateAnalogInput(0);
-			}
+			Channel4.waitStabilization();
+			Channel4.Action();
+			ActivateAnalogInput(0);	
 		}	
 	}
-
-  ActivateAnalogInput(0);
 	
 	nTemp++;
 }
@@ -457,53 +428,47 @@ void burst_sm()
 	}
 }
 
-void ext_sm()
+void ext_sm(int currentValue)
 {	
-	int p;
+	int p,pio;
 	int i,datapack=0;
 	
 	//ACTIVATIONS
 	if( (Channel1.state == CH_RUN) && (Channel1.dctype==EXTERNAL_TYPE) ){
-		if(pioRead(5) == Channel1.edge){//TODO:COMPROBAR QUE EFECTIVAMENTE HUBO FLANCO EN ESTE PIO CONCRETO
-			if(ODStream.usingch != 1)
-				Channel1.Activate();
-			ActivateAnalogInput(1);
+		if(((currentValue & 0x80)>0) == Channel1.edge){//TODO:COMPROBAR QUE EFECTIVAMENTE HUBO FLANCO EN ESTE PIO CONCRETO
+			Channel1.Activate();
+			Channel1.waitStabilization();
 			Channel1.Action();
-			ODStream.usingch = 1;
+			Serial.print("1");
 		}	
 	}
 	
 	if( (Channel2.state == CH_RUN) && (Channel2.dctype==EXTERNAL_TYPE) ){
-		if(pioRead(5) == Channel2.edge){
-			if(ODStream.usingch != 2)
-				Channel2.Activate();
-			ActivateAnalogInput(2);
+		if(((currentValue & 0x40)>0) == Channel2.edge){
+			Channel2.Activate();
+			Channel2.waitStabilization();
 			Channel2.Action();
-			ODStream.usingch = 2;
+			Serial.print("2");
 		}	
 	}
 	
 	if( (Channel3.state == CH_RUN) && (Channel3.dctype==EXTERNAL_TYPE) ){
-		if(pioRead(5) == Channel3.edge){
-			if(ODStream.usingch != 3)
-				Channel3.Activate();
-			ActivateAnalogInput(3);
+		if(((currentValue & 0x20)>0) == Channel3.edge){
+			Channel3.Activate();
+			Channel3.waitStabilization();
 			Channel3.Action();
-			ODStream.usingch = 3;
+			Serial.print("3");
 		}	
 	}
 	
 	if( (Channel4.state == CH_RUN) && (Channel4.dctype==EXTERNAL_TYPE) ){
-		if(pioRead(5) == Channel4.edge){
-			if(ODStream.usingch != 4)
-				Channel4.Activate();
-			ActivateAnalogInput(4);
+		if(((currentValue & 0x10)>0) == Channel4.edge){
+			Channel4.Activate();
+			Channel4.waitStabilization();
 			Channel4.Action();
-			ODStream.usingch = 4;
+			Serial.print("4");
 		}	
 	}
-
-  ActivateAnalogInput(0);	
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -513,14 +478,44 @@ void ext_sm()
 
 ISR(TIMER2_COMPA_vect)          
 {
-  ODStream.tstreamCallback();
+	
+	ODStream.tstreamCallback();
 }
 
 
-ISR(PCINT3_vect) 
+ISR(PCINT0_vect) 
 {
-	ext_sm();
-
+	static unsigned interrupt;
+	unsigned int i,j;
+	int currentValue,refreshValue;
+	if(PCIFR !=0)
+		return;
+	if(interrupt)
+	{
+		interrupt=0;
+		return;
+	}
+	ledSet(LEDRED,1);
+	ledSet(LEDGREEN,0);
+	for(i=0;i<200;i++)
+	{
+		refreshValue = PINA;
+		for(j=0;j<200;j++)
+		{
+			refreshValue+=PINA;
+		}
+	}
+	ext_sm(refreshValue);
+	ledSet(LEDRED,0);
+	ledSet(LEDGREEN,1);
+	
+	//if a interrupt was caused, next re-entry will return inmediatly
+	if(PCIFR!=0)
+	{
+		interrupt=1;
+	}
+	else
+		interrupt=0;
 }
 
 

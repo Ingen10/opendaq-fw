@@ -6,6 +6,7 @@
 
 extern DataChannel Channel1, Channel2, Channel3, Channel4;
 extern DStream ODStream;
+extern Encoder encoder;
 
 
 void setup() {
@@ -19,8 +20,8 @@ void setup() {
 	SetDigitalDir(0X0F);
 	
 	#ifdef SERIAL_DEBUG
-  Serial.print("Calibracion: ");
-  Serial.println(i,HEX);	
+	Serial.print("*Calibracion: ");
+	Serial.println(i,HEX);	
 	for(i=0;i<6;i++){
 		Serial.print(i,HEX);	
 		Serial.print(":  m= ");
@@ -40,14 +41,17 @@ void setup() {
 	delay(100);
 	SetAnalogVoltage(900);
 
+	/*ODStream.Initialize();
+	ODStream.CreateExternalChannel(2,0);
+	ODStream.Start();	//FAILS! if no channel activated
+	//ODStream.ConfigChan(1, ANALOG_INPUT, 7, 0, 0);
+	ODStream.DeleteExperiments(0);
 
-	ODStream.Initialize();
-	ODStream.CreateStreamChannel(1,100);
-	ODStream.ConfigChan(1, ANALOG_INPUT, 7, 0, 0);
-/*	ODStream.Start();	//FAILS! if no channel activated
+	ODStream.CreateStreamChannel(1,500);
+
+
 
 	ODStream.CreateStreamChannel(2,2);
-	ODStream.CreateStreamChannel(3,40);
 	ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
 	ODStream.ConfigChan(3, ANALOG_INPUT, 7, 0, 1);
   
@@ -82,24 +86,24 @@ void setup() {
 	ledSet(LEDGREEN,1);
 	ledSet(LEDRED,0);
 	
+	
+	SetpioMode(4, 1);
 }
   
 
 void loop() 
 { 	
   static int j=0,i=0;
-	
+
+
 	#ifdef SERIAL_DEBUG
 		delay(300);
-  #endif
-	
+	#endif
 	ODStream.CheckTriggers();
 	Comm.Process_Stream();
 	while(Comm.available()) {
 		Comm.parseInput();
 	}
-	
-
 }
 
 
