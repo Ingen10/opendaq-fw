@@ -25,8 +25,8 @@ class Encoder
 {
   private:
   // properties
-  unsigned int position;
-  unsigned int resolution;
+  int position;
+  int resolution;
   unsigned int stabilizationTime;
   // methods
 

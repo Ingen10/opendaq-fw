@@ -64,10 +64,13 @@ void DataChannel::Action()
 {
 
 	if(dcmode == ANALOG_OUTPUT)
+	{
 		Write();
+	}
 	else 	//if(dcmode == ANALOG_INPUT)
+	{
 		Read();
-
+	}
 	ndata++;
   
 	if(ndata == maxndata){
@@ -82,6 +85,7 @@ void DataChannel::Action()
 		}
 	}
 }
+
 
 int DataChannel::endReached()
 {
@@ -99,11 +103,11 @@ void DataChannel::Read()
 void DataChannel::Write()
 {
   signed int c;
-  
+  unsigned int add;
   c = databuffer[writeindex%maxndata];
-  actionCallback(c);
+  SetAnalogVoltage(c);
   writeindex++;
-	//readindex++;
+  readindex=writeindex;
 }
 
 
@@ -352,7 +356,7 @@ void DataChannel::Initialize()
 	ready = 0;
 	
 	if(dctype==BURST_TYPE){
-		bufferlen = 1000;
+		bufferlen = 150;
 	}
 	else{
 		bufferlen = 150;

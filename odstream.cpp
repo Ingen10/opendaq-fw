@@ -37,12 +37,21 @@ void DStream::Start()
 	}
 		
 	CheckTriggers();
+	ledSet(LEDGREEN,1);
+	ledSet(LEDRED,0);
 }
 
 void DStream::Stop()
 {
+	Channel1.reset();
+	Channel2.reset();
+	Channel3.reset();
+	Channel4.reset();
+	
 	TIMSK2 &= ~_BV(OCIE2A);
 	PCICR &= ~_BV(PCIE0);
+	ledSet(LEDGREEN,1);
+	ledSet(LEDRED,0);
 }
 
 void DStream::Pause()
@@ -371,6 +380,7 @@ void DStream::FlushChan(uint8_t nb)
 void stream_sm()
 {
 	//nTemp--> variable for counting slots of 500us
+	static int ledStatus=0;
 	static unsigned long nTemp=0;
 	static int blocked=0;
 	int p;
@@ -378,41 +388,36 @@ void stream_sm()
 	//ACTIVATIONS
 	if( (Channel1.state == CH_RUN) && (Channel1.dctype==STREAM_TYPE) ){
 		if(((nTemp)%(Channel1.period))==0){
+			ledStatus = ~ledStatus;
+			ledSet(LEDRED,ledStatus);
+			pioWrite(0, ledStatus);
 			Channel1.Activate();
-			ActivateAnalogInput(1);
 			Channel1.waitStabilization();
 			Channel1.Action();
-			ActivateAnalogInput(0);	
 		}
 	}
 	
 	if( (Channel2.state == CH_RUN) && (Channel2.dctype==STREAM_TYPE) ){
 		if(((nTemp)%(Channel2.period))==0){
 			Channel2.Activate();
-			ActivateAnalogInput(2);
 			Channel2.waitStabilization();
 			Channel2.Action();
-			ActivateAnalogInput(0);	
 		}
 	}
 	
 	if( (Channel3.state == CH_RUN) && (Channel3.dctype==STREAM_TYPE) ){
 		if(((nTemp)%(Channel3.period))==0){
 			Channel3.Activate();
-			ActivateAnalogInput(3);
 			Channel3.waitStabilization();
 			Channel3.Action();
-			ActivateAnalogInput(0);	
 		}	
 	}
 	
 	if( (Channel4.state == CH_RUN) && (Channel4.dctype==STREAM_TYPE) ){
 		if(((nTemp)%(Channel4.period))==0){
 			Channel4.Activate();
-			ActivateAnalogInput(4);
 			Channel4.waitStabilization();
 			Channel4.Action();
-			ActivateAnalogInput(0);	
 		}	
 	}
 	
@@ -422,9 +427,8 @@ void stream_sm()
 void burst_sm()
 {
 	if(Channel1.state == CH_RUN){
-		ActivateAnalogInput(1);
+		Channel1.Activate();
 		Channel1.Action();
-		ActivateAnalogInput(0);
 	}
 }
 
@@ -432,14 +436,12 @@ void ext_sm(int currentValue)
 {	
 	int p,pio;
 	int i,datapack=0;
-	
 	//ACTIVATIONS
 	if( (Channel1.state == CH_RUN) && (Channel1.dctype==EXTERNAL_TYPE) ){
 		if(((currentValue & 0x80)>0) == Channel1.edge){//TODO:COMPROBAR QUE EFECTIVAMENTE HUBO FLANCO EN ESTE PIO CONCRETO
 			Channel1.Activate();
 			Channel1.waitStabilization();
 			Channel1.Action();
-			Serial.print("1");
 		}	
 	}
 	
@@ -448,7 +450,6 @@ void ext_sm(int currentValue)
 			Channel2.Activate();
 			Channel2.waitStabilization();
 			Channel2.Action();
-			Serial.print("2");
 		}	
 	}
 	
@@ -457,7 +458,6 @@ void ext_sm(int currentValue)
 			Channel3.Activate();
 			Channel3.waitStabilization();
 			Channel3.Action();
-			Serial.print("3");
 		}	
 	}
 	
@@ -466,7 +466,6 @@ void ext_sm(int currentValue)
 			Channel4.Activate();
 			Channel4.waitStabilization();
 			Channel4.Action();
-			Serial.print("4");
 		}	
 	}
 }
@@ -495,8 +494,7 @@ ISR(PCINT0_vect)
 		interrupt=0;
 		return;
 	}
-	ledSet(LEDRED,1);
-	ledSet(LEDGREEN,0);
+	//This is a bucle for wait and avoid fakes edges
 	for(i=0;i<200;i++)
 	{
 		refreshValue = PINA;
@@ -505,9 +503,8 @@ ISR(PCINT0_vect)
 			refreshValue+=PINA;
 		}
 	}
+	
 	ext_sm(refreshValue);
-	ledSet(LEDRED,0);
-	ledSet(LEDGREEN,1);
 	
 	//if a interrupt was caused, next re-entry will return inmediatly
 	if(PCIFR!=0)

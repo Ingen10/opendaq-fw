@@ -173,7 +173,7 @@ class DataChannel
 	
 	void Flush();
   
-  int Datalen();
+	int Datalen();
 
 };
 
