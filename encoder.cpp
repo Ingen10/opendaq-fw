@@ -14,7 +14,7 @@ void Encoder::Start(unsigned int res)
 	stabilizationTime=100;
 	//Digital pin 5 as input
 	DDRD &= ~(_BV(DDD5));					//input direction
-	PORTD &= ~(_BV(PD5));
+//	PORTD &= ~(_BV(PD5));
 	
 	EICRA = _BV(ISC11);
 	EIMSK |= _BV(INT1);
@@ -50,21 +50,23 @@ void Encoder::increment_position()
 void Encoder::decrement_position()
 {
 	position--;
-	if(position<0)
+	if(position>resolution)
 		position=resolution;
 }
-
-
-int dummyfunction(int j);
 
 int Encoder::waitStabilization()
 {
 	int dummy,i,j;
 	for(i=0;i<stabilizationTime;i++)
 	{
-		for(j=0;j<8000;j++)
+		for(j=0;j<10;j++)
 		{
-			dummyfunction(j);
+			if(UCSR0A & _BV(RXC0))
+			{	
+				Comm.parseInput(1);
+				ledSet(LEDGREEN,0);
+				ledSet(LEDRED,1);
+			}
 		}
 	}
 	return dummy;
@@ -76,17 +78,45 @@ int Encoder::waitStabilization()
 
 ISR(INT1_vect) 
 {
-	if(PORTD && _BV(PD5))
+	static unsigned interrupt;
+	if(interrupt)
 	{
-		Serial.print("Incrementando");
+		interrupt=0;
+		return;
+	}
+
+	encoder.waitStabilization();	
+
+	if(PIND & _BV(PIND5))
+	{
 		encoder.increment_position();
 	}
 	else
 	{
-		Serial.print("Decrementando");
 		encoder.decrement_position();
 	}
+	while(!(PIND & _BV(PIND3)))
+	{
+		if(UCSR0A & _BV(RXC0))
+		{	
+			Comm.parseInput(1);
+			ledSet(LEDGREEN,0);
+			ledSet(LEDRED,1);
+		}	
+	}
+	
 	encoder.waitStabilization();
+	
+	//if a interrupt was caused, next re-entry will return inmediatly
+	if(EIFR!=0)
+	{
+		interrupt=1;
+	}
+	else
+		interrupt=0;
+	
+	ledSet(LEDGREEN,1);
+	ledSet(LEDRED,0);
 }
 
 

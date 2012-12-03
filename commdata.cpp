@@ -38,6 +38,8 @@ CommDataClass::CommDataClass(void)
 	my_chn = 0;
 	my_gain = 1;
 	my_mode = 0;
+	
+	crcEnabled=0;
 
   systemReset();
 }
@@ -97,12 +99,31 @@ void CommDataClass::write(uint8_t c){
 }
 
 
+int CommDataClass::checkCRC()
+{
+	int i;
+	unsigned int suma=0;
+	unsigned int check;
+	if(!crcEnabled)
+	{
+		return 1;
+	}
+	for(i=2;i<receivedBytes;i++)
+	{
+		suma+=storedInputData[i];
+	}
+	return (my_crc16==suma);
+	
+}
 
-void CommDataClass::parseInput(void){
+
+void CommDataClass::parseInput(int fl){
 	
 	int inputData = read();
 	int i;
-	
+	if(fl)
+		inputData = UDR0;
+
 	#ifdef SERIAL_DEBUG
 	Serial.print(inputData,HEX);
 	Serial.print(" ");
@@ -139,6 +160,13 @@ void CommDataClass::parseInput(void){
 			waitForData--;
 
 		if(waitForData == 0){
+			if(!checkCRC())
+			{
+				ledSet(LEDGREEN,0);
+				ledSet(LEDRED,1);
+				systemReset();
+				return;
+			}
 			Process_Command();
 			systemReset();
 		}
@@ -159,7 +187,7 @@ void CommDataClass::Process_Stream(void)
 	int i;
 
 	
-	if( (Channel1.readindex<Channel1.writeindex) ){//&& (Channel1.dcmode != ANALOG_OUTPUT) ){//(1){//
+	if( (Channel1.readindex<Channel1.writeindex && Channel1.dcmode != ANALOG_OUTPUT) ){//&& (Channel1.dcmode != ANALOG_OUTPUT) ){//(1){//
 		len = Channel1.writeindex - Channel1.readindex;
 		len = (len>50)?50:len;	
 		#ifdef SERIAL_DEBUG
@@ -308,11 +336,9 @@ void CommDataClass::Process_Stream(void)
 		
 	}
 	
-		
-	if(Channel4.readindex<Channel4.writeindex){//(1){//
+	if(Channel4.readindex<Channel4.writeindex && Channel4.dcmode != ANALOG_OUTPUT){//(1){//		
 		len = Channel4.writeindex - Channel4.readindex;
-		len = (len>50)?50:len;
-		
+		len = (len>50)?50:len;	
 		#ifdef SERIAL_DEBUG
 			Serial.print(len,DEC);
 
@@ -363,7 +389,7 @@ void CommDataClass::Process_Stream(void)
 	{
 		//send stop
 		resp_len = 1;
-		response[2] = 26;
+		response[2] = 80;
 		response[3] = resp_len;	//number of bytes
 		response[4] = 1;				//channel #1
 		
@@ -433,6 +459,7 @@ void CommDataClass::Process_Command(void)
 {
 	byte i,j;
 	uint16_t tdata;
+	uint16_t temp;
 	byte resp_len=0;
 	int16_t value;
 	uint32_t aux32;
@@ -849,14 +876,12 @@ void CommDataClass::Process_Command(void)
 		
 		///// ENCODER COMMANDS		//////////////////////////////////////
 		case C_ENCODER_INIT:		
-			resp_len = 2;
+			resp_len = 1;
 	    
 			value = storedInputData[4];
-			tdata = storedInputData[5];
 			response[4] = value;
-			response[5] = tdata;
 		
-			encoder.Start(tdata);
+			encoder.Start(value);
 			#ifdef SERIAL_DEBUG
 			Serial.print("C_ENCODEER_INIT: T = ");
 			Serial.println(tdata,DEC);
@@ -1083,38 +1108,42 @@ void CommDataClass::Process_Command(void)
 	
 		case C_SIGNAL_LOAD:
 			resp_len = 3;
-      
-			i = storedInputData[4]; //Nb of channel
-			tdata = make16(storedInputData+5);		//nb of total points
 			
- 			response[4] = i;
-			response[5] = make8(tdata,1);
-			response[6] = make8(tdata,0);
+			tdata = make16(storedInputData+4);		//index init
 			
-			/*
-	ODStream.ConfigChan(1, ANALOG_OUTPUT);
-	ODStream.SetupChan(1,2,0);
-	i=0;
-	while(i<=2){
-		Channel1.databuffer[i] = 600 * (1+i);
-		i++;
-	}
-*/
-
+			response[4] = make8(tdata,1);
+			response[5] = make8(tdata,0);
 			
-			#ifdef SERIAL_DEBUG
-			Serial.print("C_SIGNAL_LOAD [ ");
-			Serial.print(i,DEC);
-			Serial.print(" ] => mode= ");
-			Serial.print(j,DEC);
-			Serial.print(" value= ");
-			Serial.println(tdata,DEC);
-			#endif
+			temp = storedInputData[3];
+			temp-=2;
+			temp/=2;
+			temp+=tdata;
+			for(i=0;i<temp-tdata;i++)
+			{
+				value = make16(storedInputData+6+2*i);		//nb of total points
+				Channel4.databuffer[i+tdata] = value;
+				Channel1.databuffer[i+tdata] = value;
+			}
 		break;
 		
 		
 		///// ALTERNATIVE COMMANDS		//////////////////////////////////////		
+		case C_ENABLE_CRC:
+			resp_len=1;
+			
+			i= storedInputData[4];
+			response[4] = i;
+			
+			if(i)
+			{
+				crcEnabled=1;
+			}
+			else
+			{
+				crcEnabled=0;
+			}
 		
+		break;
 		case C_LED_W:
 			resp_len = 1;
 			

@@ -100,6 +100,8 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 
 #define C_STREAM_DATA	25			//Device writes a packet with measured data coming from one of the channels
 
+#define C_ENABLE_CRC 	55		
+
 
 
 //other constants
@@ -120,7 +122,8 @@ class CommDataClass
 {
   private:
   // properties
-  byte receivedBytes;
+	int checkCRC();
+	byte receivedBytes;
 	byte waitForData; // this flag says how many input bytes are left in the message
 	byte maxData;
 	uint16_t my_crc16;	// received 16bit crc 
@@ -130,6 +133,8 @@ class CommDataClass
 
 	uint32_t my_id;
 
+	int crcEnabled;
+	
 	//byte* response;
 	//byte response[MAX_DATA_BYTES];
 
@@ -161,7 +166,7 @@ class CommDataClass
 	CommDataClass();
 	
 	//serial receive handling
-  void parseInput(void);
+  void parseInput(int fl);
 	
 	//serial stream transfer
 	void Process_Stream(void);

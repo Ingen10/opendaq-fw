@@ -41,6 +41,11 @@ void DStream::Start()
 
 void DStream::Stop()
 {
+	Channel1.reset();
+	Channel2.reset();
+	Channel3.reset();
+	Channel4.reset();
+	
 	TIMSK2 &= ~_BV(OCIE2A);
 	PCICR &= ~_BV(PCIE0);
 }
@@ -439,7 +444,6 @@ void ext_sm(int currentValue)
 			Channel1.Activate();
 			Channel1.waitStabilization();
 			Channel1.Action();
-			Serial.print("1");
 		}	
 	}
 	
@@ -448,7 +452,6 @@ void ext_sm(int currentValue)
 			Channel2.Activate();
 			Channel2.waitStabilization();
 			Channel2.Action();
-			Serial.print("2");
 		}	
 	}
 	
@@ -457,7 +460,6 @@ void ext_sm(int currentValue)
 			Channel3.Activate();
 			Channel3.waitStabilization();
 			Channel3.Action();
-			Serial.print("3");
 		}	
 	}
 	
@@ -466,7 +468,6 @@ void ext_sm(int currentValue)
 			Channel4.Activate();
 			Channel4.waitStabilization();
 			Channel4.Action();
-			Serial.print("4");
 		}	
 	}
 }
@@ -497,6 +498,7 @@ ISR(PCINT0_vect)
 	}
 	ledSet(LEDRED,1);
 	ledSet(LEDGREEN,0);
+	//This is a bucle for wait and avoid fakes edges
 	for(i=0;i<200;i++)
 	{
 		refreshValue = PINA;
@@ -505,6 +507,7 @@ ISR(PCINT0_vect)
 			refreshValue+=PINA;
 		}
 	}
+	
 	ext_sm(refreshValue);
 	ledSet(LEDRED,0);
 	ledSet(LEDGREEN,1);

@@ -3,6 +3,7 @@
 #include "datachannel.h"
 #include "commdata.h"
 #include "calibration.h"
+#include <avr/wdt.h> 
 
 extern DataChannel Channel1, Channel2, Channel3, Channel4;
 extern DStream ODStream;
@@ -86,8 +87,8 @@ void setup() {
 	ledSet(LEDGREEN,1);
 	ledSet(LEDRED,0);
 	
+	wdt_enable(WDTO_250MS);  
 	
-	SetpioMode(4, 1);
 }
   
 
@@ -102,8 +103,9 @@ void loop()
 	ODStream.CheckTriggers();
 	Comm.Process_Stream();
 	while(Comm.available()) {
-		Comm.parseInput();
+		Comm.parseInput(0);
 	}
+	wdt_reset(); 
 }
 
 
