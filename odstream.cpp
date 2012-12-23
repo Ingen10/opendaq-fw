@@ -494,6 +494,11 @@ ISR(PCINT0_vect)
 		interrupt=0;
 		return;
 	}
+<<<<<<< HEAD
+=======
+	ledSet(LEDRED,1);
+	ledSet(LEDGREEN,0);
+>>>>>>> 4b8ed03590a78c6cad1a5513bd63f60014fac8bb
 	//This is a bucle for wait and avoid fakes edges
 	for(i=0;i<200;i++)
 	{
