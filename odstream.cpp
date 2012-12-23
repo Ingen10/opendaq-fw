@@ -23,6 +23,7 @@ void DStream::Start()
 {
 	if( (Channel1.dctype >= STREAM_TYPE) || (Channel2.dctype >= STREAM_TYPE) || 
 			(Channel3.dctype >= STREAM_TYPE) || (Channel4.dctype >= STREAM_TYPE) ) {
+		TCNT2 = 0;
 		TIMSK2 = _BV(OCIE2A);
 	}
 

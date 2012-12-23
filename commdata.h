@@ -81,9 +81,9 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 #define C_STREAM_STOP	80		//Stop actual measurement
 #define C_CHANNEL_FLUSH	45		//Resets buffer of data in the channel 
 
-#define C_CHANNEL_CFG	22			//Configure one of the measurement channels (analog +IN,-IN, GAIN)
-#define C_CHANNEL_SETUP	32		//Configure channel number of points and repeat mode
-#define C_TRIGGER_SETUP	33		//Configure channel initial trigger mode and conditions
+#define C_CHANNEL_CFG	22			//Configure one of the measurement experiments (analog +IN,-IN, GAIN)
+#define C_CHANNEL_SETUP	32		//Configure experiment number of points and repeat mode
+#define C_TRIGGER_SETUP	33		//Configure experiment initial trigger mode and conditions
 
 #define C_SIGNAL_LOAD	23			//Load an array of values to preload DAC output
 

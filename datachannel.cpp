@@ -324,6 +324,8 @@ int dummyfunction(int j)
 int DataChannel::waitStabilization()
 {
 	int dummy,i,j;
+	//call ReadACD to adapt analog input
+	ReadADC();
 	for(i=0;i<stabilizationTime;i++)
 	{
 		for(j=0;j<8000;j++)
