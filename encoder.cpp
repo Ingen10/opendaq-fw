@@ -50,7 +50,15 @@ void Encoder::increment_position()
 void Encoder::decrement_position()
 {
 	position--;
+<<<<<<< HEAD
 	if(position<0 && resolution>0)
+=======
+<<<<<<< HEAD
+	if(position<0 && resolution>0)
+=======
+	if(position>resolution)
+>>>>>>> 4b8ed03590a78c6cad1a5513bd63f60014fac8bb
+>>>>>>> a43592ee3377312296fd62983c3cd159436723fb
 		position=resolution;
 }
 
