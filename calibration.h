@@ -41,6 +41,7 @@
 
 #define CID_POS 	40
 
+
 class CalibrationClass
 {
   public:

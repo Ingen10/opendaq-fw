@@ -176,6 +176,8 @@ void CommDataClass::parseInput(int fl){
 }
 
 
+#define MAXSIZE 30
+
 void CommDataClass::Process_Stream(void)
 {
 	byte resp_len=0;
@@ -185,10 +187,9 @@ void CommDataClass::Process_Stream(void)
 
 	int len;
 	int i;
-	
 	if( (Channel1.readindex<Channel1.writeindex && Channel1.dcmode != ANALOG_OUTPUT) ){//&& (Channel1.dcmode != ANALOG_OUTPUT) ){//(1){//
 		len = Channel1.writeindex - Channel1.readindex;
-		len = (len>50)?50:len;	
+		len = (len>MAXSIZE)?MAXSIZE:len;	
 		#ifdef SERIAL_DEBUG
 			Serial.println("Processing Stream");
 			Serial.print(len,DEC);
@@ -230,15 +231,15 @@ void CommDataClass::Process_Stream(void)
 			my_crc16 = CRC_16(resp_len+2,response+2);
 			response[0] = make8(my_crc16,1);
 			response[1] = make8(my_crc16,0);
-
+			PORTA = PORTA | 0x40;
 			Send_Command(response,resp_len+4);
+			PORTA = PORTA & ~0x40;
 		#endif	
 		
-	}
-		
+	}	
 	if(Channel2.readindex<Channel2.writeindex){//(1){//
 		len = Channel2.writeindex - Channel2.readindex;
-		len = (len>50)?50:len;
+		len = (len>MAXSIZE)?MAXSIZE:len;
 		#ifdef SERIAL_DEBUG
 			Serial.print(len,DEC);
 
@@ -279,15 +280,16 @@ void CommDataClass::Process_Stream(void)
 			response[0] = make8(my_crc16,1);
 			response[1] = make8(my_crc16,0);
 
+			PORTA = PORTA | 0x40;
 			Send_Command(response,resp_len+4);
+			PORTA = PORTA & ~0x40;
 		#endif	
 		
 	}
-
 		
 	if(Channel3.readindex<Channel3.writeindex){//(1){//
 		len = Channel3.writeindex - Channel3.readindex;
-		len = (len>50)?50:len;
+		len = (len>MAXSIZE)?MAXSIZE:len;
 		
 		#ifdef SERIAL_DEBUG
 			Serial.print(len,DEC);
@@ -329,14 +331,15 @@ void CommDataClass::Process_Stream(void)
 			response[0] = make8(my_crc16,1);
 			response[1] = make8(my_crc16,0);
 
+			PORTA = PORTA | 0x40;
 			Send_Command(response,resp_len+4);
+			PORTA = PORTA & ~0x40;
 		#endif	
 		
 	}
-	
 	if(Channel4.readindex<Channel4.writeindex && Channel4.dcmode != ANALOG_OUTPUT){//(1){//		
 		len = Channel4.writeindex - Channel4.readindex;
-		len = (len>50)?50:len;	
+		len = (len>MAXSIZE)?MAXSIZE:len;
 		#ifdef SERIAL_DEBUG
 			Serial.print(len,DEC);
 
@@ -377,14 +380,15 @@ void CommDataClass::Process_Stream(void)
 			response[0] = make8(my_crc16,1);
 			response[1] = make8(my_crc16,0);
 
+			PORTA = PORTA | 0x40;
 			Send_Command(response,resp_len+4);
+			PORTA = PORTA & ~0x40;
 		#endif	
 		
 	}
-	return;
-	
+
 	//End-of-experiment check
-	if(Channel1.writeindex>0 && Channel1.endReached())
+	if(Channel1.writeindex>0  && Channel1.writeindex==Channel1.readindex && Channel1.endReached())
 	{
 		//send stop
 		resp_len = 1;
@@ -399,7 +403,7 @@ void CommDataClass::Process_Stream(void)
 		
 		Channel1.reset();
 	}
-	if(Channel2.writeindex>0 && Channel2.endReached())
+	if(Channel2.writeindex>0   && Channel2.writeindex==Channel2.readindex && Channel2.endReached())
 	{
 		//send stop
 		resp_len = 1;
@@ -414,7 +418,7 @@ void CommDataClass::Process_Stream(void)
 		
 		Channel2.reset();
 	}
-	if(Channel3.writeindex>0 && Channel3.endReached())
+	if(Channel3.writeindex>0   && Channel3.writeindex==Channel3.readindex && Channel3.endReached())
 	{
 		//send stop
 		resp_len = 1;
@@ -429,7 +433,7 @@ void CommDataClass::Process_Stream(void)
 
 		Channel3.reset();
 	}
-	if(Channel4.writeindex>0 && Channel4.endReached())
+	if(Channel4.writeindex>0   && Channel4.writeindex==Channel4.readindex && Channel4.endReached())
 	{
 		//send stop
 		resp_len = 1;
@@ -557,6 +561,20 @@ void CommDataClass::Process_Command(void)
 
 			#ifdef SERIAL_DEBUG
 			Serial.print("C_SET_DAC: ");
+			Serial.println(my_vout,DEC);
+			#endif
+		break;	
+		
+		case C_SET_ANALOG:
+			resp_len = 2;
+			
+			my_vout = make16(storedInputData+4);
+			SetDacOutput(my_vout);
+			response[4] = make8(my_vout,1);
+			response[5] = make8(my_vout,0);
+
+			#ifdef SERIAL_DEBUG
+			Serial.print("C_SET_Analog: ");
 			Serial.println(my_vout,DEC);
 			#endif
 		break;	

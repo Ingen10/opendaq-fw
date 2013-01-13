@@ -55,6 +55,7 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 #define C_LED_W			18			//Configure device LED status: bit 1 sets green LED, bit 2 sets red LED
 
 #define C_SET_DAC		13
+#define C_SET_ANALOG    24
 #define C_EEPROM_WRITE	30
 #define C_EEPROM_READ	31
 

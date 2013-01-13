@@ -101,7 +101,9 @@ void loop()
 		delay(300);
 	#endif
 	ODStream.CheckTriggers();
+	PORTA = PORTA | 0x20;
 	Comm.Process_Stream();
+	PORTA = PORTA & ~0x20;
 	while(Comm.available()) {
 		Comm.parseInput(0);
 	}
