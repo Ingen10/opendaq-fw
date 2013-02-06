@@ -40,6 +40,7 @@ void DStream::Start()
 	CheckTriggers();
 	ledSet(LEDGREEN,1);
 	ledSet(LEDRED,0);
+	stream_sm();
 }
 
 void DStream::Stop()

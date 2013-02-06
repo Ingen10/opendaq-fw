@@ -49,7 +49,7 @@ void CalibrationClass::Reset_calibration()
   gain_b[4] = 0;
   
 	//DAC CALIBRATION DEFAULTS
-  gain_m[5] = 2000;
+  gain_m[5] = 1000;
   gain_b[5] = 0;
 }
 

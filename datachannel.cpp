@@ -62,7 +62,7 @@ DataChannel::DataChannel(int dtype, int dpin, int dedge)
 
 void DataChannel::Action()
 {
-
+	PORTA = PORTA | 0x10;
 	if(dcmode == ANALOG_OUTPUT)
 	{
 		Write();
@@ -72,7 +72,6 @@ void DataChannel::Action()
 		Read();
 	}
 	ndata++;
-  
 	if(ndata == maxndata){
 		if(maxnrepeat == R_CONTINUOUS)
 			ndata = 0;
@@ -84,6 +83,7 @@ void DataChannel::Action()
 				Disable();
 		}
 	}
+	PORTA = PORTA & 0xEF;
 }
 
 
@@ -95,7 +95,7 @@ int DataChannel::endReached()
 void DataChannel::Read()
 {
   signed int c;
-  c = actionCallback(option);
+  c = ReadNADC(1);//actionCallback(option);
   databuffer[writeindex%bufferlen] = c;
   writeindex++;
 }
@@ -250,7 +250,6 @@ void DataChannel::Activate()
 	if(dcmode == ANALOG_INPUT){
 		ConfigAnalog(pch,nch,	g);
 	}
-	else	return;
 }
 
 
@@ -340,6 +339,7 @@ int DataChannel::waitStabilization()
 
 void DataChannel::Initialize()
 {
+	int add;
 	stabilizationTime=100;	//100 veces 0.508 us
 
 	state = CH_READY;
@@ -365,6 +365,9 @@ void DataChannel::Initialize()
 	}
 	
     databuffer = (signed int*) malloc( bufferlen * sizeof(int));
+	add=(int)databuffer;
+	Serial.println("Direccion de databuffer");
+	Serial.println((int)databuffer,HEX);
 	#ifdef SERIAL_DEBUG
 	if(databuffer == NULL){
 		Serial.println("error malloc");

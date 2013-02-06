@@ -39,7 +39,7 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 
 
 
-#define MAX_DATA_BYTES 64 // max number of data bytes in messages
+#define MAX_DATA_BYTES 128 // max number of data bytes in messages
 
 
 #define	NACK				0xA0

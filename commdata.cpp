@@ -176,7 +176,7 @@ void CommDataClass::parseInput(int fl){
 }
 
 
-#define MAXSIZE 30
+#define MAXSIZE 60
 
 void CommDataClass::Process_Stream(void)
 {
