@@ -1,6 +1,7 @@
-/*! \file commdata.h
-    \brief Class used for managing the serial communications between open-daq and host PC
-    
+/*
+ *  Copyright (C) 2012 INGEN10 Ingenieria SL
+ *  http://www.ingen10.com
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
@@ -14,11 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		120507
- *  Author:			JRB
-
+ *  Version:  120507
+ *  Author:   JRB
  */
-
 
 #ifndef COMMDATA_H
 #define COMMDATA_H
@@ -27,7 +26,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include "HardwareSerial.h"
 #include "daqhw.h"
@@ -102,8 +101,6 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 #define C_STREAM_DATA	25			//Device writes a packet with measured data coming from one of the channels
 
 #define C_ENABLE_CRC 	55		
-
-
 
 //other constants
 #define ID_OVERWRITE  4

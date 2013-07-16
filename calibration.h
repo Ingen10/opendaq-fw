@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		120522
- *  Author:			JRB
+ *  Version:  120522
+ *  Author:   JRB
  */
 
 #ifndef CALIBRATION_H

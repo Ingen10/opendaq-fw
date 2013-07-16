@@ -21,13 +21,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		120407
- *  Author:			JRB
-
  */
-
-#ifndef TIMERONE_cpp
-#define TIMERONE_cpp
 
 #include "Timer1.h"
 
@@ -361,13 +355,3 @@ unsigned long TimerOne::getCounter(int reset)
 
 	return tcnt1;
 }
-
-
-
-
-
-
-
-#endif
-
-

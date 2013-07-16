@@ -3,7 +3,7 @@
 #include "datachannel.h"
 #include "commdata.h"
 #include "calibration.h"
-#include <avr/wdt.h> 
+#include <avr/wdt.h>
 
 extern DataChannel Channel1, Channel2, Channel3, Channel4;
 extern DStream ODStream;
@@ -18,39 +18,34 @@ void setup() {
 	i = Cal.RecallCalibration();
 	
 	Comm.begin();
-	SetDigitalDir(0X0F);
+	//SetDigitalDir(0X0F);
 	
-	#ifdef SERIAL_DEBUG
+#ifdef SERIAL_DEBUG
 	Serial.print("*Calibracion: ");
 	Serial.println(i,HEX);	
-	for(i=0;i<6;i++){
+
+	for(i=0; i<6; i++) {
 		Serial.print(i,HEX);	
 		Serial.print(":  m= ");
 		Serial.print(Cal.gain_m[i],DEC);	
 		Serial.print("  b= ");
 		Serial.println(Cal.gain_b[i],DEC);			
 	}
-	#endif
+#endif
 	
-	/*
-	pioMode(0, OUTPUT);
-	pioWrite(	0, LOW);
-*/
-		
 	delay(100);
 	SetAnalogVoltage(0);
 	delay(100);
 	SetAnalogVoltage(900);
 
-	/*ODStream.Initialize();
+	/*
+  ODStream.Initialize();
 	ODStream.CreateExternalChannel(2,0);
 	ODStream.Start();	//FAILS! if no channel activated
 	//ODStream.ConfigChan(1, ANALOG_INPUT, 7, 0, 0);
 	ODStream.DeleteExperiments(0);
 
 	ODStream.CreateStreamChannel(1,500);
-
-
 
 	ODStream.CreateStreamChannel(2,2);
 	ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
@@ -62,7 +57,7 @@ void setup() {
 	ODStream.ConfigChan(1, ANALOG_OUTPUT);
 	ODStream.SetupChan(1,2,0);
 	i=0;
-	while(i<=2){
+	while(i<=2) {
 		Channel1.databuffer[i] = 600 * (1+i);
 		i++;
 	}
@@ -70,44 +65,42 @@ void setup() {
 	ODStream.CreateStreamChannel(2,20);
 	ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
 	*/
-/*
 
+  /*
 	ODStream.CreateStreamChannel(3,60);
 	ODStream.CreateStreamChannel(4,50);
 	ODStream.TriggerMode(3, DIN5_TRG, 1);
 	*/
 	
 
-	#ifdef SERIAL_DEBUG
-  Serial.print("memoria");
+#ifdef SERIAL_DEBUG
+  Serial.print("memory");
   Serial.print("< ");
   Serial.println(availableMemory(),DEC);	
-  #endif
+#endif
 	
 	ledSet(LEDGREEN,1);
 	ledSet(LEDRED,0);
 	
 	wdt_enable(WDTO_250MS);  
-	
 }
   
 
 void loop() 
 { 	
-  static int j=0,i=0;
+  static int j=0, i=0;
 
+#ifdef SERIAL_DEBUG
+    delay(300);
+#endif
 
-	#ifdef SERIAL_DEBUG
-		delay(300);
-	#endif
-	ODStream.CheckTriggers();
-	PORTA = PORTA | 0x20;
-	Comm.Process_Stream();
-	PORTA = PORTA & ~0x20;
-	while(Comm.available()) {
-		Comm.parseInput(0);
-	}
-	wdt_reset(); 
+  ODStream.CheckTriggers();
+  PORTA = PORTA | 0x20;
+  Comm.Process_Stream();
+  PORTA = PORTA & ~0x20;
+
+  while(Comm.available())
+    Comm.parseInput(0);
+
+  wdt_reset(); 
 }
-
-

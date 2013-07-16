@@ -1,6 +1,7 @@
-/*! \file datachannel.h
-    \brief Class used for managing the automated data acquisition for openDAQ
-    
+/*
+ *  Copyright (C) 2012 INGEN10 Ingenieria SL
+ *  http://www.ingen10.com
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
@@ -14,11 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		120407
- *  Author:			JRB
-
+ *  Version:  120407
+ *  Author:   JRB
  */
-
 
 #ifndef DATACHANNEL_H
 #define DATACHANNEL_H

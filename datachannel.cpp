@@ -15,12 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		120407
- *  Author:			JRB
+ *  Version:  120407
+ *  Author:   JRB
  */
-
-#ifndef DATACHANNEL_CPP
-#define DATACHANNEL_CPP
 
 #include "datachannel.h"
 
@@ -339,7 +336,6 @@ int DataChannel::waitStabilization()
 
 void DataChannel::Initialize()
 {
-	int add;
 	stabilizationTime=100;	//100 veces 0.508 us
 
 	state = CH_READY;
@@ -365,9 +361,6 @@ void DataChannel::Initialize()
 	}
 	
     databuffer = (signed int*) malloc( bufferlen * sizeof(int));
-	add=(int)databuffer;
-	Serial.println("Direccion de databuffer");
-	Serial.println((int)databuffer,HEX);
 	#ifdef SERIAL_DEBUG
 	if(databuffer == NULL){
 		Serial.println("error malloc");
@@ -375,7 +368,3 @@ void DataChannel::Initialize()
 	#endif
   
 }
-
-
-#endif
-

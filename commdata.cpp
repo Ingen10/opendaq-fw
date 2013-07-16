@@ -15,12 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		120507
- *  Author:			JRB
+ *  Version:  120507
+ *  Author:   JRB
  */
-
-#ifndef COMMDATA_CPP
-#define COMMDATA_CPP
 
 #include "commdata.h"
 
@@ -102,18 +99,15 @@ void CommDataClass::write(uint8_t c){
 int CommDataClass::checkCRC()
 {
 	int i;
-	unsigned int suma=0;
-	unsigned int check;
+	unsigned int check, suma=0;
+
 	if(!crcEnabled)
-	{
 		return 1;
-	}
+
 	for(i=2;i<receivedBytes;i++)
-	{
 		suma+=storedInputData[i];
-	}
+
 	return (my_crc16==suma);
-	
 }
 
 
@@ -1200,7 +1194,9 @@ void CommDataClass::Process_Command(void)
 			response[4] = make8(tdata,1);
 			response[5] = make8(tdata,0);
 
-			_delay_ms(tdata);
+      for (i=0; i<tdata; i++)
+			  _delay_ms(1);
+
 			#ifdef SERIAL_DEBUG
 			Serial.print("C_WAIT_MS: ");
 			Serial.println(tdata);
@@ -1301,23 +1297,13 @@ uint16_t CommDataClass::CRC_16(int size,byte *packet)
 
 uint16_t CommDataClass::make16(byte* a)
 {
-	uint16_t data=0;
-
-	data = *(a)<<8;	
-	data += *(a+1);
-	return data;
+	return ((uint16_t)(a[0]) << 8) | (uint16_t)(a[1]);
 }
 
 uint32_t CommDataClass::make32(byte* a)
 {
-	uint32_t data=0;
-	int i;
-	
-	data = *(a)<<24;	
-	data += *(a+1)<<16;
-	data += *(a+2)<<8;
-	data += *(a+3);
-	return data;
+	return ((uint32_t)(a[0]) << 24) | ((uint32_t)(a[1]) << 16) | \
+	       ((uint32_t)(a[2]) << 8)  | (uint32_t)(a[3]);
 }
 
 byte CommDataClass::make8(uint16_t a,byte position)
@@ -1332,9 +1318,4 @@ byte CommDataClass::make8(uint16_t a,byte position)
 	return aux;
 }
 
-
 CommDataClass Comm;
-
-
-#endif
-
