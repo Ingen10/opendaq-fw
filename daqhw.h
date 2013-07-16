@@ -6,12 +6,12 @@
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
  *  (at your option) any later version.
-   
+
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
-  
+
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -28,65 +28,63 @@
 #include "Timer1.h"
 
 extern "C" {
-	#include <stdlib.h>
+#include <stdlib.h>
 }
-
 
 typedef uint8_t byte;
 
-
 //Analog input channel definitions (MMA-MMB-MMC-MPA-MPB-MPC bits select)
-#define AIN1	0X0
-#define AIN2	0X4
-#define AIN3	0X2
-#define AIN4	0X6
-#define AIN5	0X1
-#define AIN6	0X5
-#define AIN7	0X3
-#define AIN8	0X7
-#define AGND	0X0
-#define AREF	0X4
+#define AIN1    0X0
+#define AIN2    0X4
+#define AIN3    0X2
+#define AIN4    0X6
+#define AIN5    0X1
+#define AIN6    0X5
+#define AIN7    0X3
+#define AIN8    0X7
+#define AGND    0X0
+#define AREF    0X4
 
 //Analog gain definitions
-#define GAINX0_5	0
-#define GAINX001	1
-#define GAINX002	2
-#define GAINX010	3
-#define GAINX100	4
+#define GAINX0_5    0
+#define GAINX001    1
+#define GAINX002    2
+#define GAINX010    3
+#define GAINX100    4
 
-#define LEDGREEN 	0
-#define LEDRED 		1
+#define LEDGREEN    0
+#define LEDRED      1
 
 
 const uint8_t PROGMEM pio_to_bit_mask_PGM[] = {
-	_BV(7), 
-	_BV(6),
-	_BV(5),
-	_BV(4),
-	_BV(5),
-	_BV(3)
+    _BV(7),
+    _BV(6),
+    _BV(5),
+    _BV(4),
+    _BV(5),
+    _BV(3)
 };
 
 const uint8_t PROGMEM pio_to_port_PGM[] = {
- 	PA, 
-	PA,
-	PA,
-	PA,
-	PD,
-	PD
+    PA,
+    PA,
+    PA,
+    PA,
+    PD,
+    PD
 };
 
 const uint8_t PROGMEM ain_to_port_PGM[] = {
-	AGND,
-	AIN1,
-	AIN2,
-	AIN3,
-	AIN4,
-	AIN5,
-	AIN6,
-	AIN7,
-	AIN8,
-	AREF
+    AGND,
+    AIN1,
+    AIN2,
+    AIN3,
+    AIN4,
+    AIN5,
+    AIN6,
+    AIN7,
+    AIN8,
+    AREF
 };
 
 #define pioToPort(P) ( pgm_read_byte( pio_to_port_PGM + (P) ) )
@@ -129,7 +127,7 @@ void captureInit(unsigned long microseconds);
 void captureStop();
 int  getCapture(int state);
 
-void encoderInit(unsigned int secondChannelPIO,unsigned int resolution);
+void encoderInit(unsigned int secondChannelPIO, unsigned int resolution);
 void encoderStop();
 int  getEncoder();
 

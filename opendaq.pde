@@ -10,97 +10,96 @@ extern DStream ODStream;
 extern Encoder encoder;
 
 
-void setup() {
-	int i;
+void setup()
+{
+    int i;
 
-	daqInit();
-	
-	i = Cal.RecallCalibration();
-	
-	Comm.begin();
-	//SetDigitalDir(0X0F);
-	
-#ifdef SERIAL_DEBUG
-	Serial.print("*Calibracion: ");
-	Serial.println(i,HEX);	
+    daqInit();
 
-	for(i=0; i<6; i++) {
-		Serial.print(i,HEX);	
-		Serial.print(":  m= ");
-		Serial.print(Cal.gain_m[i],DEC);	
-		Serial.print("  b= ");
-		Serial.println(Cal.gain_b[i],DEC);			
-	}
-#endif
-	
-	delay(100);
-	SetAnalogVoltage(0);
-	delay(100);
-	SetAnalogVoltage(900);
+    i = Cal.RecallCalibration();
 
-	/*
-  ODStream.Initialize();
-	ODStream.CreateExternalChannel(2,0);
-	ODStream.Start();	//FAILS! if no channel activated
-	//ODStream.ConfigChan(1, ANALOG_INPUT, 7, 0, 0);
-	ODStream.DeleteExperiments(0);
-
-	ODStream.CreateStreamChannel(1,500);
-
-	ODStream.CreateStreamChannel(2,2);
-	ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
-	ODStream.ConfigChan(3, ANALOG_INPUT, 7, 0, 1);
-  
-  
-	ODStream.CreateBurstChannel(400);
-	ODStream.CreateExternalChannel(2,0);
-	ODStream.ConfigChan(1, ANALOG_OUTPUT);
-	ODStream.SetupChan(1,2,0);
-	i=0;
-	while(i<=2) {
-		Channel1.databuffer[i] = 600 * (1+i);
-		i++;
-	}
-	
-	ODStream.CreateStreamChannel(2,20);
-	ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
-	*/
-
-  /*
-	ODStream.CreateStreamChannel(3,60);
-	ODStream.CreateStreamChannel(4,50);
-	ODStream.TriggerMode(3, DIN5_TRG, 1);
-	*/
-	
+    Comm.begin();
+    //SetDigitalDir(0X0F);
 
 #ifdef SERIAL_DEBUG
-  Serial.print("memory");
-  Serial.print("< ");
-  Serial.println(availableMemory(),DEC);	
+    Serial.print("*Calibracion: ");
+    Serial.println(i, HEX);
+
+    for(i = 0; i < 6; i++) {
+        Serial.print(i, HEX);
+        Serial.print(":  m= ");
+        Serial.print(Cal.gain_m[i], DEC);
+        Serial.print("  b= ");
+        Serial.println(Cal.gain_b[i], DEC);
+    }
 #endif
-	
-	ledSet(LEDGREEN,1);
-	ledSet(LEDRED,0);
-	
-	wdt_enable(WDTO_250MS);  
+
+    delay(100);
+    SetAnalogVoltage(0);
+    delay(100);
+    SetAnalogVoltage(900);
+
+    /*
+    ODStream.Initialize();
+    ODStream.CreateExternalChannel(2,0);
+    ODStream.Start();   //FAILS! if no channel activated
+    //ODStream.ConfigChan(1, ANALOG_INPUT, 7, 0, 0);
+    ODStream.DeleteExperiments(0);
+
+    ODStream.CreateStreamChannel(1,500);
+
+    ODStream.CreateStreamChannel(2,2);
+    ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
+    ODStream.ConfigChan(3, ANALOG_INPUT, 7, 0, 1);
+
+    ODStream.CreateBurstChannel(400);
+    ODStream.CreateExternalChannel(2,0);
+    ODStream.ConfigChan(1, ANALOG_OUTPUT);
+    ODStream.SetupChan(1,2,0);
+    i=0;
+    while(i<=2) {
+        Channel1.databuffer[i] = 600 * (1+i);
+        i++;
+    }
+
+    ODStream.CreateStreamChannel(2,20);
+    ODStream.ConfigChan(2, ANALOG_INPUT, 7, 0, 8);
+    */
+
+    /*
+    ODStream.CreateStreamChannel(3,60);
+    ODStream.CreateStreamChannel(4,50);
+    ODStream.TriggerMode(3, DIN5_TRG, 1);
+    */
+
+#ifdef SERIAL_DEBUG
+    Serial.print("memory");
+    Serial.print("< ");
+    Serial.println(availableMemory(), DEC);
+#endif
+
+    ledSet(LEDGREEN, 1);
+    ledSet(LEDRED, 0);
+
+    wdt_enable(WDTO_250MS);
 }
-  
 
-void loop() 
-{ 	
-  static int j=0, i=0;
+
+void loop()
+{
+    static int j = 0, i = 0;
 
 #ifdef SERIAL_DEBUG
     delay(300);
 #endif
 
-  ODStream.CheckTriggers();
-  PORTA = PORTA | 0x20;
-  Comm.Process_Stream();
-  PORTA = PORTA & ~0x20;
+    ODStream.CheckTriggers();
+    PORTA = PORTA | 0x20;
+    Comm.Process_Stream();
+    PORTA = PORTA & ~0x20;
 
-  while(Comm.available())
-    Comm.parseInput(0);
+    while(Comm.available())
+        Comm.parseInput(0);
 
-  wdt_reset(); 
+    wdt_reset();
 }
