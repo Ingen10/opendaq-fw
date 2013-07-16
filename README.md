@@ -1,17 +1,17 @@
 openDAQ firmware
 ================
 
-This is the firmware of the [openDAQ](http://open-daq.com) board.
-It uses the lastest [Arduino](http://arduino.cc/) environment.
+This is the firmware of the [openDAQ](http://open-daq.com) board. It is based
+on [Arduino](http://arduino.cc/).
 
-OpenDAQ is an USB based measurement and automation device, which provides user
-with multifunction data-logging capabilities such as analog inputs and outputs,
-digital inputs and outputs, timer, counter and many more features.
+OpenDAQ is an USB measurement and automation device which provides
+multifunction data-logging capabilities, analog inputs and outputs, digital
+inputs and outputs, timer, counter and many more features.
 
 
 How to setup the Arduino environment
 -----------------------------------
-A couple of files have to be modified in the Arduino system directoies to add
+A couple of files have to be modified in the Arduino system directories to add
 the openDAQ board:
 
  * Add the openDAQ board definition to the end of the `boards.txt` file
