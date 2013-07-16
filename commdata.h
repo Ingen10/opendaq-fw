@@ -100,6 +100,8 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 
 #define C_ENABLE_CRC    55
 
+#define C_MCP23S17      70
+
 //other constants
 #define ID_OVERWRITE            4
 #define CALIBRATION_OVERWRITE   5

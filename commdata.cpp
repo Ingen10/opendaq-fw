@@ -20,6 +20,7 @@
  */
 
 #include "commdata.h"
+#include "mcp23s17.h"
 
 extern "C" {
 #include <string.h>
@@ -1172,6 +1173,24 @@ void CommDataClass::Process_Command(void)
         Serial.println(tdata);
 #endif
 
+        break;
+
+    case C_MCP23S17:
+	/* Use some PIOs as a SPI port
+	 * for controlling a MCP23S17 port expander:
+	 * PIO1: CLK
+	 * PIO2: MOSI
+	 * PIO4: SS
+	 */
+        tdata = make16(storedInputData + 4);
+
+	SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
+	mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
+	mcp23s17_write(PIO4, GPIO, tdata);  // write 16 bits to GPIOs
+
+        resp_len = 2;
+        response[4] = make8(tdata, 1);
+        response[5] = make8(tdata, 0);
         break;
 
     case NACK:

@@ -45,11 +45,10 @@ signed int ReadAnalog()
 
 void SetpioMode(uint8_t pio, uint8_t mode)
 {
-    uint8_t bit = pioToBitMask(pio);
-    uint8_t port = pioToPort(pio);
+    uint8_t bit = digitalPinToBitMask(pio);
     volatile uint8_t *reg;
 
-    reg = portModeRegister(port);
+    reg = portModeRegister(digitalPinToPort(pio));
 
     if (mode == 0) *reg &= ~bit;
     else *reg |= bit;
@@ -58,24 +57,21 @@ void SetpioMode(uint8_t pio, uint8_t mode)
 
 int GetpioMode(uint8_t pio)
 {
-    uint8_t bit = pioToBitMask(pio);
-    uint8_t port = pioToPort(pio);
+    uint8_t bit = digitalPinToBitMask(pio);
     volatile uint8_t *reg;
 
-    reg = portModeRegister(port);
+    reg = portModeRegister(digitalPinToPort(pio));
 
     return (*reg & bit) != 0;
-
 }
 
 
 void pioWrite(uint8_t pio, uint8_t val)
 {
-    uint8_t bit = pioToBitMask(pio);
-    uint8_t port = pioToPort(pio);
+    uint8_t bit = digitalPinToBitMask(pio);
     volatile uint8_t *out;
 
-    out = portOutputRegister(port);
+    out = portOutputRegister(digitalPinToPort(pio));
 
     if (val == 0) *out &= ~bit;
     else *out |= bit;
@@ -84,11 +80,10 @@ void pioWrite(uint8_t pio, uint8_t val)
 
 int pioRead(uint8_t pio)
 {
-    uint8_t bit = pioToBitMask(pio);
-    uint8_t port = pioToPort(pio);
+    uint8_t bit = digitalPinToBitMask(pio);
 
-    if (*portInputRegister(port) & bit) return 1;
-
+    if (*portInputRegister(digitalPinToPort(pio)) & bit)
+        return 1;
     return 0;
 }
 

@@ -31,8 +31,6 @@ extern "C" {
 #include <stdlib.h>
 }
 
-typedef uint8_t byte;
-
 //Analog input channel definitions (MMA-MMB-MMC-MPA-MPB-MPC bits select)
 #define AIN1    0X0
 #define AIN2    0X4
@@ -55,25 +53,6 @@ typedef uint8_t byte;
 #define LEDGREEN    0
 #define LEDRED      1
 
-
-const uint8_t PROGMEM pio_to_bit_mask_PGM[] = {
-    _BV(7),
-    _BV(6),
-    _BV(5),
-    _BV(4),
-    _BV(5),
-    _BV(3)
-};
-
-const uint8_t PROGMEM pio_to_port_PGM[] = {
-    PA,
-    PA,
-    PA,
-    PA,
-    PD,
-    PD
-};
-
 const uint8_t PROGMEM ain_to_port_PGM[] = {
     AGND,
     AIN1,
@@ -87,8 +66,6 @@ const uint8_t PROGMEM ain_to_port_PGM[] = {
     AREF
 };
 
-#define pioToPort(P) ( pgm_read_byte( pio_to_port_PGM + (P) ) )
-#define pioToBitMask(P) ( pgm_read_byte( pio_to_bit_mask_PGM + (P) ) )
 #define ainToPort(P) ( pgm_read_byte( ain_to_port_PGM + (P) ) )
 
 

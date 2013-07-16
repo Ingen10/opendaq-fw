@@ -104,13 +104,13 @@ SRC = \
 	$(ARDUINO_CORE)/wiring_analog.c $(ARDUINO_CORE)/wiring_digital.c \
 	$(ARDUINO_CORE)/wiring_pulse.c \
 	$(ARDUINO_CORE)/wiring_shift.c $(ARDUINO_CORE)/WInterrupts.c \
-	$(shell ls *.c)
+	$(wildcard *.c)
 
 CXXSRC = $(ARDUINO_CORE)/HardwareSerial.cpp $(ARDUINO_CORE)/WMath.cpp \
 	$(ARDUINO_CORE)/WString.cpp $(ARDUINO_CORE)/Print.cpp \
 	$(foreach l,$(ARDLIBS),$(ARDUINO_DIR)/libraries/$l/$l.cpp) \
 	$(foreach l,$(USERLIBS),$(HOME)/sketchbook/libraries/$l/$l.cpp) \
-	$(shell ls *.cpp)
+	$(wildcard *.cpp)
 
 # Tried to use patsubst, but gmake ignores the second occurrence of %.
 # http://www.mail-archive.com/bug-make@gnu.org/msg00426.html
