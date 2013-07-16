@@ -32,7 +32,7 @@ DataChannel Channel4 = DataChannel(INACTIVE_TYPE);
 // Public Methods //////////////////////////////////////////////////////////////
 void DStream::Initialize()
 {
-    TCCR2A = 0;	    // clear control register A
+    TCCR2A = 0;     // clear control register A
     // set mode 8: phase and frequency correct pwm, stop the timer
     TCCR2B = _BV(WGM13);
 }
@@ -178,8 +178,8 @@ void DStream::CreateBurstChannel(unsigned long us_period)
         t2bits = _BV(CS20) | _BV(CS21) | _BV(CS22);  // prescale by /1024
     else
         cycles = T2_RESOLUTION - 1;
-        // request was out of bounds, set as maximum
-        t2bits = _BV(CS20) | _BV(CS21) | _BV(CS22);
+    // request was out of bounds, set as maximum
+    t2bits = _BV(CS20) | _BV(CS21) | _BV(CS22);
 
     OCR2A = cycles;     // ICR1 is TOP in p & f correct pwm mode
     TCCR2B &= ~(_BV(CS20) | _BV(CS21) | _BV(CS22));

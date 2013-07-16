@@ -65,7 +65,7 @@ public:
     void Stop();
     void Pause();
     void Resume();
-    
+
     //TODO: change second parameter to ms_period
     void CreateStreamChannel(uint8_t nb, unsigned long ms_period);
     void CreateExternalChannel(uint8_t nb, uint8_t edge);
