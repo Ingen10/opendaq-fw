@@ -10,7 +10,7 @@
 # Detailed instructions for using this Makefile:
 #
 #  1. Copy this file into the folder with your sketch.
-#	  There should be a file with the extension .pde (e.g. blink.pde).
+#	  There should be a file with the extension .ino (e.g. blink.ino).
 #	  cd into this directory.
 #
 #  2. Below, modify the line containing "TARGET" to refer to the name of
@@ -183,26 +183,27 @@ ALL_CXXFLAGS = -mmcu=$(MCU) -I. $(CXXFLAGS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 # Default target.
-all: applet_files build sizeafter
+all: build sizeafter
 
 test:
 	@echo CXXSRC = $(CXXSRC)
 
 build: elf hex 
 
-applet_files: $(TARGET).pde
+applet/$(TARGET).cpp: $(TARGET).ino
 	# Here is the "preprocessing".
-	# It creates a .cpp file based with the same name as the .pde file.
+	# It creates a .cpp file based with the same name as the .ino file.
 	# On top of the new .cpp file comes the WProgram.h header.
 	# At the end there is a generic main() function attached,
 	# plus special magic to get around the pure virtual error
 	# undefined reference to `__cxa_pure_virtual' from Print.o.
 	# Then the .cpp file will be compiled. Errors during compile will
 	# refer to this new, automatically generated, file. 
-	# Not the original .pde file you actually edit...
+	# Not the original .ino file you actually edit...
+
 	test -d applet || mkdir applet
 	echo '#include "Arduino.h"' > applet/$(TARGET).cpp
-	cat $(TARGET).pde >> applet/$(TARGET).cpp
+	cat $(TARGET).ino >> applet/$(TARGET).cpp
 	echo 'extern "C" void __cxa_pure_virtual() { while (1) ; }' >> applet/$(TARGET).cpp
 	cat $(ARDUINO_CORE)/main.cpp >> applet/$(TARGET).cpp
 
@@ -257,7 +258,7 @@ extcoff: $(TARGET).elf
 	$(NM) -n $< > $@
 
 	# Link: create ELF output file from library.
-applet/$(TARGET).elf: $(TARGET).pde applet/core.a 
+applet/$(TARGET).elf: applet/$(TARGET).cpp applet/core.a 
 	$(CC) $(ALL_CFLAGS) -o $@ applet/$(TARGET).cpp -L. applet/core.a $(LDFLAGS)
 
 
@@ -311,4 +312,4 @@ depend:
 		>> $(MAKEFILE); \
 	$(CC) -M -mmcu=$(MCU) $(CDEFS) $(CINCS) $(SRC) $(ASRC) >> $(MAKEFILE)
 
-.PHONY:	all build elf hex eep lss sym program coff extcoff clean depend applet_files sizebefore sizeafter
+.PHONY:	all build elf hex eep lss sym program coff extcoff clean depend sizebefore sizeafter
