@@ -4,6 +4,7 @@
 #include "calibration.h"
 #include "datachannel.h"
 #include "odstream.h"
+#include "debug.h"
 
 extern DStream ODStream;
 
@@ -17,16 +18,9 @@ void setup()
     Comm.begin();
 
 #ifdef SERIAL_DEBUG
-    Serial.print("*Calibration: ");
-    Serial.println(i, HEX);
-
-    for(i = 0; i < 6; i++) {
-        Serial.print(i, HEX);
-        Serial.print(":  m= ");
-        Serial.print(Cal.gain_m[i], DEC);
-        Serial.print("  b= ");
-        Serial.println(Cal.gain_b[i], DEC);
-    }
+    _DEBUG("Calibration: %X\n", i);
+    for(i = 0; i < 6; i++)
+        _DEBUG("%X: m=%d b=%d\n", i, Cal.gain_m[i], Cal.gain_b[i]);
 #endif
 
     delay(100);
@@ -34,11 +28,7 @@ void setup()
     delay(100);
     SetAnalogVoltage(900);
 
-#ifdef SERIAL_DEBUG
-    Serial.print("memory");
-    Serial.print("< ");
-    Serial.println(availableMemory(), DEC);
-#endif
+    _DEBUG("memory < %d\n", availableMemory());
 
     ledSet(LEDGREEN, 1);
     ledSet(LEDRED, 0);

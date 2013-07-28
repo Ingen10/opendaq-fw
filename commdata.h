@@ -22,8 +22,6 @@
 #ifndef COMMDATA_H
 #define COMMDATA_H
 
-//#define SERIAL_DEBUG
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>

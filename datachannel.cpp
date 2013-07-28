@@ -20,6 +20,7 @@
  */
 
 #include "datachannel.h"
+#include "debug.h"
 
 extern "C" {
 #include <stdlib.h>
@@ -342,8 +343,6 @@ void DataChannel::Initialize()
     bufferlen = 150;
     databuffer = (signed int*) malloc( bufferlen * sizeof(int));
 
-#ifdef SERIAL_DEBUG
     if(databuffer == NULL)
-        Serial.println("error malloc");
-#endif
+        _DEBUG("malloc error\n");
 }

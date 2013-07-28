@@ -20,6 +20,7 @@
  */
 
 #include "commdata.h"
+#include "debug.h"
 #include "mcp23s17.h"
 
 extern "C" {
@@ -28,6 +29,7 @@ extern "C" {
 }
 
 #define MAXSIZE 60
+
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -110,10 +112,7 @@ void CommDataClass::parseInput(int fl)
     if(fl)
         inputData = UDR0;
 
-#ifdef SERIAL_DEBUG
-    Serial.print(inputData, HEX);
-    Serial.print(" ");
-#endif
+    _DEBUG("%X ", inputData);
 
     input_data[received_bytes] = inputData;
     received_bytes++;
@@ -161,9 +160,6 @@ void CommDataClass::processStream(void)
     byte response[MAX_DATA_BYTES];
     int len;
     int i, j;
-#ifdef SERIAL_DEBUG
-    char text[50];
-#endif
 
     for (i=1; i<5; i++) {
         if ((i == 1 || i == 4) && (channels[i].dcmode != ANALOG_OUTPUT))
@@ -173,21 +169,16 @@ void CommDataClass::processStream(void)
             len = channels[i].writeindex - channels[i].readindex;
             len = (len > MAXSIZE) ? MAXSIZE : len;
 
-#ifdef SERIAL_DEBUG
-            Serial.println("Processing Stream");
-            Serial.print(len, DEC);
-            sprintf(text, " *%d-(w%d, r%d, ndata:%d, state:%d): [", i,
+            _DEBUG("Processing stream");
+            _DEBUG(" *%d-(w%d, r%d, ndata:%d, state:%d): [", i,
                     channels[i].writeindex, channels[i].readindex,
                     channels[i].ndata, channels[i].state);
-            Serial.write(text);
-
-            for(j = 0; j < len; j++) {
-                value = channels[i].Get();
-                Serial.print(value, DEC);
-                Serial.print(" ");
-            }
-            Serial.println("]");
+#ifdef SERIAL_DEBUG
+            for(j = 0; j < len; j++)
+                _DEBUG("%d ", channels[i].Get());
+            _DEBUG("]");
 #else
+
             resp_len = 4 + 2 * len;
 
             for(j = 0; j < len; j++) {
@@ -249,33 +240,15 @@ void CommDataClass::processCommand(void)
     uint32_t aux32;
     byte response[MAX_DATA_BYTES];
 #ifdef SERIAL_DEBUG
-    char debug_text[50];
-#endif
-
-#ifdef SERIAL_DEBUG
     float f;
 
-    Serial.println();
-
-    Serial.print("crc16: ");
-    Serial.print(my_crc16, HEX);
-    Serial.print(" <> ");
-    Serial.println(CRC_16(max_data + 2, input_data + 2), HEX);
-
-    Serial.print("Command: ");
-    Serial.println(next_command, HEX);
-    Serial.print("bytes: ");
-    Serial.println(max_data, HEX);
-
-    for(i = 0; i < max_data; i += 2) {
-        tdata = make16(input_data + i + 4);
-        Serial.print(tdata, HEX);
-        Serial.print(" ");
-    }
-    Serial.println();
+    _DEBUG("crc16: %X <> %X\n", my_crc16, CRC_16(max_data + 2, input_data + 2));
+    _DEBUG("command: %X\n", next_command);
+    _DEBUG("bytes: %X\n", max_data);
+    for(i = 0; i < max_data; i += 2)
+        _DEBUG("%X ", make16(input_data + i + 4));
+    _DEBUG("\n");
 #endif
-
-    //response = (byte*) calloc(16,sizeof(byte));
 
     switch(next_command) {
     case C_AIN:
@@ -285,19 +258,12 @@ void CommDataClass::processCommand(void)
         value = ReadNADC(my_nsamples);
         response[4] = make8(value, 1);
         response[5] = make8(value, 0);
-#ifdef SERIAL_DEBUG
-        print_debug("AIN: %d\nP: %d\nN: %d\nGAIN: %d\nNSAMPLES: %d 
-        Serial.print("AIN: ");
-        Serial.println(value, DEC);
-        Serial.print("P: ");
-        Serial.print(my_chp, DEC);
-        Serial.print(" N: ");
-        Serial.print(my_chn, DEC);
-        Serial.print(" GAIN: ");
-        Serial.print(my_gain, DEC);
-        Serial.print(" nSAMPLES: ");
-        Serial.println(my_nsamples, DEC);
-#endif
+
+        _DEBUG("AIN: %d\n", value);
+        _DEBUG("P: %d ", my_chp);
+        _DEBUG("N: %d ", my_chn);
+        _DEBUG("GAIN: %d ", my_gain);
+        _DEBUG("NSAMPLES: %d\n", my_nsamples);
         break;
 
     case C_AIN_CFG:
@@ -322,18 +288,11 @@ void CommDataClass::processCommand(void)
         response[8] = my_gain;
         response[9] = my_nsamples;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("AIN_CFG: ");
-        Serial.println(value, DEC);
-        Serial.print("P: ");
-        Serial.print(my_chp, DEC);
-        Serial.print(" N: ");
-        Serial.print(my_chn, DEC);
-        Serial.print(" GAIN: ");
-        Serial.print(my_gain, DEC);
-        Serial.print(" nSAMPLES: ");
-        Serial.println(my_nsamples, DEC);
-#endif
+        _DEBUG("AIN_CFG: %d\n", value);
+        _DEBUG("P: %d ", my_chp);
+        _DEBUG("N: %d ", my_chn);
+        _DEBUG("GAIN: %d ", my_gain);
+        _DEBUG("NSAMPLES: %d\n", my_nsamples);
         break;
 
     case C_SET_DAC:
@@ -344,10 +303,7 @@ void CommDataClass::processCommand(void)
         response[4] = make8(my_vout, 1);
         response[5] = make8(my_vout, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_SET_DAC: ");
-        Serial.println(my_vout, DEC);
-#endif
+        _DEBUG("C_SET_DAC: %d\n", my_vout);
         break;
 
     case C_SET_ANALOG:
@@ -358,10 +314,7 @@ void CommDataClass::processCommand(void)
         response[4] = make8(my_vout, 1);
         response[5] = make8(my_vout, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_SET_Analog: ");
-        Serial.println(my_vout, DEC);
-#endif
+        _DEBUG("C_SET_ANALOG: %d\n", my_vout);
         break;
 
         ///// PIO & PORT COMMANDS  /////////////////////////////////////
@@ -379,12 +332,7 @@ void CommDataClass::processCommand(void)
         response[4] = i;
         response[5] = j;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_PIO ");
-        Serial.print(i, DEC);
-        Serial.print(": ");
-        Serial.println(j, DEC);
-#endif
+        _DEBUG("C_PIO: %d: %d\n", i, j);
         break;
 
     case C_PIO_DIR:
@@ -405,12 +353,7 @@ void CommDataClass::processCommand(void)
         response[4] = i;
         response[5] = j;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_PIO_DIR ");
-        Serial.print(i, DEC);
-        Serial.print(": ");
-        Serial.println(j, DEC);
-#endif
+        _DEBUG("C_PIO_DIR: %d: %d\n", i, j);
         break;
 
 
@@ -427,10 +370,7 @@ void CommDataClass::processCommand(void)
 
         response[4] = j;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_PORT: ");
-        Serial.println(j, HEX);
-#endif
+        _DEBUG("C_PORT: %d\n", j);
         break;
 
     case C_PORT_DIR:
@@ -444,10 +384,7 @@ void CommDataClass::processCommand(void)
 
         response[4] = j;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_PORT_DIR: ");
-        Serial.println(j, HEX);
-#endif
+        _DEBUG("C_PORT_DIR: %d\n", j);
         break;
 
         ///// EEPROM COMMANDS         /////////////////////////////////////
@@ -462,12 +399,7 @@ void CommDataClass::processCommand(void)
         response[4] = i;
         response[5] = j;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("EEPROM_WRITE: [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] = ");
-        Serial.println(j, DEC);
-#endif
+        _DEBUG("EEPROM_WRITE: [%d] = %d\n", i, j);
         break;
 
     case C_EEPROM_READ:
@@ -479,12 +411,7 @@ void CommDataClass::processCommand(void)
         response[4] = i;
         response[5] = j;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("EEPROM_READ: [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] = ");
-        Serial.println(j, DEC);
-#endif
+        _DEBUG("EEPROM_READ: [%d] = %d\n", i, j);
         break;
 
     case C_ID_CONFIG:
@@ -509,13 +436,7 @@ void CommDataClass::processCommand(void)
         aux32 = (my_id & 0X000000FF);
         response[9] = aux32;
 
-#ifdef SERIAL_DEBUG
-        Serial.println("C_ID_CONFIG: ");
-        Serial.print("ID =  ");
-        Serial.print(my_id, DEC);
-        Serial.print("   x");
-        Serial.println(my_id, HEX);
-#endif
+        _DEBUG("C_ID_CONFIG: ID = %d  x%X\n", my_id, my_id);
         break;
 
     case C_GET_CALIB:
@@ -546,17 +467,8 @@ void CommDataClass::processCommand(void)
         response[8] = make8(value, 0);
 
 #ifdef SERIAL_DEBUG
-        Serial.println("C_xxx_CALIB: ");
-        Serial.print("g");
-        Serial.print(i, DEC);
-        Serial.print(":  m=");
-        f = tdata;
-        f /= 10000.0;
-        Serial.print(f, 5);
-        Serial.print(" (m=");
-        Serial.print(tdata);
-        Serial.print(") : b=");
-        Serial.println(value);
+        f = tdata/10000.0;
+        _DEBUG("C_xxx_CALIB: g%d: m=%f (m=%d) : b=%d\n", i, f, tdata, value);
 #endif
         break;
 
@@ -568,10 +480,7 @@ void CommDataClass::processCommand(void)
         counterInit(i);
         response[4] = i;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_COUNTER_INIT: f_");
-        Serial.println(i, DEC);
-#endif
+        _DEBUG("C_COUNTER_INIT: f_%d\n", i);
         break;
 
     case C_GET_COUNTER:
@@ -582,10 +491,7 @@ void CommDataClass::processCommand(void)
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_GET_COUNTER: ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_GET_COUNTER: %d\n", tdata);
         break;
 
         ///// PWM COMMANDS       /////////////////////////////////////
@@ -601,12 +507,7 @@ void CommDataClass::processCommand(void)
         response[6] = make8(tdata, 1);
         response[7] = make8(tdata, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_PWM_INIT: f_ ");
-        Serial.print(tdata, DEC);
-        Serial.print(" , duty_ ");
-        Serial.println(value, DEC);
-#endif
+        _DEBUG("C_PWM_INIT: f_ %d , duty_ %d\n", tdata, value);
         break;
 
     case C_PWM_DUTY:
@@ -618,20 +519,16 @@ void CommDataClass::processCommand(void)
         response[4] = make8(value, 1);
         response[5] = make8(value, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_PWM_DUTY: ");
-        Serial.println(value, DEC);
-#endif
+        _DEBUG("C_PWM_DUTY: %d\n", value);
         break;
 
     case C_PWM_STOP:
         resp_len = 0;
 
         PwmStop();
-#ifdef SERIAL_DEBUG
-        Serial.println("C_PWM_STOP");
-#endif
+        _DEBUG("C_PWM_STOP");
         break;
+
         ///// CAPTURE COMMANDS        //////////////////////////////////////
     case C_CAPTURE_INIT:
         resp_len = 2;
@@ -641,19 +538,14 @@ void CommDataClass::processCommand(void)
         response[5] = make8(tdata, 0);
 
         captureInit(tdata);
-#ifdef SERIAL_DEBUG
-        Serial.print("C_CAPTURE_INIT: T = ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_CAPTURE_INIT: T = %d\n", tdata);
         break;
 
     case C_CAPTURE_STOP:
         resp_len = 0;
 
         captureStop();
-#ifdef SERIAL_DEBUG
-        Serial.println("C_CAPTURE_STOP");
-#endif
+        _DEBUG("C_CAPTURE_STOP");
         break;
 
     case C_GET_CAPTURE:
@@ -665,12 +557,7 @@ void CommDataClass::processCommand(void)
         response[5] = make8(tdata, 1);
         response[6] = make8(tdata, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_GET_CAPTURE (");
-        Serial.print(i, DEC);
-        Serial.print("):  ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_GET_CAPTURE (%d): %d\n", i, tdata);
         break;
 
         ///// ENCODER COMMANDS        //////////////////////////////////////
@@ -681,19 +568,14 @@ void CommDataClass::processCommand(void)
         response[4] = value;
 
         encoder.Start(value);
-#ifdef SERIAL_DEBUG
-        Serial.print("C_ENCODEER_INIT: T = ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_ENCODER_INIT: T = %d\n", i, tdata);
         break;
 
     case C_ENCODER_STOP:
         resp_len = 0;
 
         encoder.Stop();
-#ifdef SERIAL_DEBUG
-        Serial.println("C_ENCODER_STOP");
-#endif
+        _DEBUG("C_ENCODER_STOP");
         break;
 
     case C_GET_ENCODER:
@@ -703,12 +585,7 @@ void CommDataClass::processCommand(void)
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_GET_ENCODER (");
-        Serial.print(i, DEC);
-        Serial.print("):  ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_GET_ENCODER: (%d): %d\n", i, tdata);
         break;
 
         ///// STREAM CONTROL COMMANDS      ///////////////////////////////////
@@ -724,12 +601,7 @@ void CommDataClass::processCommand(void)
 
         ODStream.CreateStreamChannel(i, tdata);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_STREAM_CREATE [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] => f(ms)= ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_STREAM_CREATE [ %d ] => f(ms)= %d\n", i, tdata);
         break;
 
     case C_BURST_CREATE:
@@ -742,50 +614,35 @@ void CommDataClass::processCommand(void)
 
         ODStream.CreateBurstChannel(tdata);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_BURST_CREATE => f(us)= ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_BURST_CREATE => f(us)= %d\n", tdata);
         break;
 
     case C_EXTERNAL_CREATE:
         resp_len = 2;
 
         i = input_data[4];
-        if(max_data > 1)
-            j = input_data[5];
-        else
-            j = 1;
+        j = (max_data > 1) ? input_data[5] : 1;
 
         response[4] = i;
         response[5] = j;
 
         ODStream.CreateExternalChannel(i, j);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_EXTERNAL_CREATE [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] => edge= ");
-        Serial.println(j, DEC);
-#endif
+        _DEBUG("C_EXTERNAL_CREATE [ %d ] => edge= %d\n", i, j);
         break;
 
     case C_STREAM_START:
         resp_len = 0;
 
         ODStream.Start();
-#ifdef SERIAL_DEBUG
-        Serial.println("C_STREAM_START");
-#endif
+        _DEBUG("C_STREAM_START\n");
         break;
 
     case C_STREAM_STOP:
         resp_len = 0;
 
         ODStream.Stop();
-#ifdef SERIAL_DEBUG
-        Serial.println("C_STREAM_STOP");
-#endif
+        _DEBUG("C_STREAM_STOP\n");
         break;
 
 
@@ -796,10 +653,7 @@ void CommDataClass::processCommand(void)
         response[4] = i;
 
         ODStream.FlushChan(i);
-#ifdef SERIAL_DEBUG
-        Serial.println("C_CHANNEL_FLUSH: ");
-        Serial.println(i, DEC);
-#endif
+        _DEBUG("C_CHANNEL_FLUSH: %d\n", i);
         break;
 
 
@@ -810,10 +664,7 @@ void CommDataClass::processCommand(void)
         response[4] = i;
 
         ODStream.DeleteExperiments(i);
-#ifdef SERIAL_DEBUG
-        Serial.println("C_CHANNEL_DESTROY: ");
-        Serial.println(i, DEC);
-#endif
+        _DEBUG("C_CHANNEL_DESTROY: %d\n", i);
         break;
 
         ///// DATA CHANNEL CONFIGURATION        //////////////////////////////////////
@@ -831,14 +682,7 @@ void CommDataClass::processCommand(void)
 
         ODStream.SetupChan(i, tdata, j);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_CHANNEL_SETUP [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] => Nb= ");
-        Serial.print(tdata, DEC);
-        Serial.print(" repeat= ");
-        Serial.println(j, DEC);
-#endif
+        _DEBUG("C_CHANNEL_SETUP [ %d ] => Nb= %d repeat=%d\n", i, tdata, j);
         break;
 
 
@@ -863,18 +707,8 @@ void CommDataClass::processCommand(void)
 
         ODStream.ConfigChan(i, my_mode, my_chp, my_chn, my_gain);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_CHANNEL_CFG [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] => mode: ");
-        Serial.print(my_mode, DEC);
-        Serial.print(" P: ");
-        Serial.print(my_chp, DEC);
-        Serial.print(" N: ");
-        Serial.print(my_chn, DEC);
-        Serial.print(" GAIN: ");
-        Serial.println(my_gain, DEC);
-#endif
+        _DEBUG("C_CHANNEL_CFG [ %d ] => mode: %d P: %d N: %d GAIN: %d\n",
+                i, my_mode, my_chp, my_chn, my_gain);
         break;
 
     case C_TRIGGER_SETUP:
@@ -891,15 +725,7 @@ void CommDataClass::processCommand(void)
 
         ODStream.TriggerMode(i, j, tdata);
 
-
-#ifdef SERIAL_DEBUG
-        Serial.print("C_TRIGGER_SETUP [ ");
-        Serial.print(i, DEC);
-        Serial.print(" ] => mode= ");
-        Serial.print(j, DEC);
-        Serial.print(" value= ");
-        Serial.println(tdata, DEC);
-#endif
+        _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\n", i, j, tdata);
         break;
 
     case C_SIGNAL_LOAD:
@@ -939,10 +765,8 @@ void CommDataClass::processCommand(void)
         response[4] = i;
         ledSet(LEDGREEN, i & 0x01);
         ledSet(LEDRED, i & 0x02);
-#ifdef SERIAL_DEBUG
-        Serial.print("C_LED_W: ");
-        Serial.println(i, HEX);
-#endif
+
+        _DEBUG("C_LED_W: %d\n", i);
         break;
 
     case C_RESET:
@@ -953,13 +777,10 @@ void CommDataClass::processCommand(void)
         response[2] = C_RESET;
         response[3] = 0;
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_LED_W: ");
-        Serial.println(i, HEX);
-#else
+        _DEBUG("C_RESET\n");
+#ifndef SERIAL_DEBUG
         sendCommand(response, resp_len + 4);
 #endif
-
         systemReset();
         break;
 
@@ -973,29 +794,23 @@ void CommDataClass::processCommand(void)
         for (i = 0; i < tdata; i++)
             _delay_ms(1);
 
-#ifdef SERIAL_DEBUG
-        Serial.print("C_WAIT_MS: ");
-        Serial.println(tdata);
-#endif
-
+        _DEBUG("C_WAIT_MS: %d\n", tdata);
         break;
 
     case C_MCP23S17:
-	/* Use some PIOs as a SPI port
-	 * for controlling a MCP23S17 port expander:
-	 * PIO1: CLK
-	 * PIO2: MOSI
-	 * PIO4: SS
-	 */
+        /* Emulate an SPI port using some PIOs for controlling a MCP23S17
+         * port expander: PIO1=CLK, PIO2=MOSI, PIO4=SS */
         tdata = make16(input_data + 4);
 
-	SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
-	mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
-	mcp23s17_write(PIO4, GPIO, tdata);  // write 16 bits to GPIOs
+        SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
+        mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
+        mcp23s17_write(PIO4, GPIO, tdata);  // write 16 bits to GPIOs
 
         resp_len = 2;
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
+
+        _DEBUG("C_MCP23S17: %d\n", tdata);
         break;
 
     case NACK:
@@ -1011,22 +826,16 @@ void CommDataClass::processCommand(void)
     response[1] = make8(my_crc16, 0);
 
 #ifdef SERIAL_DEBUG
-    Serial.print("Response: ");
-    for(i = 0; i < resp_len + 4; i++) {
-        Serial.print(response[i], HEX);
-        Serial.print(" ");
-    }
-    Serial.println();
-    Serial.println("*************");
-    Serial.println();
+    _DEBUG("Response: ");
+    for(i = 0; i < resp_len + 4; i++)
+        _DEBUG("%X ", response[i]);
+
+    _DEBUG("\n*************\n");
+
 #else
-    //sendCommand(resp_len+4);
-    for(i = 0; i < resp_len + 4; i++) {
+    for(i = 0; i < resp_len + 4; i++)
         Serial.write(response[i]);
-    }
 #endif
-    //free(response);
-    //response=NULL;
 }
 
 
