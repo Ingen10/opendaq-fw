@@ -55,11 +55,6 @@ public:
 
     int usingch;
 
-    /*!
-    They initialize the channel
-    \param void
-    \return void
-    */
     void Initialize();
     void Start();
     void Stop();
@@ -75,8 +70,8 @@ public:
     void ConfigChan(uint8_t nb, int mode);
     void ConfigChan(uint8_t nb, int mode, int pchan, int nchan);
     void ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain);
-    void ConfigChan(uint8_t nb, int mode, int pchan, int nchan,
-                    int gain, int nsamples);
+    void ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain,
+            int nsamples);
     void ConfigChan(uint8_t nb, int mode, int channel);
 
     void TriggerMode(uint8_t nb, int trigger_mode, int16_t trigger_value);

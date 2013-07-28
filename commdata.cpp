@@ -39,7 +39,7 @@ CommDataClass::CommDataClass(void)
     my_gain = 1;
     my_mode = 0;
 
-    crcEnabled = 0;
+    crc_enabled = 0;
 
     systemReset();
 }
@@ -93,11 +93,11 @@ int CommDataClass::checkCRC()
     int i;
     unsigned int check, suma = 0;
 
-    if(!crcEnabled)
+    if(!crc_enabled)
         return 1;
 
-    for(i = 2; i < receivedBytes; i++)
-        suma += storedInputData[i];
+    for(i = 2; i < received_bytes; i++)
+        suma += input_data[i];
 
     return (my_crc16 == suma);
 }
@@ -115,326 +115,131 @@ void CommDataClass::parseInput(int fl)
     Serial.print(" ");
 #endif
 
-    storedInputData[receivedBytes] = inputData;
-    receivedBytes++;
-    receivedBytes %= MAX_DATA_BYTES;
+    input_data[received_bytes] = inputData;
+    received_bytes++;
+    received_bytes %= MAX_DATA_BYTES;
 
-    if(receivedBytes == 1)
+    if(received_bytes == 1)
         my_crc16 = inputData << 8;
-    else if(receivedBytes == 2)
+    else if(received_bytes == 2)
         my_crc16 += inputData;
-    else if(receivedBytes == 3)
+    else if(received_bytes == 3)
         next_command = inputData;
-    else if(receivedBytes == 4) {
-        waitForData = inputData;
-        if(waitForData > MAX_DATA_BYTES - 4)
-            waitForData = 0;
-        if ((next_command != C_SIGNAL_LOAD) && (waitForData > 10))
-            waitForData = 0;
-        maxData = waitForData;
-        if(waitForData == 0) {
-            Process_Command();
+    else if(received_bytes == 4) {
+        wait_for_data = inputData;
+        if(wait_for_data > MAX_DATA_BYTES - 4)
+            wait_for_data = 0;
+        if ((next_command != C_SIGNAL_LOAD) && (wait_for_data > 10))
+            wait_for_data = 0;
+        max_data = wait_for_data;
+        if(wait_for_data == 0) {
+            processCommand();
             systemReset();
         }
     } else {
-        if(waitForData > 0)
-            waitForData--;
-        if(waitForData == 0) {
+        if(wait_for_data > 0)
+            wait_for_data--;
+        if(wait_for_data == 0) {
             if(!checkCRC()) {
                 ledSet(LEDGREEN, 0);
                 ledSet(LEDRED, 1);
                 systemReset();
                 return;
             }
-            Process_Command();
+            processCommand();
             systemReset();
         }
     }
 }
 
 
-void CommDataClass::Process_Stream(void)
+void CommDataClass::processStream(void)
 {
     byte resp_len = 0;
     int16_t value;
     unsigned long longvalue;
     byte response[MAX_DATA_BYTES];
     int len;
-    int i;
-
-    if((Channel1.readindex < Channel1.writeindex && \
-            Channel1.dcmode != ANALOG_OUTPUT) ) {
-        len = Channel1.writeindex - Channel1.readindex;
-        len = (len > MAXSIZE) ? MAXSIZE : len;
+    int i, j;
 #ifdef SERIAL_DEBUG
-        Serial.println("Processing Stream");
-        Serial.print(len, DEC);
-
-        Serial.print(" *1-(w");
-        Serial.print(Channel1.writeindex, DEC);
-        Serial.print(", r");
-        Serial.print(Channel1.readindex, DEC);
-
-        Serial.print(", ndata:");
-        Serial.print(Channel1.ndata, DEC);
-        Serial.print(", state:");
-        Serial.print(Channel1.state, DEC);
-        Serial.print("): [ ");
-
-        for(i = 0; i < len; i++) {
-            value = Channel1.Get();
-            Serial.print(value, DEC);
-            Serial.print(" ");
-        }
-        Serial.println("]");
-#else
-        resp_len = 4 + 2 * len;            //TODO: not 4+ but 6+ len
-        //response = (byte*) calloc(4+resp_len,sizeof(byte));
-        for(i = 0; i < len; i++) {
-            value = Channel1.Get();
-            response[8 + 2 * i] = make8(value, 1);
-            response[9 + 2 * i] = make8(value, 0);
-        }
-
-        response[2] = 25;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 1;         //channel #1
-        response[5] = Channel1.pch;
-        response[6] = Channel1.nch;
-        response[7] = Channel1.g;
-
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-        PORTA = PORTA | 0x40;
-        Send_Command(response, resp_len + 4);
-        PORTA = PORTA & ~0x40;
-#endif
-    }
-
-    if(Channel2.readindex < Channel2.writeindex) {
-        len = Channel2.writeindex - Channel2.readindex;
-        len = (len > MAXSIZE) ? MAXSIZE : len;
-#ifdef SERIAL_DEBUG
-        Serial.print(len, DEC);
-
-        Serial.print(" *2-(w");
-        Serial.print(Channel2.writeindex, DEC);
-        Serial.print(", r");
-        Serial.print(Channel2.readindex, DEC);
-
-        Serial.print(", ndata:");
-        Serial.print(Channel2.ndata, DEC);
-        Serial.print(", state:");
-        Serial.print(Channel2.state, DEC);
-        Serial.print("): [ ");
-
-        for(i = 0; i < len; i++) {
-            value = Channel2.Get();
-            Serial.print(value, DEC);
-            Serial.print(" ");
-        }
-        Serial.println("]");
-#else
-        resp_len = 4 + 2 * len;
-
-        for(i = 0; i < len; i++) {
-            value = Channel2.Get();
-            response[8 + 2 * i] = make8(value, 1);
-            response[9 + 2 * i] = make8(value, 0);
-        }
-
-        response[2] = 25;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 2;         //channel #2
-        response[5] = Channel2.pch;
-        response[6] = Channel2.nch;
-        response[7] = Channel2.g;
-
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-
-        PORTA = PORTA | 0x40;
-        Send_Command(response, resp_len + 4);
-        PORTA = PORTA & ~0x40;
-#endif
-    }
-
-    if(Channel3.readindex < Channel3.writeindex) {
-        len = Channel3.writeindex - Channel3.readindex;
-        len = (len > MAXSIZE) ? MAXSIZE : len;
-
-#ifdef SERIAL_DEBUG
-        Serial.print(len, DEC);
-
-        Serial.print(" *3-(w");
-        Serial.print(Channel3.writeindex, DEC);
-        Serial.print(", r");
-        Serial.print(Channel3.readindex, DEC);
-
-        Serial.print(", ndata:");
-        Serial.print(Channel3.ndata, DEC);
-        Serial.print(", state:");
-        Serial.print(Channel3.state, DEC);
-        Serial.print("): [ ");
-
-        for(i = 0; i < len; i++) {
-            value = Channel3.Get();
-            Serial.print(value, DEC);
-            Serial.print(" ");
-        }
-        Serial.println("]");
-#else
-        resp_len = 4 + 2 * len;
-        //response = (byte*) calloc(4+resp_len,sizeof(byte));
-        for(i = 0; i < len; i++) {
-            value = Channel3.Get();
-            response[8 + 2 * i] = make8(value, 1);
-            response[9 + 2 * i] = make8(value, 0);
-        }
-
-        response[2] = 25;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 3;         //channel #3
-        response[5] = Channel3.pch;
-        response[6] = Channel3.nch;
-        response[7] = Channel3.g;
-
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-
-        PORTA = PORTA | 0x40;
-        Send_Command(response, resp_len + 4);
-        PORTA = PORTA & ~0x40;
+    char text[50];
 #endif
 
-    }
+    for (i=1; i<5; i++) {
+        if ((i == 1 || i == 4) && (channels[i].dcmode != ANALOG_OUTPUT))
+            continue;
 
-    if(Channel4.readindex < Channel4.writeindex && \
-            Channel4.dcmode != ANALOG_OUTPUT) {
-        len = Channel4.writeindex - Channel4.readindex;
-        len = (len > MAXSIZE) ? MAXSIZE : len;
+        if(channels[i].readindex < channels[i].writeindex) {
+            len = channels[i].writeindex - channels[i].readindex;
+            len = (len > MAXSIZE) ? MAXSIZE : len;
+
 #ifdef SERIAL_DEBUG
-        Serial.print(len, DEC);
+            Serial.println("Processing Stream");
+            Serial.print(len, DEC);
+            sprintf(text, " *%d-(w%d, r%d, ndata:%d, state:%d): [", i,
+                    channels[i].writeindex, channels[i].readindex,
+                    channels[i].ndata, channels[i].state);
+            Serial.write(text);
 
-        Serial.print(" *4-(w");
-        Serial.print(Channel4.writeindex, DEC);
-        Serial.print(", r");
-        Serial.print(Channel4.readindex, DEC);
-
-        Serial.print(", ndata:");
-        Serial.print(Channel4.ndata, DEC);
-        Serial.print(", state:");
-        Serial.print(Channel4.state, DEC);
-        Serial.print("): [ ");
-
-        for(i = 0; i < len; i++) {
-            value = Channel4.Get();
-            Serial.print(value, DEC);
-            Serial.print(" ");
-        }
-        Serial.println("]");
+            for(j = 0; j < len; j++) {
+                value = channels[i].Get();
+                Serial.print(value, DEC);
+                Serial.print(" ");
+            }
+            Serial.println("]");
 #else
-        resp_len = 4 + 2 * len;
-        //response = (byte*) calloc(4+resp_len,sizeof(byte));
-        for(i = 0; i < len; i++) {
-            value = Channel4.Get();
-            response[8 + 2 * i] = make8(value, 1);
-            response[9 + 2 * i] = make8(value, 0);
-        }
+            resp_len = 4 + 2 * len;
 
-        response[2] = 25;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 4;         //channel #4
-        response[5] = Channel4.pch;
-        response[6] = Channel4.nch;
-        response[7] = Channel4.g;
+            for(j = 0; j < len; j++) {
+                value = channels[i].Get();
+                response[8 + 2 * j] = make8(value, 1);
+                response[9 + 2 * j] = make8(value, 0);
+            }
 
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
+            response[2] = 25;
+            response[3] = resp_len;  //number of bytes
+            response[4] = i;         //channel #
+            response[5] = channels[i].pch;
+            response[6] = channels[i].nch;
+            response[7] = channels[i].g;
 
-        PORTA = PORTA | 0x40;
-        Send_Command(response, resp_len + 4);
-        PORTA = PORTA & ~0x40;
+            my_crc16 = CRC_16(resp_len + 2, response + 2);
+            response[0] = make8(my_crc16, 1);
+            response[1] = make8(my_crc16, 0);
+
+            PORTA = PORTA | 0x40;
+            sendCommand(response, resp_len + 4);
+            PORTA = PORTA & ~0x40;
 #endif
-
+        }
     }
 
     //End-of-experiment check
-    if(Channel1.writeindex > 0  && \
-            Channel1.writeindex == Channel1.readindex && \
-            Channel1.endReached()) {
-        //send stop
-        resp_len = 1;
-        response[2] = 80;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 1;         //channel #1
+    for (i=1; i<5; i++) {
+        if(channels[i].writeindex > 0  &&
+                channels[i].writeindex == channels[i].readindex &&
+                channels[i].endReached()) {
+            //send stop
+            resp_len = 1;
+            response[2] = 80;
+            response[3] = resp_len;  //number of bytes
+            response[4] = 1;         //channel #1
 
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-        Send_Command(response, resp_len + 4);
+            my_crc16 = CRC_16(resp_len + 2, response + 2);
+            response[0] = make8(my_crc16, 1);
+            response[1] = make8(my_crc16, 0);
+            sendCommand(response, resp_len + 4);
 
-        Channel1.reset();
+            channels[i].reset();
+        }
     }
-    if(Channel2.writeindex > 0 && \
-            Channel2.writeindex == Channel2.readindex && \
-            Channel2.endReached()) {
-        //send stop
-        resp_len = 1;
-        response[2] = 80;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 2;         //channel #2
-
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-        Send_Command(response, resp_len + 4);
-
-        Channel2.reset();
-    }
-    if(Channel3.writeindex > 0   && Channel3.writeindex == Channel3.readindex && Channel3.endReached()) {
-        //send stop
-        resp_len = 1;
-        response[2] = 80;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 3;         //channel #3
-
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-        Send_Command(response, resp_len + 4);
-
-        Channel3.reset();
-    }
-    if(Channel4.writeindex > 0   && Channel4.writeindex == Channel4.readindex && Channel4.endReached()) {
-        //send stop
-        resp_len = 1;
-        response[2] = 80;
-        response[3] = resp_len;  //number of bytes
-        response[4] = 4;         //channel #4
-
-        my_crc16 = CRC_16(resp_len + 2, response + 2);
-        response[0] = make8(my_crc16, 1);
-        response[1] = make8(my_crc16, 0);
-        Send_Command(response, resp_len + 4);
-
-        Channel4.reset();
-    }
-    /*
-    free(response);
-    response=NULL;
-    */
 }
 
 
 
 // Private Methods /////////////////////////////////////////////////////////////
 
-void CommDataClass::Process_Command(void)
+void CommDataClass::processCommand(void)
 {
     byte i, j;
     uint16_t tdata;
@@ -443,6 +248,9 @@ void CommDataClass::Process_Command(void)
     int16_t value;
     uint32_t aux32;
     byte response[MAX_DATA_BYTES];
+#ifdef SERIAL_DEBUG
+    char debug_text[50];
+#endif
 
 #ifdef SERIAL_DEBUG
     float f;
@@ -452,15 +260,15 @@ void CommDataClass::Process_Command(void)
     Serial.print("crc16: ");
     Serial.print(my_crc16, HEX);
     Serial.print(" <> ");
-    Serial.println(CRC_16(maxData + 2, storedInputData + 2), HEX);
+    Serial.println(CRC_16(max_data + 2, input_data + 2), HEX);
 
     Serial.print("Command: ");
     Serial.println(next_command, HEX);
     Serial.print("bytes: ");
-    Serial.println(maxData, HEX);
+    Serial.println(max_data, HEX);
 
-    for(i = 0; i < maxData; i += 2) {
-        tdata = make16(storedInputData + i + 4);
+    for(i = 0; i < max_data; i += 2) {
+        tdata = make16(input_data + i + 4);
         Serial.print(tdata, HEX);
         Serial.print(" ");
     }
@@ -478,6 +286,7 @@ void CommDataClass::Process_Command(void)
         response[4] = make8(value, 1);
         response[5] = make8(value, 0);
 #ifdef SERIAL_DEBUG
+        print_debug("AIN: %d\nP: %d\nN: %d\nGAIN: %d\nNSAMPLES: %d 
         Serial.print("AIN: ");
         Serial.println(value, DEC);
         Serial.print("P: ");
@@ -494,12 +303,12 @@ void CommDataClass::Process_Command(void)
     case C_AIN_CFG:
         resp_len = 6;
 
-        my_chp = storedInputData[4];
-        my_chn = storedInputData[5];
-        if(maxData > 2)
-            my_gain = storedInputData[6];
-        if(maxData > 3)
-            my_nsamples = storedInputData[7];
+        my_chp = input_data[4];
+        my_chn = input_data[5];
+        if(max_data > 2)
+            my_gain = input_data[6];
+        if(max_data > 3)
+            my_nsamples = input_data[7];
 
         ConfigAnalog(my_chp, my_chn, my_gain);
 
@@ -530,7 +339,7 @@ void CommDataClass::Process_Command(void)
     case C_SET_DAC:
         resp_len = 2;
 
-        my_vout = make16(storedInputData + 4);
+        my_vout = make16(input_data + 4);
         SetAnalogVoltage(my_vout);
         response[4] = make8(my_vout, 1);
         response[5] = make8(my_vout, 0);
@@ -544,7 +353,7 @@ void CommDataClass::Process_Command(void)
     case C_SET_ANALOG:
         resp_len = 2;
 
-        my_vout = make16(storedInputData + 4);
+        my_vout = make16(input_data + 4);
         SetDacOutput(my_vout);
         response[4] = make8(my_vout, 1);
         response[5] = make8(my_vout, 0);
@@ -560,9 +369,9 @@ void CommDataClass::Process_Command(void)
     case C_PIO:
         resp_len = 2;
 
-        i = storedInputData[4];
-        if(maxData > 1) {
-            j = storedInputData[5];
+        i = input_data[4];
+        if(max_data > 1) {
+            j = input_data[5];
             pioWrite(i - 1, j);
         } else {
             j = pioRead(i - 1);
@@ -581,9 +390,9 @@ void CommDataClass::Process_Command(void)
     case C_PIO_DIR:
         resp_len = 2;
 
-        i = storedInputData[4];
-        if(maxData > 1) {
-            j = storedInputData[5];
+        i = input_data[4];
+        if(max_data > 1) {
+            j = input_data[5];
             if(j != 0)
                 SetpioMode(i - 1, OUTPUT);
             else
@@ -608,9 +417,9 @@ void CommDataClass::Process_Command(void)
     case C_PORT:
         resp_len = 1;
 
-        if(maxData > 0) {
+        if(max_data > 0) {
             //TODO: verificar si los 1 o los 0 son las salidas
-            j = storedInputData[4];
+            j = input_data[4];
             OutputDigital(j);
             j = ReadDigital();
         } else
@@ -627,8 +436,8 @@ void CommDataClass::Process_Command(void)
     case C_PORT_DIR:
         resp_len = 1;
 
-        if(maxData > 0) {
-            j = storedInputData[4];
+        if(max_data > 0) {
+            j = input_data[4];
             SetDigitalDir(j);
         } else
             j = GetDigitalDir();
@@ -646,8 +455,8 @@ void CommDataClass::Process_Command(void)
     case C_EEPROM_WRITE:
         resp_len = 2;
 
-        i = storedInputData[4];
-        j = storedInputData[5];
+        i = input_data[4];
+        j = input_data[5];
         Cal.write(i, j);
 
         response[4] = i;
@@ -664,7 +473,7 @@ void CommDataClass::Process_Command(void)
     case C_EEPROM_READ:
         resp_len = 2;
 
-        i = storedInputData[4];
+        i = input_data[4];
         j = Cal.read(i);
 
         response[4] = i;
@@ -681,8 +490,8 @@ void CommDataClass::Process_Command(void)
     case C_ID_CONFIG:
         resp_len = 6;
 
-        if(maxData == ID_OVERWRITE) {
-            my_id = make32(storedInputData + 4);
+        if(max_data == ID_OVERWRITE) {
+            my_id = make32(input_data + 4);
             Cal.ID_Save(my_id);
         }
 
@@ -714,13 +523,13 @@ void CommDataClass::Process_Command(void)
     case C_RESET_CALIB:
         resp_len = 5;
 
-        i = storedInputData[4];       //gain channel
+        i = input_data[4];       //gain channel
         response[4] = i;
 
         if(next_command == C_SET_CALIB) {
-            tdata = make16(storedInputData + 5);
+            tdata = make16(input_data + 5);
             Cal.gain_m[i] = tdata;
-            value = make16(storedInputData + 7);
+            value = make16(input_data + 7);
             Cal.gain_b[i] = value;
             Cal.SaveCalibration();
         } else if(next_command == C_RESET_CALIB) {
@@ -755,7 +564,7 @@ void CommDataClass::Process_Command(void)
     case C_COUNTER_INIT:
         resp_len = 1;
 
-        i = storedInputData[4];
+        i = input_data[4];
         counterInit(i);
         response[4] = i;
 
@@ -768,7 +577,7 @@ void CommDataClass::Process_Command(void)
     case C_GET_COUNTER:
         resp_len = 2;
 
-        i = storedInputData[4];
+        i = input_data[4];
         tdata = getCounter(i);
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
@@ -783,8 +592,8 @@ void CommDataClass::Process_Command(void)
     case C_PWM_INIT:
         resp_len = 4;
 
-        value = make16(storedInputData + 4);
-        tdata = make16(storedInputData + 6);
+        value = make16(input_data + 4);
+        tdata = make16(input_data + 6);
         pwmInit(value, tdata);
 
         response[4] = make8(value, 1);
@@ -803,7 +612,7 @@ void CommDataClass::Process_Command(void)
     case C_PWM_DUTY:
         resp_len = 2;
 
-        value = make16(storedInputData + 4);
+        value = make16(input_data + 4);
         setPwmDuty(value);
 
         response[4] = make8(value, 1);
@@ -827,7 +636,7 @@ void CommDataClass::Process_Command(void)
     case C_CAPTURE_INIT:
         resp_len = 2;
 
-        tdata = make16(storedInputData + 4);
+        tdata = make16(input_data + 4);
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
 
@@ -850,7 +659,7 @@ void CommDataClass::Process_Command(void)
     case C_GET_CAPTURE:
         resp_len = 3;
 
-        i = storedInputData[4];
+        i = input_data[4];
         tdata = getCapture(i);
         response[4] = i;
         response[5] = make8(tdata, 1);
@@ -868,7 +677,7 @@ void CommDataClass::Process_Command(void)
     case C_ENCODER_INIT:
         resp_len = 1;
 
-        value = storedInputData[4];
+        value = input_data[4];
         response[4] = value;
 
         encoder.Start(value);
@@ -906,8 +715,8 @@ void CommDataClass::Process_Command(void)
     case C_STREAM_CREATE:
         resp_len = 3;
 
-        i = storedInputData[4];
-        tdata = make16(storedInputData + 5);
+        i = input_data[4];
+        tdata = make16(input_data + 5);
 
         response[4] = i;
         response[5] = make8(tdata, 1);
@@ -926,7 +735,7 @@ void CommDataClass::Process_Command(void)
     case C_BURST_CREATE:
         resp_len = 2;
 
-        tdata = make16(storedInputData + 4);
+        tdata = make16(input_data + 4);
 
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
@@ -942,9 +751,9 @@ void CommDataClass::Process_Command(void)
     case C_EXTERNAL_CREATE:
         resp_len = 2;
 
-        i = storedInputData[4];
-        if(maxData > 1)
-            j = storedInputData[5];
+        i = input_data[4];
+        if(max_data > 1)
+            j = input_data[5];
         else
             j = 1;
 
@@ -983,7 +792,7 @@ void CommDataClass::Process_Command(void)
     case C_CHANNEL_FLUSH:
         resp_len = 1;
 
-        i = storedInputData[4];
+        i = input_data[4];
         response[4] = i;
 
         ODStream.FlushChan(i);
@@ -997,7 +806,7 @@ void CommDataClass::Process_Command(void)
     case C_CHANNEL_DESTROY:
         resp_len = 1;
 
-        i = storedInputData[4];
+        i = input_data[4];
         response[4] = i;
 
         ODStream.DeleteExperiments(i);
@@ -1011,9 +820,9 @@ void CommDataClass::Process_Command(void)
     case C_CHANNEL_SETUP:
         resp_len = 4;
 
-        i = storedInputData[4]; //Nb of channel
-        tdata = make16(storedInputData + 5);         //nb of total points
-        j = storedInputData[7];  //repetition setup
+        i = input_data[4]; //Nb of channel
+        tdata = make16(input_data + 5);         //nb of total points
+        j = input_data[7];  //repetition setup
 
         response[4] = i;
         response[5] = make8(tdata, 1);
@@ -1036,14 +845,14 @@ void CommDataClass::Process_Command(void)
     case C_CHANNEL_CFG:
         resp_len = 6;
 
-        i = storedInputData[4]; //Nb of channel
-        my_mode = storedInputData[5];
-        my_chp = storedInputData[6];
-        my_chn = storedInputData[7];
-        if(maxData > 4)
-            my_gain = storedInputData[8];
-        if(maxData > 5)
-            my_nsamples = storedInputData[9];
+        i = input_data[4]; //Nb of channel
+        my_mode = input_data[5];
+        my_chp = input_data[6];
+        my_chn = input_data[7];
+        if(max_data > 4)
+            my_gain = input_data[8];
+        if(max_data > 5)
+            my_nsamples = input_data[9];
 
         response[4] = i;
         response[6] = my_mode;
@@ -1071,9 +880,9 @@ void CommDataClass::Process_Command(void)
     case C_TRIGGER_SETUP:
         resp_len = 4;
 
-        i = storedInputData[4]; //Nb of channel
-        j = storedInputData[5];  //repetition setup
-        tdata = make16(storedInputData + 6);         //nb of total points
+        i = input_data[4]; //Nb of channel
+        j = input_data[5];  //repetition setup
+        tdata = make16(input_data + 6);         //nb of total points
 
         response[4] = i;
         response[5] = j;
@@ -1096,19 +905,19 @@ void CommDataClass::Process_Command(void)
     case C_SIGNAL_LOAD:
         resp_len = 3;
 
-        tdata = make16(storedInputData + 4);         //index init
+        tdata = make16(input_data + 4);         //index init
 
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
 
-        temp = storedInputData[3];
+        temp = input_data[3];
         temp -= 2;
         temp /= 2;
         temp += tdata;
         for(i = 0; i < temp - tdata; i++) {
-            value = make16(storedInputData + 6 + 2 * i);      //nb of total points
-            Channel4.databuffer[i + tdata] = value;
-            Channel1.databuffer[i + tdata] = value;
+            value = make16(input_data + 6 + 2 * i);      //nb of total points
+            channels[3].databuffer[i + tdata] = value;
+            channels[0].databuffer[i + tdata] = value;
         }
         break;
 
@@ -1116,21 +925,17 @@ void CommDataClass::Process_Command(void)
     case C_ENABLE_CRC:
         resp_len = 1;
 
-        i = storedInputData[4];
+        i = input_data[4];
         response[4] = i;
 
-        if(i) {
-            crcEnabled = 1;
-        } else {
-            crcEnabled = 0;
-        }
+        crc_enabled = (i > 0);
 
         break;
 
     case C_LED_W:
         resp_len = 1;
 
-        i = storedInputData[4];
+        i = input_data[4];
         response[4] = i;
         ledSet(LEDGREEN, i & 0x01);
         ledSet(LEDRED, i & 0x02);
@@ -1152,7 +957,7 @@ void CommDataClass::Process_Command(void)
         Serial.print("C_LED_W: ");
         Serial.println(i, HEX);
 #else
-        Send_Command(response, resp_len + 4);
+        sendCommand(response, resp_len + 4);
 #endif
 
         systemReset();
@@ -1161,7 +966,7 @@ void CommDataClass::Process_Command(void)
     case C_WAIT_MS:
         resp_len = 2;
 
-        tdata = make16(storedInputData + 4);         //delay in ms
+        tdata = make16(input_data + 4);         //delay in ms
         response[4] = make8(tdata, 1);
         response[5] = make8(tdata, 0);
 
@@ -1182,7 +987,7 @@ void CommDataClass::Process_Command(void)
 	 * PIO2: MOSI
 	 * PIO4: SS
 	 */
-        tdata = make16(storedInputData + 4);
+        tdata = make16(input_data + 4);
 
 	SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
 	mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
@@ -1215,7 +1020,7 @@ void CommDataClass::Process_Command(void)
     Serial.println("*************");
     Serial.println();
 #else
-    //Send_Command(resp_len+4);
+    //sendCommand(resp_len+4);
     for(i = 0; i < resp_len + 4; i++) {
         Serial.write(response[i]);
     }
@@ -1226,7 +1031,7 @@ void CommDataClass::Process_Command(void)
 
 
 // sends output buffer taking account of initial character x7E and escape character x7D
-void CommDataClass::Send_Command(byte* response, int size)
+void CommDataClass::sendCommand(byte* response, int size)
 {
     int i;
     byte a;
@@ -1253,13 +1058,13 @@ void CommDataClass::systemReset(void)
     byte i;
 
     for(i = 0; i < MAX_DATA_BYTES; i++)
-        storedInputData[i] = 0;
+        input_data[i] = 0;
 
-    waitForData = 0;
-    maxData = 0;
+    wait_for_data = 0;
+    max_data = 0;
     my_crc16 = 0;
     next_command = 0;
-    receivedBytes = 0;
+    received_bytes = 0;
 
 }
 

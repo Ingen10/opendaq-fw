@@ -60,11 +60,12 @@ DataChannel::DataChannel(int dtype, int dpin, int dedge)
 void DataChannel::Action()
 {
     PORTA = PORTA | 0x10;
-    if(dcmode == ANALOG_OUTPUT) {
+
+    if(dcmode == ANALOG_OUTPUT)
         Write();
-    } else { //if(dcmode == ANALOG_INPUT)
+    else
         Read();
-    }
+
     ndata++;
     if(ndata == maxndata) {
         if(maxnrepeat == R_CONTINUOUS)
@@ -83,14 +84,14 @@ void DataChannel::Action()
 
 int DataChannel::endReached()
 {
-    return endReachedFlag;
+    return end_reached;
 }
 
 
 void DataChannel::Read()
 {
     signed int c;
-    c = ReadNADC(1);//actionCallback(option);
+    c = ReadNADC(1);    //actionCallback(option);
     databuffer[writeindex % bufferlen] = c;
     writeindex++;
 }
@@ -112,14 +113,13 @@ signed int DataChannel::Get()
     signed int c;
     int i;
 
-    if(dcmode == ANALOG_OUTPUT) {
+    if (dcmode == ANALOG_OUTPUT)
         c = databuffer[readindex % maxndata];
-    } else {
+    else
         c = databuffer[readindex % bufferlen];
-    }
-    if(readindex < writeindex) {
+
+    if(readindex < writeindex)
         readindex++;
-    }
 
     return c;
 }
@@ -151,22 +151,15 @@ int DataChannel::CheckMyTrigger()
 
     if((trg_mode >= 1) && (trg_mode <= 6)) {
         SetpioMode(trg_mode - 1, INPUT);
-        if(pioRead(trg_mode - 1) == trg_value)
-            return 1;
-        else
-            return 0;
+        return (pioRead(trg_mode - 1) == trg_value);
     } else if(trg_mode == ABIG_TRG) {
         ConfigAnalog(pch, nch, g);
         value = ReadNADC(10);
-        if(value > trg_value)
-            return 1;
-        else return 0;
+        return (value > trg_value);
     } else if(trg_mode == ASML_TRG) {
         ConfigAnalog(pch, nch, g);
         value = ReadNADC(10);
-        if(value < trg_value)
-            return 1;
-        else return 0;
+        return (value < trg_value);
     } else
         return 1;
 }
@@ -219,9 +212,9 @@ void DataChannel::Configure(int mode, int channel)
 
 void DataChannel::Begin()
 {
-    if(dcmode == ANALOG_INPUT) {
+    if(dcmode == ANALOG_INPUT)
         ConfigAnalog(pch, nch, g);
-    } else if(dcmode == ANALOG_OUTPUT)
+    else if(dcmode == ANALOG_OUTPUT)
         SetDacOutput(0);
     else if(dcmode == COUNTER_INPUT) {
         option = pch;
@@ -252,20 +245,30 @@ int DataChannel::Datalen()
 
 void DataChannel::Enable()
 {
-    endReachedFlag = 0;
-    if(dcmode == ANALOG_INPUT)
-        //actionCallback = ReadAnalogIn;
-        actionCallback = ReadNADC;
-    else if(dcmode == ANALOG_OUTPUT)
-        actionCallback = SetAnalogVoltage;
-    else if(dcmode == COUNTER_INPUT)
-        actionCallback = getCounter;
-    else if(dcmode == DIGITAL_OUTPUT);
-    //actionCallback = OutputDigital;
-    else if(dcmode == DIGITAL_INPUT);
-    //actionCallback = pioRead;
-    else if(dcmode == CAPTURE_INPUT)
-        actionCallback = getCapture;
+    end_reached = 0;
+
+    switch (dcmode) {
+        case ANALOG_INPUT:
+            actionCallback = ReadNADC;
+            break;
+        case ANALOG_OUTPUT:
+            actionCallback = SetAnalogVoltage;
+            break;
+        case COUNTER_INPUT:
+            actionCallback = getCounter;
+            break;
+        case DIGITAL_OUTPUT:
+            //actionCallback = OutputDigital;
+            break;
+        case DIGITAL_INPUT:
+            //actionCallback = pioRead;
+            break;
+        case CAPTURE_INPUT:
+            actionCallback = getCapture;
+            break;
+        default:
+            break;
+    }
 
     state = CH_RUN;
     ndata = 0;
@@ -276,7 +279,7 @@ void DataChannel::Enable()
 void DataChannel::Disable()
 {
     state = CH_STOP;
-    endReachedFlag = 1;
+    end_reached = 1;
 }
 
 void DataChannel::reset()
@@ -314,7 +317,7 @@ int DataChannel::waitStabilization()
 
     //call ReadACD to adapt analog input
     ReadADC();
-    for(i = 0; i < stabilizationTime; i++) {
+    for(i = 0; i < stabilization_time; i++) {
         for(j = 0; j < 8000; j++) {
             dummy = dummyfunction(j);
         }
@@ -326,33 +329,21 @@ int DataChannel::waitStabilization()
 
 void DataChannel::Initialize()
 {
-    stabilizationTime = 100; //100 veces 0.508 us
-
+    stabilization_time = 100;   // 100 times 0.508 us
     state = CH_READY;
-
     dcmode = ANALOG_INPUT;
-
     trg_mode = Sw_TRG;
-
     maxndata = 0;
     maxnrepeat = R_CONTINUOUS;
-
     writeindex = 0;
     readindex = 0;
-
     option = 1;
     ready = 0;
-
-    if(dctype == BURST_TYPE) {
-        bufferlen = 150;
-    } else {
-        bufferlen = 150;
-    }
-
+    bufferlen = 150;
     databuffer = (signed int*) malloc( bufferlen * sizeof(int));
+
 #ifdef SERIAL_DEBUG
-    if(databuffer == NULL) {
+    if(databuffer == NULL)
         Serial.println("error malloc");
-    }
 #endif
 }

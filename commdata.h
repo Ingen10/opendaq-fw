@@ -34,7 +34,7 @@
 #include "odstream.h"
 #include "encoder.h"
 
-extern DataChannel Channel1, Channel2, Channel3, Channel4;
+extern DataChannel *channels;
 
 
 #define MAX_DATA_BYTES 128 // max number of data bytes in messages
@@ -117,23 +117,19 @@ extern DataChannel Channel1, Channel2, Channel3, Channel4;
 class CommDataClass {
 private:
     // properties
-    int checkCRC();
-    byte receivedBytes;
-    byte waitForData;   // shows how many input bytes are left in the message
-    byte maxData;
+    byte received_bytes;
+    byte wait_for_data;   // shows how many input bytes are left in the message
+    byte max_data;
     uint16_t my_crc16;  // received 16bit crc
     byte next_command;  // short command being executed
     uint8_t my_chp, my_chn, my_gain, my_nsamples, my_mode;
     int16_t my_vout;
-
     uint32_t my_id;
+    int crc_enabled;
 
-    int crcEnabled;
+    int checkCRC();
 
-    //byte* response;
-    //byte response[MAX_DATA_BYTES];
-
-    byte storedInputData[MAX_DATA_BYTES]; // multi-byte data
+    byte input_data[MAX_DATA_BYTES]; // multi-byte data
 
     // methods
     void systemReset(void);
@@ -143,10 +139,8 @@ private:
     uint32_t make32(byte* a);
 
     byte make8(uint16_t a, byte position);
-
-    void Process_Command(void);
-
-    void Send_Command(byte* response, int size);
+    void processCommand(void);
+    void sendCommand(byte* response, int size);
 
 public:
     //! class constructor
@@ -156,7 +150,7 @@ public:
     void parseInput(int fl);
 
     //serial stream transfer
-    void Process_Stream(void);
+    void processStream(void);
 
     // override general serial communication functions
     void begin(long speed);

@@ -77,8 +77,8 @@ private:
     // properties
     int option;
 
-    int stabilizationTime;
-    int endReachedFlag;
+    int stabilization_time;
+    int end_reached;
 
     // methods
     void Initialize();

@@ -5,9 +5,7 @@
 #include "datachannel.h"
 #include "odstream.h"
 
-extern DataChannel Channel1, Channel2, Channel3, Channel4;
 extern DStream ODStream;
-extern Encoder encoder;
 
 
 void setup()
@@ -56,7 +54,7 @@ void loop()
 #endif
     ODStream.CheckTriggers();
     PORTA = PORTA | 0x20;
-    Comm.Process_Stream();
+    Comm.processStream();
     PORTA = PORTA & ~0x20;
 
     while(Comm.available())

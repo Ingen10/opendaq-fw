@@ -145,9 +145,9 @@ int GetDigitalDir()
 
 void ledSet(uint8_t nb, uint8_t val)
 {
-    if( val == 0) {
+    if( val == 0)
         PORTC |= (1 << (2 + nb)); //Inverted output logic for the leds (ON=0V)
-    } else
+    else
         PORTC &= ~(1 << (2 + nb));
 }
 
@@ -176,7 +176,6 @@ signed int ReadADC()
     result >>= 2;
 
     return (signed int) result & 0xFFFF;
-
 }
 
 
@@ -198,6 +197,7 @@ signed int ReadNADC(int nsamples)
 signed int ReadAnalogIn(int n)
 {
     signed long r;
+
     r = ReadNADC(n);
     r *= -153;
     r /= 1000;
@@ -251,43 +251,20 @@ void SetDacOutput(int value)
     PORTB |= 0X01 << 3;
 }
 
-/*
-int SetAnalogVoltage(signed int mv)
-{
-    unsigned long aux;
-
-    if(mv<-5000)
-        aux = 0;
-    else if(mv>5000)
-        aux = 10000;
-    else
-        aux = mv + 5000;
-
-    aux *= 16383;
-    aux /= 10000;
-    SetDacOutput(aux);
-
-    return (int) aux;
-}
-*/
 
 int SetAnalogVoltage(signed int mv)
 {
     unsigned long aux;
 
-    if(mv < -4096)
-        aux = 0;
-    else if(mv > 4096)
-        aux = 8192;
-    else
-        aux = mv + 4096;
-
-//  aux *= 2;
-    aux *= 16384;
-    aux /= 8192;
+    if (mv < -4096)
+        mv = -4096;
+    else if (mv > 4096)
+        mv = 4096;
+    
+    aux = 2*(mv + 4096);
     SetDacOutput(aux);
 
-    return (int) aux;
+    return (int)aux;
 }
 
 // TIMER1 based functions ///////////////////////////////////////////////
