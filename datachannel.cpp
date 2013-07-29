@@ -34,6 +34,7 @@ DataChannel::DataChannel(int dtype)
     Initialize();
 }
 
+
 DataChannel::DataChannel(int dtype, unsigned long dperiod)
 {
     dctype = dtype;
@@ -41,12 +42,14 @@ DataChannel::DataChannel(int dtype, unsigned long dperiod)
     Initialize();
 }
 
+
 DataChannel::DataChannel(int dtype, int dpin)
 {
     edge = 1;
     dctype = dtype;
     Initialize();
 }
+
 
 DataChannel::DataChannel(int dtype, int dpin, int dedge)
 {
@@ -92,6 +95,7 @@ int DataChannel::endReached()
 void DataChannel::Read()
 {
     signed int c;
+
     c = ReadNADC(1);    //actionCallback(option);
     databuffer[writeindex % bufferlen] = c;
     writeindex++;
@@ -102,6 +106,7 @@ void DataChannel::Write()
 {
     signed int c;
     unsigned int add;
+
     c = databuffer[writeindex % maxndata];
     SetAnalogVoltage(c);
     writeindex++;
@@ -161,8 +166,9 @@ int DataChannel::CheckMyTrigger()
         ConfigAnalog(pch, nch, g);
         value = ReadNADC(10);
         return (value < trg_value);
-    } else
-        return 1;
+    }
+        
+    return 1;
 }
 
 
@@ -191,6 +197,7 @@ void DataChannel::Configure(int mode, int pchan, int nchan, int gain)
     nch = nchan;
     g = gain;
 }
+
 
 void DataChannel::Configure(int mode, int pchan, int nchan, int gain, int nsamples)
 {
@@ -277,17 +284,20 @@ void DataChannel::Enable()
     Begin();
 }
 
+
 void DataChannel::Disable()
 {
     state = CH_STOP;
     end_reached = 1;
 }
 
+
 void DataChannel::reset()
 {
     writeindex = 0;
     readindex = 0;
 }
+
 
 void DataChannel::Destroy()
 {
@@ -297,6 +307,7 @@ void DataChannel::Destroy()
         free (databuffer);
     }
 }
+
 
 void DataChannel::Flush()
 {
@@ -312,6 +323,7 @@ int dummyfunction(int j)
     return j * 2;
 }
 
+
 int DataChannel::waitStabilization()
 {
     int dummy, i, j;
@@ -319,12 +331,13 @@ int DataChannel::waitStabilization()
     //call ReadACD to adapt analog input
     ReadADC();
     for(i = 0; i < stabilization_time; i++) {
-        for(j = 0; j < 8000; j++) {
+        for(j = 0; j < 8000; j++)
             dummy = dummyfunction(j);
-        }
     }
+
     return dummy;
 }
+
 
 // Private Methods /////////////////////////////////////////////////////////////
 
@@ -341,7 +354,7 @@ void DataChannel::Initialize()
     option = 1;
     ready = 0;
     bufferlen = 150;
-    databuffer = (signed int*) malloc( bufferlen * sizeof(int));
+    databuffer = (signed int*)malloc(bufferlen * sizeof(int));
 
     if(databuffer == NULL)
         _DEBUG("malloc error\n");

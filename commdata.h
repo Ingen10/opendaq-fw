@@ -117,7 +117,7 @@ private:
     // properties
     byte received_bytes;
     byte wait_for_data;   // shows how many input bytes are left in the message
-    byte max_data;
+    byte data_len;      // length of received packet (bytes)
     uint16_t my_crc16;  // received 16bit crc
     byte next_command;  // short command being executed
     uint8_t my_chp, my_chn, my_gain, my_nsamples, my_mode;
@@ -131,7 +131,7 @@ private:
 
     // methods
     void systemReset(void);
-    uint16_t CRC_16(int size, byte* packet);
+    uint16_t crc16(int size, byte* packet);
 
     uint16_t make16(byte* a);
     uint32_t make32(byte* a);

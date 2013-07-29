@@ -51,11 +51,11 @@ CommDataClass::CommDataClass(void)
 
 // override general serial communication functions:
 
-// begin method
 void CommDataClass::begin(void)
 {
     begin(115200);
 }
+
 
 // begin method for overriding default serial bitrate
 void CommDataClass::begin(long speed)
@@ -64,25 +64,30 @@ void CommDataClass::begin(long speed)
     //delay(300);
 }
 
+
 void CommDataClass::end()
 {
     Serial.end();
 }
+
 
 int CommDataClass::available(void)
 {
     return Serial.available();
 }
 
+
 int CommDataClass::read(void)
 {
     return Serial.read();
 }
 
+
 void CommDataClass::flush(void)
 {
     Serial.flush();
 }
+
 
 void CommDataClass::write(uint8_t c)
 {
@@ -92,13 +97,12 @@ void CommDataClass::write(uint8_t c)
 
 int CommDataClass::checkCRC()
 {
-    int i;
     unsigned int check, suma = 0;
 
     if(!crc_enabled)
         return 1;
 
-    for(i = 2; i < received_bytes; i++)
+    for(int i = 2; i < received_bytes; i++)
         suma += input_data[i];
 
     return (my_crc16 == suma);
@@ -108,7 +112,7 @@ int CommDataClass::checkCRC()
 void CommDataClass::parseInput(int fl)
 {
     int inputData = read();
-    int i;
+
     if(fl)
         inputData = UDR0;
 
@@ -130,7 +134,7 @@ void CommDataClass::parseInput(int fl)
             wait_for_data = 0;
         if ((next_command != C_SIGNAL_LOAD) && (wait_for_data > 10))
             wait_for_data = 0;
-        max_data = wait_for_data;
+        data_len = wait_for_data;
         if(wait_for_data == 0) {
             processCommand();
             systemReset();
@@ -154,9 +158,8 @@ void CommDataClass::parseInput(int fl)
 
 void CommDataClass::processStream(void)
 {
-    byte resp_len = 0;
+    byte resp_len;
     int16_t value;
-    unsigned long longvalue;
     byte response[MAX_DATA_BYTES];
     int len;
     int i, j;
@@ -194,7 +197,7 @@ void CommDataClass::processStream(void)
             response[6] = channels[i].nch;
             response[7] = channels[i].g;
 
-            my_crc16 = CRC_16(resp_len + 2, response + 2);
+            my_crc16 = crc16(resp_len + 2, response + 2);
             response[0] = make8(my_crc16, 1);
             response[1] = make8(my_crc16, 0);
 
@@ -216,7 +219,7 @@ void CommDataClass::processStream(void)
             response[3] = resp_len;  //number of bytes
             response[4] = 1;         //channel #1
 
-            my_crc16 = CRC_16(resp_len + 2, response + 2);
+            my_crc16 = crc16(resp_len + 2, response + 2);
             response[0] = make8(my_crc16, 1);
             response[1] = make8(my_crc16, 0);
             sendCommand(response, resp_len + 4);
@@ -227,39 +230,35 @@ void CommDataClass::processStream(void)
 }
 
 
-
 // Private Methods /////////////////////////////////////////////////////////////
 
 void CommDataClass::processCommand(void)
 {
-    byte i, j;
-    uint16_t tdata;
-    uint16_t temp;
+    uint16_t word1, word2, word3;
+    byte byte1, byte2, i;
     byte resp_len = 0;
-    int16_t value;
-    uint32_t aux32;
     byte response[MAX_DATA_BYTES];
+
 #ifdef SERIAL_DEBUG
     float f;
 
-    _DEBUG("crc16: %X <> %X\n", my_crc16, CRC_16(max_data + 2, input_data + 2));
+    _DEBUG("crc16: %X <> %X\n", my_crc16, crc16(data_len + 2, input_data + 2));
     _DEBUG("command: %X\n", next_command);
-    _DEBUG("bytes: %X\n", max_data);
-    for(i = 0; i < max_data; i += 2)
+    _DEBUG("bytes: %X\n", data_len);
+    for(i = 0; i < data_len; i += 2)
         _DEBUG("%X ", make16(input_data + i + 4));
     _DEBUG("\n");
 #endif
 
     switch(next_command) {
     case C_AIN:
+        word1 = ReadNADC(my_nsamples);
+
+        response[4] = make8(word1, 1);
+        response[5] = make8(word1, 0);
         resp_len = 2;
 
-        //value = ReadAnalogIn(my_nsamples);
-        value = ReadNADC(my_nsamples);
-        response[4] = make8(value, 1);
-        response[5] = make8(value, 0);
-
-        _DEBUG("AIN: %d\n", value);
+        _DEBUG("AIN: %d\n", word1);
         _DEBUG("P: %d ", my_chp);
         _DEBUG("N: %d ", my_chn);
         _DEBUG("GAIN: %d ", my_gain);
@@ -267,28 +266,26 @@ void CommDataClass::processCommand(void)
         break;
 
     case C_AIN_CFG:
-        resp_len = 6;
-
         my_chp = input_data[4];
         my_chn = input_data[5];
-        if(max_data > 2)
+        if(data_len > 2)
             my_gain = input_data[6];
-        if(max_data > 3)
+        if(data_len > 3)
             my_nsamples = input_data[7];
 
         ConfigAnalog(my_chp, my_chn, my_gain);
-
         ReadNADC(my_nsamples);
-        value = ReadNADC(my_nsamples);
-        //value = ReadAnalogIn(my_nsamples);
-        response[4] = make8(value, 1);
-        response[5] = make8(value, 0);
+        word1 = ReadNADC(my_nsamples);
+
+        response[4] = make8(word1, 1);
+        response[5] = make8(word1, 0);
         response[6] = my_chp;
         response[7] = my_chn;
         response[8] = my_gain;
         response[9] = my_nsamples;
+        resp_len = 6;
 
-        _DEBUG("AIN_CFG: %d\n", value);
+        _DEBUG("AIN_CFG: %d\n", word1);
         _DEBUG("P: %d ", my_chp);
         _DEBUG("N: %d ", my_chn);
         _DEBUG("GAIN: %d ", my_gain);
@@ -296,23 +293,23 @@ void CommDataClass::processCommand(void)
         break;
 
     case C_SET_DAC:
-        resp_len = 2;
-
         my_vout = make16(input_data + 4);
         SetAnalogVoltage(my_vout);
+
         response[4] = make8(my_vout, 1);
         response[5] = make8(my_vout, 0);
+        resp_len = 2;
 
         _DEBUG("C_SET_DAC: %d\n", my_vout);
         break;
 
     case C_SET_ANALOG:
-        resp_len = 2;
-
         my_vout = make16(input_data + 4);
         SetDacOutput(my_vout);
+
         response[4] = make8(my_vout, 1);
         response[5] = make8(my_vout, 0);
+        resp_len = 2;
 
         _DEBUG("C_SET_ANALOG: %d\n", my_vout);
         break;
@@ -320,104 +317,92 @@ void CommDataClass::processCommand(void)
         ///// PIO & PORT COMMANDS  /////////////////////////////////////
 
     case C_PIO:
+        byte1 = input_data[4];
+        if(data_len > 1) {
+            byte2 = input_data[5];
+            pioWrite(byte1 - 1, byte2);
+        } else
+            byte2 = pioRead(byte1 - 1);
+
+        response[4] = byte1;
+        response[5] = byte2;
         resp_len = 2;
 
-        i = input_data[4];
-        if(max_data > 1) {
-            j = input_data[5];
-            pioWrite(i - 1, j);
-        } else {
-            j = pioRead(i - 1);
-        }
-        response[4] = i;
-        response[5] = j;
-
-        _DEBUG("C_PIO: %d: %d\n", i, j);
+        _DEBUG("C_PIO: %d: %d\n", byte1, byte2);
         break;
 
     case C_PIO_DIR:
-        resp_len = 2;
-
-        i = input_data[4];
-        if(max_data > 1) {
-            j = input_data[5];
-            if(j != 0)
-                SetpioMode(i - 1, OUTPUT);
+        byte1 = input_data[4];
+        if(data_len > 1) {
+            byte2 = input_data[5];
+            if(byte2 != 0)
+                SetpioMode(byte1 - 1, OUTPUT);
             else
                 //pinMode(8,INPUT);
-                SetpioMode(i - 1, INPUT);
-        } else {
-            j = GetpioMode(tdata - 1);
-        }
+                SetpioMode(byte1 - 1, INPUT);
+        } else
+            byte2 = GetpioMode(word1 - 1);
 
-        response[4] = i;
-        response[5] = j;
+        response[4] = byte1;
+        response[5] = byte2;
+        resp_len = 2;
 
-        _DEBUG("C_PIO_DIR: %d: %d\n", i, j);
+        _DEBUG("C_PIO_DIR: %d: %d\n", byte1, byte2);
         break;
 
-
     case C_PORT:
+        if(data_len > 0) {
+            //TODO: verificar si los 1 o los 0 son las salidas
+            byte1 = input_data[4];
+            OutputDigital(byte1);
+            byte1 = ReadDigital();
+        } else
+            byte1 = ReadDigital();
+
+        response[4] = byte1;
         resp_len = 1;
 
-        if(max_data > 0) {
-            //TODO: verificar si los 1 o los 0 son las salidas
-            j = input_data[4];
-            OutputDigital(j);
-            j = ReadDigital();
-        } else
-            j = ReadDigital();
-
-        response[4] = j;
-
-        _DEBUG("C_PORT: %d\n", j);
+        _DEBUG("C_PORT: %d\n", byte1);
         break;
 
     case C_PORT_DIR:
+        if(data_len > 0) {
+            byte1 = input_data[4];
+            SetDigitalDir(byte1);
+        } else
+            byte1 = GetDigitalDir();
+
+        response[4] = byte1;
         resp_len = 1;
 
-        if(max_data > 0) {
-            j = input_data[4];
-            SetDigitalDir(j);
-        } else
-            j = GetDigitalDir();
-
-        response[4] = j;
-
-        _DEBUG("C_PORT_DIR: %d\n", j);
+        _DEBUG("C_PORT_DIR: %d\n", byte1);
         break;
 
         ///// EEPROM COMMANDS         /////////////////////////////////////
 
     case C_EEPROM_WRITE:
+        byte1 = input_data[4];
+        byte2 = input_data[5];
+        Cal.write(byte1, byte2);
+
+        memcpy(&response[4], &input_data[4], 2);
         resp_len = 2;
 
-        i = input_data[4];
-        j = input_data[5];
-        Cal.write(i, j);
-
-        response[4] = i;
-        response[5] = j;
-
-        _DEBUG("EEPROM_WRITE: [%d] = %d\n", i, j);
+        _DEBUG("EEPROM_WRITE: [%d] = %d\n", byte1, byte2);
         break;
 
     case C_EEPROM_READ:
+        byte1 = input_data[4];
+        byte2 = Cal.read(byte1);
+
+        memcpy(&response[4], &input_data[4], 2);
         resp_len = 2;
 
-        i = input_data[4];
-        j = Cal.read(i);
-
-        response[4] = i;
-        response[5] = j;
-
-        _DEBUG("EEPROM_READ: [%d] = %d\n", i, j);
+        _DEBUG("EEPROM_READ: [%d] = %d\n", byte1, byte2);
         break;
 
     case C_ID_CONFIG:
-        resp_len = 6;
-
-        if(max_data == ID_OVERWRITE) {
+        if(data_len == ID_OVERWRITE) {
             my_id = make32(input_data + 4);
             Cal.ID_Save(my_id);
         }
@@ -426,15 +411,8 @@ void CommDataClass::processCommand(void)
 
         response[4] = HVER;
         response[5] = FVER;
-
-        aux32 = (my_id & 0XFF000000) >> 24;
-        response[6] = aux32;
-        aux32 = (my_id & 0X00FF0000) >> 16;
-        response[7] = aux32;
-        aux32 = (my_id & 0X0000FF00) >> 8;
-        response[8] = aux32;
-        aux32 = (my_id & 0X000000FF);
-        response[9] = aux32;
+        memcpy(&response[6], &my_id, 4);
+        resp_len = 6;
 
         _DEBUG("C_ID_CONFIG: ID = %d  x%X\n", my_id, my_id);
         break;
@@ -444,338 +422,305 @@ void CommDataClass::processCommand(void)
     case C_RESET_CALIB:
         resp_len = 5;
 
-        i = input_data[4];       //gain channel
-        response[4] = i;
+        byte1 = input_data[4];       //gain channel
+        response[4] = byte1;
 
         if(next_command == C_SET_CALIB) {
-            tdata = make16(input_data + 5);
-            Cal.gain_m[i] = tdata;
-            value = make16(input_data + 7);
-            Cal.gain_b[i] = value;
+            word1 = make16(input_data + 5);
+            Cal.gain_m[byte1] = word1;
+            word2 = make16(input_data + 7);
+            Cal.gain_b[byte1] = word2;
             Cal.SaveCalibration();
         } else if(next_command == C_RESET_CALIB) {
             Cal.Reset_calibration();
             Cal.SaveCalibration();
         }
 
-        tdata = Cal.gain_m[i];
-        value = Cal.gain_b[i];
+        word1 = Cal.gain_m[byte1];
+        word2 = Cal.gain_b[byte1];
 
-        response[5] = make8(tdata, 1);
-        response[6] = make8(tdata, 0);
-        response[7] = make8(value, 1);
-        response[8] = make8(value, 0);
+        response[5] = make8(word1, 1);
+        response[6] = make8(word1, 0);
+        response[7] = make8(word2, 1);
+        response[8] = make8(word2, 0);
 
 #ifdef SERIAL_DEBUG
-        f = tdata/10000.0;
-        _DEBUG("C_xxx_CALIB: g%d: m=%f (m=%d) : b=%d\n", i, f, tdata, value);
+        f = word1/10000.0;
+        _DEBUG("C_xxx_CALIB: g%d: m=%f (m=%d) : b=%d\n", byte1, f, word1, word2);
 #endif
         break;
 
         ///// COUNTER COMMANDS        /////////////////////////////////////
     case C_COUNTER_INIT:
+        byte1 = input_data[4];
+        counterInit(byte1);
+
+        response[4] = byte1;
         resp_len = 1;
 
-        i = input_data[4];
-        counterInit(i);
-        response[4] = i;
-
-        _DEBUG("C_COUNTER_INIT: f_%d\n", i);
+        _DEBUG("C_COUNTER_INIT: f_%d\n", byte1);
         break;
 
     case C_GET_COUNTER:
+        byte1 = input_data[4];
+        word1 = getCounter(byte1);
+
+        memcpy(&response[4], &input_data[4], 2);
         resp_len = 2;
 
-        i = input_data[4];
-        tdata = getCounter(i);
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
-
-        _DEBUG("C_GET_COUNTER: %d\n", tdata);
+        _DEBUG("C_GET_COUNTER: %d\n", word1);
         break;
 
         ///// PWM COMMANDS       /////////////////////////////////////
     case C_PWM_INIT:
+        word1 = make16(input_data + 4);
+        word2 = make16(input_data + 6);
+        pwmInit(word1, word2);
+
+        memcpy(&response[4], &input_data[4], 4);
         resp_len = 4;
 
-        value = make16(input_data + 4);
-        tdata = make16(input_data + 6);
-        pwmInit(value, tdata);
-
-        response[4] = make8(value, 1);
-        response[5] = make8(value, 0);
-        response[6] = make8(tdata, 1);
-        response[7] = make8(tdata, 0);
-
-        _DEBUG("C_PWM_INIT: f_ %d , duty_ %d\n", tdata, value);
+        _DEBUG("C_PWM_INIT: f_ %d , duty_ %d\n", word2, word1);
         break;
 
     case C_PWM_DUTY:
+        word1 = make16(input_data + 4);
+        setPwmDuty(word1);
+
+        memcpy(&response[4], &input_data[4], 4);
         resp_len = 2;
 
-        value = make16(input_data + 4);
-        setPwmDuty(value);
-
-        response[4] = make8(value, 1);
-        response[5] = make8(value, 0);
-
-        _DEBUG("C_PWM_DUTY: %d\n", value);
+        _DEBUG("C_PWM_DUTY: %d\n", word1);
         break;
 
     case C_PWM_STOP:
+        PwmStop();
+
         resp_len = 0;
 
-        PwmStop();
         _DEBUG("C_PWM_STOP");
         break;
 
-        ///// CAPTURE COMMANDS        //////////////////////////////////////
+    ///// CAPTURE COMMANDS        //////////////////////////////////////
     case C_CAPTURE_INIT:
+        word1 = make16(input_data + 4);
+
+        captureInit(word1);
+
+        memcpy(&response[4], &input_data[4], 4);
         resp_len = 2;
 
-        tdata = make16(input_data + 4);
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
-
-        captureInit(tdata);
-        _DEBUG("C_CAPTURE_INIT: T = %d\n", tdata);
+        _DEBUG("C_CAPTURE_INIT: T = %d\n", word1);
         break;
 
     case C_CAPTURE_STOP:
+        captureStop();
+
         resp_len = 0;
 
-        captureStop();
         _DEBUG("C_CAPTURE_STOP");
         break;
 
     case C_GET_CAPTURE:
+        byte1 = input_data[4];
+        word1 = getCapture(byte1);
+
+        response[4] = byte1;
+        response[5] = make8(word1, 1);
+        response[6] = make8(word1, 0);
         resp_len = 3;
 
-        i = input_data[4];
-        tdata = getCapture(i);
-        response[4] = i;
-        response[5] = make8(tdata, 1);
-        response[6] = make8(tdata, 0);
-
-        _DEBUG("C_GET_CAPTURE (%d): %d\n", i, tdata);
+        _DEBUG("C_GET_CAPTURE (%d): %d\n", byte1, word1);
         break;
 
-        ///// ENCODER COMMANDS        //////////////////////////////////////
+    ///// ENCODER COMMANDS        //////////////////////////////////////
     case C_ENCODER_INIT:
+        word1 = input_data[4];
+
+        response[4] = word1;
         resp_len = 1;
 
-        value = input_data[4];
-        response[4] = value;
-
-        encoder.Start(value);
-        _DEBUG("C_ENCODER_INIT: T = %d\n", i, tdata);
+        encoder.Start(word1);
+        _DEBUG("C_ENCODER_INIT: T = %d\n", byte1, word1);
         break;
 
     case C_ENCODER_STOP:
+        encoder.Stop();
+
         resp_len = 0;
 
-        encoder.Stop();
         _DEBUG("C_ENCODER_STOP");
         break;
 
     case C_GET_ENCODER:
+        word1 = encoder.get_position();
+
+        response[4] = make8(word1, 1);
+        response[5] = make8(word1, 0);
         resp_len = 2;
 
-        tdata = encoder.get_position();
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
-
-        _DEBUG("C_GET_ENCODER: (%d): %d\n", i, tdata);
+        _DEBUG("C_GET_ENCODER: (%d): %d\n", byte1, word1);
         break;
 
-        ///// STREAM CONTROL COMMANDS      ///////////////////////////////////
+    ///// STREAM CONTROL COMMANDS      ///////////////////////////////////
     case C_STREAM_CREATE:
+        byte1 = input_data[4];
+        word1 = make16(input_data + 5);
+
+        memcpy(&response[4], &input_data[4], 3);
         resp_len = 3;
 
-        i = input_data[4];
-        tdata = make16(input_data + 5);
+        ODStream.CreateStreamChannel(byte1, word1);
 
-        response[4] = i;
-        response[5] = make8(tdata, 1);
-        response[6] = make8(tdata, 0);
-
-        ODStream.CreateStreamChannel(i, tdata);
-
-        _DEBUG("C_STREAM_CREATE [ %d ] => f(ms)= %d\n", i, tdata);
+        _DEBUG("C_STREAM_CREATE [ %d ] => f(ms)= %d\n", byte1, word1);
         break;
 
     case C_BURST_CREATE:
+        word1 = make16(input_data + 4);
+
+        memcpy(&response[4], &input_data[4], 2);
         resp_len = 2;
 
-        tdata = make16(input_data + 4);
+        ODStream.CreateBurstChannel(word1);
 
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
-
-        ODStream.CreateBurstChannel(tdata);
-
-        _DEBUG("C_BURST_CREATE => f(us)= %d\n", tdata);
+        _DEBUG("C_BURST_CREATE => f(us)= %d\n", word1);
         break;
 
     case C_EXTERNAL_CREATE:
+        byte1 = input_data[4];
+        byte2 = (data_len > 1) ? input_data[5] : 1;
+        ODStream.CreateExternalChannel(byte1, byte2);
+
+        response[4] = byte1;
+        response[5] = byte2;
         resp_len = 2;
 
-        i = input_data[4];
-        j = (max_data > 1) ? input_data[5] : 1;
-
-        response[4] = i;
-        response[5] = j;
-
-        ODStream.CreateExternalChannel(i, j);
-
-        _DEBUG("C_EXTERNAL_CREATE [ %d ] => edge= %d\n", i, j);
+        _DEBUG("C_EXTERNAL_CREATE [ %d ] => edge= %d\n", byte1, byte2);
         break;
 
     case C_STREAM_START:
+        ODStream.Start();
         resp_len = 0;
 
-        ODStream.Start();
         _DEBUG("C_STREAM_START\n");
         break;
 
     case C_STREAM_STOP:
+        ODStream.Stop();
         resp_len = 0;
 
-        ODStream.Stop();
         _DEBUG("C_STREAM_STOP\n");
         break;
 
 
     case C_CHANNEL_FLUSH:
+        byte1 = input_data[4];
+        ODStream.FlushChan(byte1);
+
+        response[4] = byte1;
         resp_len = 1;
 
-        i = input_data[4];
-        response[4] = i;
-
-        ODStream.FlushChan(i);
-        _DEBUG("C_CHANNEL_FLUSH: %d\n", i);
+        _DEBUG("C_CHANNEL_FLUSH: %d\n", byte1);
         break;
 
 
     case C_CHANNEL_DESTROY:
+        byte1 = input_data[4];
+        ODStream.DeleteExperiments(byte1);
+
+        response[4] = byte1;
         resp_len = 1;
 
-        i = input_data[4];
-        response[4] = i;
-
-        ODStream.DeleteExperiments(i);
-        _DEBUG("C_CHANNEL_DESTROY: %d\n", i);
+        _DEBUG("C_CHANNEL_DESTROY: %d\n", byte1);
         break;
 
-        ///// DATA CHANNEL CONFIGURATION        //////////////////////////////////////
+    ///// DATA CHANNEL CONFIGURATION        //////////////////////////////////////
     case C_CHANNEL_SETUP:
+        byte1 = input_data[4]; //Nb of channel
+        word1 = make16(input_data + 5);         //nb of total points
+        byte2 = input_data[7];  //repetition setup
+        ODStream.SetupChan(byte1, word1, byte2);
+
+        memcpy(&response[4], &input_data[4], 4);
         resp_len = 4;
 
-        i = input_data[4]; //Nb of channel
-        tdata = make16(input_data + 5);         //nb of total points
-        j = input_data[7];  //repetition setup
-
-        response[4] = i;
-        response[5] = make8(tdata, 1);
-        response[6] = make8(tdata, 0);
-        response[4] = j;
-
-        ODStream.SetupChan(i, tdata, j);
-
-        _DEBUG("C_CHANNEL_SETUP [ %d ] => Nb= %d repeat=%d\n", i, tdata, j);
+        _DEBUG("C_CHANNEL_SETUP [ %d ] => Nb= %d repeat=%d\n", byte1, word1, byte2);
         break;
 
-
     case C_CHANNEL_CFG:
-        resp_len = 6;
-
-        i = input_data[4]; //Nb of channel
+        byte1 = input_data[4]; //Nb of channel
         my_mode = input_data[5];
         my_chp = input_data[6];
         my_chn = input_data[7];
-        if(max_data > 4)
+        if(data_len > 4)
             my_gain = input_data[8];
-        if(max_data > 5)
+        if(data_len > 5)
             my_nsamples = input_data[9];
+        ODStream.ConfigChan(byte1, my_mode, my_chp, my_chn, my_gain);
 
-        response[4] = i;
-        response[6] = my_mode;
-        response[6] = my_chp;
-        response[7] = my_chn;
+        memcpy(&response[4], &input_data[4], 4);
         response[8] = my_gain;
         response[9] = my_nsamples;
-
-        ODStream.ConfigChan(i, my_mode, my_chp, my_chn, my_gain);
+        resp_len = 6;
 
         _DEBUG("C_CHANNEL_CFG [ %d ] => mode: %d P: %d N: %d GAIN: %d\n",
-                i, my_mode, my_chp, my_chn, my_gain);
+                byte1, my_mode, my_chp, my_chn, my_gain);
         break;
 
     case C_TRIGGER_SETUP:
+        byte1 = input_data[4]; //Nb of channel
+        byte2 = input_data[5];  //repetition setup
+        word1 = make16(input_data + 6);         //nb of total points
+        ODStream.TriggerMode(byte1, byte2, word1);
+
+        memcpy(&response[4], &input_data[4], 4);
         resp_len = 4;
 
-        i = input_data[4]; //Nb of channel
-        j = input_data[5];  //repetition setup
-        tdata = make16(input_data + 6);         //nb of total points
-
-        response[4] = i;
-        response[5] = j;
-        response[6] = make8(tdata, 1);
-        response[7] = make8(tdata, 0);
-
-        ODStream.TriggerMode(i, j, tdata);
-
-        _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\n", i, j, tdata);
+        _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\n", byte1, byte2, word1);
         break;
 
     case C_SIGNAL_LOAD:
+        word1 = make16(input_data + 4);         //index init
+        word2 = (input_data[3] - 2)/2;
+
+        for(i = 0; i < word2; i++) {
+            word3 = make16(input_data + 6 + 2*i);      //nb of total points
+            channels[3].databuffer[i + word1] = word3;
+            channels[0].databuffer[i + word1] = word3;
+        }
+
+        memcpy(&response[4], &input_data[4], 2);
         resp_len = 3;
 
-        tdata = make16(input_data + 4);         //index init
-
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
-
-        temp = input_data[3];
-        temp -= 2;
-        temp /= 2;
-        temp += tdata;
-        for(i = 0; i < temp - tdata; i++) {
-            value = make16(input_data + 6 + 2 * i);      //nb of total points
-            channels[3].databuffer[i + tdata] = value;
-            channels[0].databuffer[i + tdata] = value;
-        }
         break;
 
         ///// ALTERNATIVE COMMANDS         //////////////////////////////////////
     case C_ENABLE_CRC:
+        byte1 = input_data[4];
+        crc_enabled = (byte1 > 0);
+
+        response[4] = byte1;
         resp_len = 1;
-
-        i = input_data[4];
-        response[4] = i;
-
-        crc_enabled = (i > 0);
 
         break;
 
     case C_LED_W:
+        byte1 = input_data[4];
+        ledSet(LEDGREEN, byte1 & 0x01);
+        ledSet(LEDRED, byte1 & 0x02);
+
+        response[4] = byte1;
         resp_len = 1;
 
-        i = input_data[4];
-        response[4] = i;
-        ledSet(LEDGREEN, i & 0x01);
-        ledSet(LEDRED, i & 0x02);
-
-        _DEBUG("C_LED_W: %d\n", i);
+        _DEBUG("C_LED_W: %d\n", byte1);
         break;
 
     case C_RESET:
-        resp_len = 0;
-
         response[0] = 0;
         response[1] = C_RESET;
         response[2] = C_RESET;
         response[3] = 0;
+        resp_len = 0;
 
         _DEBUG("C_RESET\n");
 #ifndef SERIAL_DEBUG
@@ -785,32 +730,30 @@ void CommDataClass::processCommand(void)
         break;
 
     case C_WAIT_MS:
-        resp_len = 2;
-
-        tdata = make16(input_data + 4);         //delay in ms
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
-
-        for (i = 0; i < tdata; i++)
+        word1 = make16(input_data + 4);         //delay in ms
+        for (i = 0; i < word1; i++)
             _delay_ms(1);
 
-        _DEBUG("C_WAIT_MS: %d\n", tdata);
+        response[4] = make8(word1, 1);
+        response[5] = make8(word1, 0);
+        resp_len = 2;
+
+        _DEBUG("C_WAIT_MS: %d\n", word1);
         break;
 
     case C_MCP23S17:
         /* Emulate an SPI port using some PIOs for controlling a MCP23S17
          * port expander: PIO1=CLK, PIO2=MOSI, PIO4=SS */
-        tdata = make16(input_data + 4);
-
+        word1 = make16(input_data + 4);
         SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
         mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
-        mcp23s17_write(PIO4, GPIO, tdata);  // write 16 bits to GPIOs
+        mcp23s17_write(PIO4, GPIO, word1);  // write 16 bits to GPIOs
 
+        response[4] = make8(word1, 1);
+        response[5] = make8(word1, 0);
         resp_len = 2;
-        response[4] = make8(tdata, 1);
-        response[5] = make8(tdata, 0);
 
-        _DEBUG("C_MCP23S17: %d\n", tdata);
+        _DEBUG("C_MCP23S17: %d\n", word1);
         break;
 
     case NACK:
@@ -821,7 +764,7 @@ void CommDataClass::processCommand(void)
     response[2] = next_command;
     response[3] = resp_len;
 
-    my_crc16 = CRC_16(resp_len + 2, response + 2);
+    my_crc16 = crc16(resp_len + 2, response + 2);
     response[0] = make8(my_crc16, 1);
     response[1] = make8(my_crc16, 0);
 
@@ -842,12 +785,11 @@ void CommDataClass::processCommand(void)
 // sends output buffer taking account of initial character x7E and escape character x7D
 void CommDataClass::sendCommand(byte* response, int size)
 {
-    int i;
     byte a;
     pioWrite(1, 1);
     Serial.write(0x7E);
 
-    for(i = 0; i < size; i++) {
+    for(byte i = 0; i < size; i++) {
         a = response[i];
 
         if( (a == 0x7D) || (a == 0x7E) ) {
@@ -864,26 +806,24 @@ void CommDataClass::sendCommand(byte* response, int size)
 // resets the system state upon a SYSTEM_RESET message from the host software
 void CommDataClass::systemReset(void)
 {
-    byte i;
-
-    for(i = 0; i < MAX_DATA_BYTES; i++)
+    for(byte i = 0; i < MAX_DATA_BYTES; i++)
         input_data[i] = 0;
 
     wait_for_data = 0;
-    max_data = 0;
+    data_len = 0;
     my_crc16 = 0;
     next_command = 0;
     received_bytes = 0;
 
 }
 
-uint16_t CommDataClass::CRC_16(int size, byte *packet)
+
+uint16_t CommDataClass::crc16(int size, byte *packet)
 {
     uint16_t crccode = 0;
-    byte i;
 
     //Iterate through packet
-    for(i = 0; i < size; i++)
+    for(byte i = 0; i < size; i++)
         crccode += packet[i];
 
     //crccode ^= 0xFFFF;
@@ -891,16 +831,19 @@ uint16_t CommDataClass::CRC_16(int size, byte *packet)
     return crccode;
 }
 
+
 uint16_t CommDataClass::make16(byte* a)
 {
     return ((uint16_t)(a[0]) << 8) | (uint16_t)(a[1]);
 }
+
 
 uint32_t CommDataClass::make32(byte* a)
 {
     return ((uint32_t)(a[0]) << 24) | ((uint32_t)(a[1]) << 16) | \
            ((uint32_t)(a[2]) << 8)  | (uint32_t)(a[3]);
 }
+
 
 byte CommDataClass::make8(uint16_t a, byte position)
 {
@@ -913,5 +856,6 @@ byte CommDataClass::make8(uint16_t a, byte position)
 
     return aux;
 }
+
 
 CommDataClass Comm;
