@@ -164,15 +164,23 @@ void CommDataClass::processStream(void)
     int len;
     int i, j;
 
-    for (i=1; i<5; i++) {
-        if ((i == 1 || i == 4) && (channels[i].dcmode != ANALOG_OUTPUT))
-            continue;
+    Serial.print(">");
 
+
+    for (i=0; i<1; i++) {
+        //if ((i == 0 || i == 3) && (channels[i].dcmode != ANALOG_OUTPUT))
+        //    continue;
+    
+    Serial.print(channels[i].readindex,DEC);
+    Serial.print(" > ");
+    Serial.println(channels[i].writeindex,DEC);    
+    
+    
         if(channels[i].readindex < channels[i].writeindex) {
             len = channels[i].writeindex - channels[i].readindex;
             len = (len > MAXSIZE) ? MAXSIZE : len;
 
-            _DEBUG("Processing stream");
+            Serial.println("Processing stream");
             _DEBUG(" *%d-(w%d, r%d, ndata:%d, state:%d): [", i,
                     channels[i].writeindex, channels[i].readindex,
                     channels[i].ndata, channels[i].state);
@@ -201,15 +209,13 @@ void CommDataClass::processStream(void)
             response[0] = make8(my_crc16, 1);
             response[1] = make8(my_crc16, 0);
 
-            PORTA = PORTA | 0x40;
             sendCommand(response, resp_len + 4);
-            PORTA = PORTA & ~0x40;
 #endif
         }
     }
 
     //End-of-experiment check
-    for (i=1; i<5; i++) {
+    for (i=0; i<4; i++) {
         if(channels[i].writeindex > 0  &&
                 channels[i].writeindex == channels[i].readindex &&
                 channels[i].endReached()) {
@@ -227,6 +233,7 @@ void CommDataClass::processStream(void)
             channels[i].reset();
         }
     }
+    
 }
 
 

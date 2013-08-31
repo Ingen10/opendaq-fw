@@ -64,7 +64,7 @@ void DStream::Start()
 
     CheckTriggers();
     ledSet(LEDGREEN, 1);
-    ledSet(LEDRED, 0);
+    ledSet(LEDRED, 1);
     stream_sm();
 }
 
@@ -168,7 +168,7 @@ void DStream::DeleteExperiments(uint8_t nb)
     if ((nb > 0) && (nb < 5))
         channels[nb-1].Destroy();
     else {
-        for (int i=1; i<5; i++)
+        for (int i=0; i<4; i++)
             channels[i].Destroy();
     }
 }
@@ -176,7 +176,7 @@ void DStream::DeleteExperiments(uint8_t nb)
 
 void DStream::CheckTriggers()
 {
-    for (int i=1; i<5; i++) {
+    for (int i=0; i<4; i++) {
         if(channels[i].state == CH_READY) {
             if(channels[i].CheckMyTrigger())
                 channels[i].Enable();
@@ -232,7 +232,7 @@ void DStream::FlushChan(uint8_t nb)
     if ((nb > 0) && (nb < 5))
         channels[nb-1].Flush();
     else {
-        for (int i=1; i<5; i++)
+        for (int i=0; i<4; i++)
             channels[i].Flush();
     }
 }
@@ -245,24 +245,26 @@ void stream_sm()
     static int led_status = 0;
     static unsigned long ntemp = 0; // counts slots of 500us
 
-    for (int i=1; i<5; i++) {
+    for (int i=0; i<4; i++) {
         if ((channels[i].state == CH_RUN) &&
                 (channels[i].dctype == STREAM_TYPE) &&
                 !(ntemp % channels[i].period)) {
 
-            if (i == 1) {
+                //pioWrite(0, led_status);    //For checking time compensation through D1
+
                 led_status = ~led_status;
                 ledSet(LEDRED, led_status);
-                pioWrite(0, led_status);    //TODO: what is this for?
-            }
-
+  
             channels[i].Activate();
             channels[i].waitStabilization();
             channels[i].Action();
         }
     }
 
+    //if(ntemp%50==0){
+    //}
     ntemp++;
+    
 }
 
 
@@ -277,11 +279,11 @@ void burst_sm()
 
 void ext_sm(int current_value)
 {
-    for (int i=1; i<5; i++) {
+    for (int i=0; i<4; i++) {
         if ((channels[i].state == CH_RUN) &&
                 (channels[i].dctype == EXTERNAL_TYPE) &&
                 ((current_value & 0x80) > 0) == channels[i].edge) {
-            //TODO: comprobar que efectivamente hubo flanco en este pio concreto
+            //TODO: check that indeed there was a slope in this pin exactly
             channels[i].Activate();
             channels[i].waitStabilization();
             channels[i].Action();
@@ -311,7 +313,7 @@ ISR(PCINT0_vect)
         interrupt = 0;
         return;
     }
-    //This is a bucle for wait and avoid fakes edges
+    //This is a bucle for waiting and avoid fakes edges
     for (i = 0; i < 200; i++) {
         refreshValue = PINA;
         for (j = 0; j < 200; j++) {
