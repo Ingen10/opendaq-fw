@@ -28,7 +28,14 @@ int DC_PCINT[] = {PCINT7, PCINT6, PCINT5, PCINT4};
 int DC_DD[] = {DDA7, DDA6, DDA5, DDA4};
 
 DStream ODStream;
-DataChannel channels[4] = DataChannel(INACTIVE_TYPE);
+
+DataChannel Channel1=DataChannel(INACTIVE_TYPE);
+DataChannel Channel2=DataChannel(INACTIVE_TYPE);
+DataChannel Channel3=DataChannel(INACTIVE_TYPE);
+DataChannel Channel4=DataChannel(INACTIVE_TYPE);
+
+DataChannel channels[]={Channel1, Channel2, Channel3, Channel4};
+
 
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -37,11 +44,15 @@ void DStream::Initialize()
     TCCR2A = 0;     // clear control register A
     // set mode 8: phase and frequency correct pwm, stop the timer
     TCCR2B = _BV(WGM13);
+        
 }
 
 
 void DStream::Start()
 {
+    for (int i=0; i<4; i++)
+        channels[i].Flush();
+
     if((channels[0].dctype >= STREAM_TYPE) ||
             (channels[1].dctype >= STREAM_TYPE) ||
             (channels[2].dctype >= STREAM_TYPE) ||
@@ -93,7 +104,7 @@ void DStream::CreateStreamChannel(uint8_t nb, unsigned long ms_period)
     channels[nb-1] = DataChannel(STREAM_TYPE, (unsigned long) ms_period);
 
     if(channels[0].dctype == BURST_TYPE)
-        channels[0].Destroy();
+        channels[0].Destroy();      //if any channel configured as stream, burst mode is disabled
 
     TCCR2A = 0X82;            //CTC MODE, CLEAR OC2A ON COMPARE
     TCCR2B = 4;               //Main clock /64 (2MHz)
@@ -109,6 +120,9 @@ void DStream::CreateExternalChannel(uint8_t nb, uint8_t edge)
 
     channels[nb-1].Destroy();
     channels[nb-1] = DataChannel(EXTERNAL_TYPE, nb-1, edge);
+
+    if(channels[0].dctype == BURST_TYPE)
+        channels[0].Destroy();      //if any channel configured as external, burst mode is disabled
 
     PCMSK0 |= _BV(DC_PCINT[nb-1]);  //Pin Change Enable Mask
     DDRA &= ~(_BV(DC_DD[nb-1]));    //input direction
@@ -181,7 +195,7 @@ void DStream::CheckTriggers()
             if(channels[i].CheckMyTrigger())
                 channels[i].Enable();
         }
-    }
+    } 
 }
 
 
@@ -217,7 +231,7 @@ void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan)
 
 void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain)
 {
-    channels[nb-1].Configure(mode, pchan, nchan, gain);
+    channels[nb-1].Configure(mode, pchan, nchan, gain);    
 }
 
 
@@ -238,6 +252,67 @@ void DStream::FlushChan(uint8_t nb)
 }
 
 
+
+///////////////////////////////////////////////////////////////////////////
+// Access to DataChannels internal variables:
+///////////////////////////////////////////////////////////////////////////
+
+
+unsigned int DStream::ReadIndex(uint8_t nb)
+{
+    return channels[nb-1].readindex;
+}
+
+unsigned int DStream::WriteIndex(uint8_t nb)
+{
+    return channels[nb-1].writeindex;
+}
+
+int DStream::State(uint8_t nb)
+{
+    return channels[nb-1].state;
+}
+
+unsigned long DStream::Ndata(uint8_t nb)
+{
+    return channels[nb-1].ndata;
+}
+
+int DStream::Pchan(uint8_t nb)
+{
+    return channels[nb-1].pch;
+}
+
+int DStream::Nchan(uint8_t nb)
+{
+    return channels[nb-1].nch;
+}
+
+int DStream::Gain(uint8_t nb)
+{
+    return channels[nb-1].g;
+}
+
+signed int DStream::Get(uint8_t nb)
+{
+    return channels[nb-1].Get();
+}
+
+int DStream::endReached(uint8_t nb)
+{
+    return channels[nb-1].endReached();
+}
+
+void DStream::Put(uint8_t nb,unsigned int index,signed int value)
+{
+    channels[nb-1].Put(index,value);
+}
+
+void DStream::Reset(uint8_t nb)
+{
+    channels[nb-1].reset();
+}
+
 // External functions //////////////////////////////////////////////////////////
 
 void stream_sm()
@@ -246,25 +321,17 @@ void stream_sm()
     static unsigned long ntemp = 0; // counts slots of 500us
 
     for (int i=0; i<4; i++) {
-        if ((channels[i].state == CH_RUN) &&
-                (channels[i].dctype == STREAM_TYPE) &&
-                !(ntemp % channels[i].period)) {
+        if ((channels[i].state == CH_RUN) && (channels[i].dctype == STREAM_TYPE) && !(ntemp % channels[i].period)) {
 
-                //pioWrite(0, led_status);    //For checking time compensation through D1
-
-                led_status = ~led_status;
-                ledSet(LEDRED, led_status);
-  
+            ledSet(LEDRED, 1);  
             channels[i].Activate();
             channels[i].waitStabilization();
             channels[i].Action();
+            ledSet(LEDRED, 0);
         }
     }
 
-    //if(ntemp%50==0){
-    //}
-    ntemp++;
-    
+    ntemp++;    
 }
 
 

@@ -22,11 +22,15 @@
 #ifndef DATACHANNEL_H
 #define DATACHANNEL_H
 
+//#define SERIAL_DEBUG
+
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "daqhw.h"
 
 #include "HardwareSerial.h"
+#include "debug.h"
 
 
 //DATACHANNEL TYPES
@@ -81,7 +85,6 @@ private:
     int end_reached;
 
     // methods
-    void Initialize();
     void Begin();
     signed int (*actionCallback)(signed int n); ///USAR FUNCION CON ARGUMENTO INT
 
@@ -115,11 +118,13 @@ public:
     DataChannel(int dtype, int dpin);
     DataChannel(int dtype, int dpin, int dedge);
 
+    void Initialize();
     signed int Get();
     void Action();
 
     void Read();
     void Write();
+    void Put(unsigned int index,signed int value);
 
     int waitStabilization();
 

@@ -63,8 +63,6 @@ DataChannel::DataChannel(int dtype, int dpin, int dedge)
 
 void DataChannel::Action()
 {
-    PORTA = PORTA | 0x10;
-
     if(dcmode == ANALOG_OUTPUT)
         Write();
     else
@@ -82,7 +80,6 @@ void DataChannel::Action()
                 Disable();
         }
     }
-    PORTA = PORTA & 0xEF;
 }
 
 
@@ -96,7 +93,7 @@ void DataChannel::Read()
 {
     signed int c;
 
-    c = ReadNADC(1);    //actionCallback(option);
+    c = actionCallback(option);//ReadNADC(1);//
     databuffer[writeindex % bufferlen] = c;
     writeindex++;
 }
@@ -130,6 +127,10 @@ signed int DataChannel::Get()
     return c;
 }
 
+void DataChannel::Put(unsigned int index,signed int value)
+{
+    databuffer[index] = value;
+}
 
 void DataChannel::Setup(unsigned long maxpoints, int maxrepeat)
 {
@@ -257,10 +258,14 @@ void DataChannel::Enable()
 
     switch (dcmode) {
         case ANALOG_INPUT:
+#ifdef SERIAL_DEBUG
+            actionCallback = ReadAnalogIn;
+#else
             actionCallback = ReadNADC;
+#endif
             break;
         case ANALOG_OUTPUT:
-            actionCallback = SetAnalogVoltage;
+            actionCallback = SetDacOutput;//SetAnalogVoltage;
             break;
         case COUNTER_INPUT:
             actionCallback = getCounter;

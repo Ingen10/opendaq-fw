@@ -27,7 +27,9 @@
 #include "datachannel.h"
 
 #include "HardwareSerial.h"
+#include "debug.h"
 
+//#define SERIAL_DEBUG
 
 //EDGE MODES
 #define H_TO_L      0
@@ -37,7 +39,6 @@
 void stream_sm();
 void burst_sm();
 void ext_sm();
-
 
 /******************************************************************************
  * Class
@@ -81,6 +82,28 @@ public:
 
     void DeleteExperiments(uint8_t nb);
     void FlushChan(uint8_t nb);
+    
+    
+    void Put(uint8_t nb,unsigned int index,signed int value);
+    
+    unsigned int ReadIndex(uint8_t nb);
+    unsigned int WriteIndex(uint8_t nb);
+
+    int State(uint8_t nb);
+
+    unsigned long Ndata(uint8_t nb);
+
+    int Pchan(uint8_t nb);
+    int Nchan(uint8_t nb);
+    int Gain(uint8_t nb);
+
+    signed Get(uint8_t nb);
+
+    int endReached(uint8_t nb);
+    void Reset(uint8_t nb);
+    
+    
+    
 };
 
 #endif

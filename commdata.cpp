@@ -30,6 +30,8 @@ extern "C" {
 
 #define MAXSIZE 60
 
+extern DStream ODStream;
+
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -164,36 +166,25 @@ void CommDataClass::processStream(void)
     int len;
     int i, j;
 
-    Serial.print(">");
-
-
-    for (i=0; i<1; i++) {
-        //if ((i == 0 || i == 3) && (channels[i].dcmode != ANALOG_OUTPUT))
-        //    continue;
+    for (i=1; i<5; i++) {
     
-    Serial.print(channels[i].readindex,DEC);
-    Serial.print(" > ");
-    Serial.println(channels[i].writeindex,DEC);    
-    
-    
-        if(channels[i].readindex < channels[i].writeindex) {
-            len = channels[i].writeindex - channels[i].readindex;
+        if(ODStream.ReadIndex(i) < ODStream.WriteIndex(i)) {
+        //if(i==0){
+            len = ODStream.WriteIndex(i) - ODStream.ReadIndex(i);
             len = (len > MAXSIZE) ? MAXSIZE : len;
 
-            Serial.println("Processing stream");
-            _DEBUG(" *%d-(w%d, r%d, ndata:%d, state:%d): [", i,
-                    channels[i].writeindex, channels[i].readindex,
-                    channels[i].ndata, channels[i].state);
+            _DEBUG(" \r\n*%d-(w%d, r%d, ndata:%d, state:%d): [", i,
+                    ODStream.WriteIndex(i), ODStream.ReadIndex(i),
+                    ODStream.Ndata(i), ODStream.State(i));
 #ifdef SERIAL_DEBUG
             for(j = 0; j < len; j++)
-                _DEBUG("%d ", channels[i].Get());
-            _DEBUG("]");
+                _DEBUG("%d ", ODStream.Get(i));
+            _DEBUG("]\r\n");
 #else
-
             resp_len = 4 + 2 * len;
 
             for(j = 0; j < len; j++) {
-                value = channels[i].Get();
+                value = ODStream.Get(i);
                 response[8 + 2 * j] = make8(value, 1);
                 response[9 + 2 * j] = make8(value, 0);
             }
@@ -201,9 +192,9 @@ void CommDataClass::processStream(void)
             response[2] = 25;
             response[3] = resp_len;  //number of bytes
             response[4] = i;         //channel #
-            response[5] = channels[i].pch;
-            response[6] = channels[i].nch;
-            response[7] = channels[i].g;
+            response[5] = ODStream.Pchan(i);
+            response[6] = ODStream.Nchan(i);
+            response[7] = ODStream.Gain(i);
 
             my_crc16 = crc16(resp_len + 2, response + 2);
             response[0] = make8(my_crc16, 1);
@@ -215,10 +206,10 @@ void CommDataClass::processStream(void)
     }
 
     //End-of-experiment check
-    for (i=0; i<4; i++) {
-        if(channels[i].writeindex > 0  &&
-                channels[i].writeindex == channels[i].readindex &&
-                channels[i].endReached()) {
+    for (i=1; i<5; i++) {
+        if(ODStream.WriteIndex(i) > 0  &&
+                ODStream.WriteIndex(i) == ODStream.ReadIndex(i) &&
+                ODStream.endReached(i)) {
             //send stop
             resp_len = 1;
             response[2] = 80;
@@ -230,7 +221,7 @@ void CommDataClass::processStream(void)
             response[1] = make8(my_crc16, 0);
             sendCommand(response, resp_len + 4);
 
-            channels[i].reset();
+            ODStream.Reset(i);
         }
     }
     
@@ -687,13 +678,13 @@ void CommDataClass::processCommand(void)
         break;
 
     case C_SIGNAL_LOAD:
+
         word1 = make16(input_data + 4);         //index init
         word2 = (input_data[3] - 2)/2;
 
         for(i = 0; i < word2; i++) {
             word3 = make16(input_data + 6 + 2*i);      //nb of total points
-            channels[3].databuffer[i + word1] = word3;
-            channels[0].databuffer[i + word1] = word3;
+            ODStream.Put(4,i + word1,word3);            //fills channel 4 buffer with the input data
         }
 
         memcpy(&response[4], &input_data[4], 2);

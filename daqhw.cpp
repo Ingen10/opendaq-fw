@@ -241,7 +241,7 @@ void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain)
 }
 
 
-void SetDacOutput(int value)
+int SetDacOutput(int value)
 {
     PORTB &= ~(0X01 << 3);
     SPDR = (value & 0xFF00) >> 8;
@@ -249,6 +249,8 @@ void SetDacOutput(int value)
     SPDR = value & 0xFF;
     while(!(SPSR & (1 << SPIF)));
     PORTB |= 0X01 << 3;
+    
+    return 0;
 }
 
 

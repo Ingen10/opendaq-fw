@@ -22,6 +22,8 @@
 #ifndef COMMDATA_H
 #define COMMDATA_H
 
+//#define SERIAL_DEBUG
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -31,8 +33,8 @@
 #include "calibration.h"
 #include "odstream.h"
 #include "encoder.h"
-
-extern DataChannel *channels;
+#include "debug.h"
+#include "odstream.h"
 
 
 #define MAX_DATA_BYTES 128 // max number of data bytes in messages
