@@ -1,4 +1,5 @@
 applet/
+doc/_build
 
 # Compiled Object files
 *.slo
