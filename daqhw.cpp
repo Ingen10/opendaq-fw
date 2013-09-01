@@ -155,6 +155,35 @@ void ledSet(uint8_t nb, uint8_t val)
 // ANALOG CHANNELS & SPI: /////////////////////////////////////////////
 signed int ReadADC()
 {
+#if HW_VERSION==2
+    unsigned long result;
+    signed int a;
+
+    PORTB &= ~(0X01<<2); 
+
+    SPDR = 0x80|myGains|myChannels;
+    while(!(SPSR & (1<<SPIF))); 
+
+    SPDR = 0x61;
+    while(!(SPSR & (1<<SPIF))); 
+
+    SPDR = 0;
+    while(!(SPSR & (1<<SPIF))); 
+    result = SPDR;
+
+    SPDR = 0;
+    while(!(SPSR & (1<<SPIF))); 
+    result = (result<<8)+SPDR;
+
+    PORTB |= 0X01<<2; 
+
+    a = (signed int) result& 0xFFFC;
+    a /= 4;
+
+    return a;
+    
+#else
+
     unsigned long result;
 
     PORTB &= ~(0X01 << 2);
@@ -176,6 +205,7 @@ signed int ReadADC()
     result >>= 2;
 
     return (signed int) result & 0xFFFF;
+#endif
 }
 
 
@@ -199,15 +229,23 @@ signed int ReadAnalogIn(int n)
     signed long r;
 
     r = ReadNADC(n);
+    
+#if HW_VERSION==2
+	r*=2500;
+	r/=8192;
+#else
     r *= -153;
     r /= 1000;
-
+#endif
     return (signed int) r;
 }
 
 
 void ConfigAnalogGain(uint8_t gain)
 {
+#if HW_VERSION==2
+	myGains = gainToAdcset(gain);
+#else
     PORTC &= ~0X03;
     PORTC &= ~(0X01 << 4);
 
@@ -216,11 +254,29 @@ void ConfigAnalogGain(uint8_t gain)
     } else {
         PORTC |= ((gain - 1) & 0X03);
     }
-
+#endif
 }
 
 void ConfigAnalogChannels(uint8_t chp, uint8_t chm)
 {
+#if HW_VERSION==2
+    //If chm channel is different from ground (0), a differential reading will be taken
+    //The firmware automatically selects the complementary channel to chp
+    uint8_t c;
+
+    c = chp;
+    if(c<1)
+        c=1;
+    if(c>8)
+        c=8;
+
+    if(chm == 0){
+        myChannels = ainToSEChan(chp-1);
+    }
+    else{
+        myChannels = ainToDEChan(chp-1);
+    }
+#else
     uint8_t ain_pos, ain_neg;
 
     ain_pos = ainToPort(chp);
@@ -231,31 +287,129 @@ void ConfigAnalogChannels(uint8_t chp, uint8_t chm)
 
     PORTA |= (ain_neg & 0X07);
     PORTC |= (ain_pos & 0X07) << 5;
+#endif
 }
 
 
 void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain)
 {
+#if HW_VERSION==2
+    Config7871();
+#endif
     ConfigAnalogChannels(chp, chm);
     ConfigAnalogGain(gain);
 }
 
 
+////////////////////////////////////////////////
+
+#if HW_VERSION==2
+
+void Config7871()
+{
+	PORTB &= ~(0X01<<2); 
+  
+	SPDR = 0x07;			//REF/OSC REGISTER
+  while(!(SPSR & (1<<SPIF))); 
+	
+  SPDR = 0x3C;			//INTERNAL OSC, CCLK OUTPUT ON, REF ON, BUF ON, 2.5V REF
+  while(!(SPSR & (1<<SPIF))); 
+	
+  PORTB |= 0X01<<2; 
+}
+
+void config7871PIO(int x)
+{
+	int result;
+  
+	PORTB &= ~(0X01<<2); 
+  
+	SPDR = 0x06;			//PIO control register
+  while(!(SPSR & (1<<SPIF))); 
+	
+	SPDR = 0x0F&x;			//All outputs
+  while(!(SPSR & (1<<SPIF))); 
+	
+  PORTB |= 0X01<<2; 
+			
+}
+
+
+void set7871PIO(int x)
+{
+	int result;
+  
+	PORTB &= ~(0X01<<2); 
+  
+	SPDR = 0x05;			//PIO state register
+  while(!(SPSR & (1<<SPIF))); 
+	
+	SPDR = 0x0F&x;		//Set outputs
+  while(!(SPSR & (1<<SPIF))); 
+	
+  PORTB |= 0X01<<2; 	
+}
+#endif
+
+
+
+// DAC functions ///////////////////////////////////////////////
+
+#if HW_VERSION==2
+    void setupLTC2630()
+    {
+        PORTB &= ~(0X01<<3); 
+      
+        SPDR = 0x60;			//Select Internal Reference (Power-on Reset Default)
+      while(!(SPSR & (1<<SPIF))); 	
+
+        SPDR = 0;
+      while(!(SPSR & (1<<SPIF))); 
+
+        SPDR = 0;
+      while(!(SPSR & (1<<SPIF))); 
+        
+      PORTB |= 0X01<<3; 	
+    }
+#endif
+
 int SetDacOutput(int value)
 {
-    PORTB &= ~(0X01 << 3);
+    PORTB &= ~(0X01<<3); 
+#if HW_VERSION==2
+    SPDR = 0x30;			//Write to and Update (Power up) DAC Register
+    while(!(SPSR & (1<<SPIF))); 
+    SPDR = (value & 0xFF00) >> 8;
+    while(!(SPSR & (1<<SPIF))); 
+    SPDR = value & 0xF0;
+    while(!(SPSR & (1<<SPIF))); 
+#else
     SPDR = (value & 0xFF00) >> 8;
     while(!(SPSR & (1 << SPIF)));
     SPDR = value & 0xFF;
     while(!(SPSR & (1 << SPIF)));
-    PORTB |= 0X01 << 3;
-    
+#endif
+    PORTB |= 0X01 << 3; 
     return 0;
 }
 
 
 int SetAnalogVoltage(signed int mv)
 {
+#if HW_VERSION==2
+	unsigned int aux;
+	
+	if(mv<0)
+		aux = 0;
+	else if(mv>4096)
+		aux = 65536;
+	else
+		aux = 16*mv;
+
+	SetDacOutput(aux);
+	
+	return (int)aux;
+#else
     unsigned long aux;
 
     if (mv < -4096)
@@ -267,6 +421,7 @@ int SetAnalogVoltage(signed int mv)
     SetDacOutput(aux);
 
     return (int)aux;
+#endif
 }
 
 // TIMER1 based functions ///////////////////////////////////////////////
@@ -335,16 +490,18 @@ void daqInit()
     //PORTD: no outputs (U1TX alternate function)
     DDRD = 0X00;
 
-    //SPI begin
-    SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4
-    //SPSR |= 1;
-    /*
-      SPCR = (1<<SPE)|(1<<MSTR)|(0x04)|1;           //fclk/4
-      SPSR |= 1;
-    */
-
     //LEDG ON
     PORTC |= 1 << 3;
+    
+#if HW_VERSION==2
+        SPCR = (1<<SPE)|(1<<MSTR)|(0x0C)|1;             //fclk/16, CLK HIGH inactive, trailing edge
+        setupLTC2630();
+        Config7871();
+#else
+        SPCR = (1<<SPE)|(1<<MSTR)|(0x04);               //fclk/4
+#endif
+    
+    
 }
 
 

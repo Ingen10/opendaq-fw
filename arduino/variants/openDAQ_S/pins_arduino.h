@@ -28,6 +28,9 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
+//1: OPENDAQ-M	2: OPENDAQ-S
+#define HW_VERSION 2
+
 #define PIO1    0
 #define PIO2    1
 #define PIO3    2

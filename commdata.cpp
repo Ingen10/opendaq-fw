@@ -407,7 +407,7 @@ void CommDataClass::processCommand(void)
 
         my_id = Cal.ID_Recall();
 
-        response[4] = HVER;
+        response[4] = HW_VERSION;
         response[5] = FVER;
         memcpy(&response[6], &my_id, 4);
         resp_len = 6;

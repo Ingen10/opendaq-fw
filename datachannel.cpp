@@ -176,9 +176,9 @@ int DataChannel::CheckMyTrigger()
 void DataChannel::Configure(int mode)
 {
     dcmode = mode;
-    pch = AIN1;
-    nch = AGND;
-    g = GAINX001;
+    pch = 1;
+    nch = 0;
+    g = 0;
 }
 
 
@@ -187,7 +187,7 @@ void DataChannel::Configure(int mode, int pchan, int nchan)
     dcmode = mode;
     pch = pchan;
     nch = nchan;
-    g = GAINX001;
+    g = 0;
 }
 
 
@@ -214,8 +214,8 @@ void DataChannel::Configure(int mode, int channel)
 {
     dcmode = mode;
     pch = channel;
-    nch = AGND;
-    g = GAINX001;
+    nch = 0;
+    g = 0;
 }
 
 
