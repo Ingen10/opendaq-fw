@@ -24,6 +24,9 @@
 
 //#define SERIAL_DEBUG
 
+//Firmware version:
+#define FVER        100
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>

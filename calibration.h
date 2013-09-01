@@ -25,10 +25,6 @@
 #include <inttypes.h>
 #include "HardwareSerial.h"
 
-
-#define HVER        1
-#define FVER        1
-
 #define CW_MARK     6
 #define CW_IND      0X55
 

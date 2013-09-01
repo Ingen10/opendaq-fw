@@ -18,26 +18,15 @@ void setup()
     Comm.begin();
 
     delay(100);
-    SetAnalogVoltage(-1000);
+    SetAnalogVoltage(0);
 
-    _DEBUG("memory < %d\n", availableMemory());
+    _DEBUG("memory < %d\r\n", availableMemory());
+    _DEBUG("VERSION %d\r\n", HW_VERSION);
 
     ledSet(LEDGREEN, 1);
     ledSet(LEDRED, 0);
 
     wdt_enable(WDTO_2S);
-    
-    ///////////////////////////
-    /*
-    ODStream.Initialize();
-    ODStream.CreateStreamChannel(1,20);
-    ODStream.ConfigChan(1, ANALOG_INPUT, 8, 0, 1);
-    ODStream.ConfigChan(2, ANALOG_INPUT, 7, 2, 2);
-    ODStream.ConfigChan(3, ANALOG_INPUT, 6, 0, 3);
-    ODStream.ConfigChan(4, ANALOG_INPUT, 5, 4, 0);
-    ODStream.Start();
-    */
-    ////////////////////////////
 }
 
 
