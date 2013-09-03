@@ -303,6 +303,10 @@ void CommDataClass::processCommand(void)
 
     case C_SET_ANALOG:
         my_vout = make16(input_data + 4);
+        #if HW_VERSION==2
+            my_vout*=2;
+        #endif
+
         SetDacOutput(my_vout);
 
         response[4] = make8(my_vout, 1);
