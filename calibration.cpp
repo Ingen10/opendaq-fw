@@ -32,22 +32,29 @@ CalibrationClass::CalibrationClass(void)
 
 void CalibrationClass::Reset_calibration()
 {
-    //AIN CALIBRATION DEFAULTS
-    gain_m[0] = 37500;
-    gain_m[1] = 12500;
-    gain_m[2] =  6250;
-    gain_m[3] =  1250;
-    gain_m[4] =   125;
-
-    gain_b[0] = 0;
-    gain_b[1] = 0;
-    gain_b[2] = 0;
-    gain_b[3] = 0;
-    gain_b[4] = 0;
-
     //DAC CALIBRATION DEFAULTS
-    gain_m[5] = 1000;
-    gain_b[5] = 0;
+    gain_m[0] = 1000;
+    gain_b[0] = 0;
+    
+    //AIN CALIBRATION DEFAULTS
+#if HW_VERSION==2
+    for(int i=1; i<13; i++)
+    {
+        gain_m[i] = 100;
+    }
+#else
+    gain_m[1] = 37500;
+    gain_m[2] = 12500;
+    gain_m[3] =  6250;
+    gain_m[4] =  1250;
+    gain_m[5] =   125;
+#endif
+    
+    for(int i=1; i<13; i++)
+    {
+        gain_b[i] = 0;
+    }
+
 }
 
 

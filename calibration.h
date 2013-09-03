@@ -31,17 +31,17 @@
 #define IW_MARK     4
 #define IW_IND      0XAA
 
-#define CG0_POS     10
-#define OFFSET_POS  20
+#define CG0_POS		10
+#define OFFSET_POS	30
 
-#define CID_POS     40
+#define CID_POS 	60
 
 
 class CalibrationClass {
 public:
     // properties
-    uint16_t gain_m[6];
-    int16_t gain_b[6];
+    uint16_t gain_m[17];
+    int16_t gain_b[17];
 
     uint32_t my_id;
 
