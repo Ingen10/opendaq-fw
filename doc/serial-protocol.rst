@@ -343,7 +343,7 @@ Byte    Description         Value           Notes
 
 SET_DAC
 -------
-Set DAC output voltage (from -4096 to +4096 mV). DAC resolution is 12 bits.
+Set DAC output voltage (RAW value). DAC resolution depends on device model (14 bits for openDAQ [M], 12bits for openDAQ[S]).
 
 **Command:**
 
