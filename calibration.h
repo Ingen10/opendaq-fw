@@ -32,16 +32,17 @@
 #define IW_IND      0XAA
 
 #define CG0_POS		10
-#define OFFSET_POS	30
+#define OFFSET_POS	36
 
-#define CID_POS 	60
+#define CID_POS 	80
 
+#define NCAL_POS    17
 
 class CalibrationClass {
 public:
     // properties
-    uint16_t gain_m[17];
-    int16_t gain_b[17];
+    unsigned long   gain_m[NCAL_POS+1];
+    long            gain_b[NCAL_POS+1];
 
     uint32_t my_id;
 

@@ -432,7 +432,7 @@ void CommDataClass::processCommand(void)
             Cal.gain_m[byte1] = word1;
             word2 = make16(input_data + 7);
             Cal.gain_b[byte1] = word2;
-            Cal.SaveCalibration();
+            Cal.SaveCalibration();            
         } else if(next_command == C_RESET_CALIB) {
             Cal.Reset_calibration();
             Cal.SaveCalibration();
@@ -447,8 +447,10 @@ void CommDataClass::processCommand(void)
         response[8] = make8(word2, 0);
 
 #ifdef SERIAL_DEBUG
-        f = word1/10000.0;
-        _DEBUG("C_xxx_CALIB: g%d: m=%f (m=%d) : b=%d\n", byte1, f, word1, word2);
+        for(i=0;i<NCAL_POS;i++){
+            _DEBUG("m[%d]: %d\r\n", i,Cal.gain_m[i]);
+            _DEBUG("b[%d]: %d\r\n", i,Cal.gain_b[i]);
+        }
 #endif
         break;
 

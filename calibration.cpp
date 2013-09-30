@@ -19,6 +19,7 @@
  *  Author:   JRB
  */
 
+
 #include <avr/eeprom.h>
 #include "calibration.h"
 
@@ -38,7 +39,7 @@ void CalibrationClass::Reset_calibration()
     
     //AIN CALIBRATION DEFAULTS
 #if HW_VERSION==2
-    for(int i=1; i<13; i++)
+    for(int i=1; i<NCAL_POS; i++)
     {
         gain_m[i] = 100;
     }
@@ -50,7 +51,7 @@ void CalibrationClass::Reset_calibration()
     gain_m[5] =   125;
 #endif
     
-    for(int i=1; i<13; i++)
+    for(int i=1; i<NCAL_POS; i++)
     {
         gain_b[i] = 0;
     }
@@ -105,19 +106,26 @@ void CalibrationClass::ID_Save(uint32_t device_id)
 
 void CalibrationClass::SaveCalibration()
 {
-    unsigned char *p;
+    long *p;
+    uint8_t value;
     int i;
 
-    p = (unsigned char*) gain_m;
+    p = (long*) gain_m;
 
-    for(i = 0; i < sizeof(gain_m); i++) {
-        write(CG0_POS + i, p[i]);
+    for(i = 0; i < NCAL_POS; i++) {
+        value = p[i]&0xFF;
+        write(CG0_POS + 2*i, value);
+        value = (p[i]&0xFF00)>>8;
+        write(CG0_POS + 2*i+1, value);
     }
 
-    p = (unsigned char*) gain_b;
+    p = (long*) gain_b;
 
-    for(i = 0; i < sizeof(gain_b); i++) {
-        write(CG0_POS + OFFSET_POS + i, p[i]);
+    for(i = 0; i < NCAL_POS; i++) {
+        value = p[i]&0xFF;
+        write(CG0_POS + OFFSET_POS + 2*i, value);
+        value = (p[i]&0xFF00)>>8;
+        write(CG0_POS + OFFSET_POS + 2*i+1, value);
     }
 
     write(CW_MARK, CW_IND);
@@ -125,7 +133,8 @@ void CalibrationClass::SaveCalibration()
 
 int CalibrationClass::RecallCalibration()
 {
-    unsigned char *p;
+    long *p;
+    uint8_t value;
     int i;
     int a;
 
@@ -135,16 +144,22 @@ int CalibrationClass::RecallCalibration()
         return 0;
     }
 
-    p = (unsigned char*) gain_m;
+    p = (long*) gain_m;
 
-    for(i = 0; i < sizeof(gain_m); i++) {
-        p[i] = read(CG0_POS + i);
+    for(i = 0; i < NCAL_POS; i++) {
+        value = read(CG0_POS + 2*i);
+        p[i] = value;
+        value = read(CG0_POS + 2*i +1);
+        p[i] |= (value<<8);
     }
 
-    p = (unsigned char*) gain_b;
+    p = (long*) gain_b;
 
-    for(i = 0; i < sizeof(gain_b); i++) {
-        p[i] = read(CG0_POS + OFFSET_POS + i);
+    for(i = 0; i < NCAL_POS; i++) {
+        value = read(CG0_POS + OFFSET_POS + 2*i);
+        p[i] = value;
+        value = read(CG0_POS + OFFSET_POS + 2*i +1);
+        p[i] |= (value<<8);
     }
 
     return a;
