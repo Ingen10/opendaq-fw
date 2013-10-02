@@ -105,7 +105,7 @@ void DataChannel::Write()
     unsigned int add;
 
     c = databuffer[writeindex % maxndata];
-    SetAnalogVoltage(c);
+    SetDacOutput(c);
     writeindex++;
     readindex = writeindex;
 }
