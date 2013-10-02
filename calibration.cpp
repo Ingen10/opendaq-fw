@@ -96,7 +96,7 @@ void CalibrationClass::ID_Save(uint32_t device_id)
 
     for(i = 0; i < 4; i++) {
         p = i32 & 0x000000FF;
-        write(CID_POS + 3 - i, p);
+        write(CID_POS + i, p);
         i32 >>= 8;
     }
 }
