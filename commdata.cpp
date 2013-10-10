@@ -469,7 +469,8 @@ void CommDataClass::processCommand(void)
         byte1 = input_data[4];
         word1 = getCounter(byte1);
 
-        memcpy(&response[4], &input_data[4], 2);
+        response[4] = make8(word1, 1);
+        response[5] = make8(word1, 0);
         resp_len = 2;
 
         _DEBUG("C_GET_COUNTER: %d\n", word1);
