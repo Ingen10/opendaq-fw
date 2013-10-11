@@ -21,6 +21,7 @@
 
 #ifndef ODSTREAM_H
 #define ODSTREAM_H
+//#define SERIAL_DEBUG
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -29,8 +30,6 @@
 #include "HardwareSerial.h"
 #include "debug.h"
 
-//#define SERIAL_DEBUG
-
 //EDGE MODES
 #define H_TO_L      0
 #define L_TO_H      1
@@ -38,7 +37,12 @@
 
 void stream_sm();
 void burst_sm();
-void ext_sm();
+void ext_sm(int bit_changes,int value);
+
+#define ainToDEChan(P) ( pgm_read_byte( ain_to_deadc_PGM + (P) ) )
+
+
+
 
 /******************************************************************************
  * Class

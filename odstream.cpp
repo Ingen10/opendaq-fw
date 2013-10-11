@@ -24,8 +24,9 @@
 #define T2_RESOLUTION 256   // Timer2 is 8 bit
 
 
-int DC_PCINT[] = {PCINT7, PCINT6, PCINT5, PCINT4};
-int DC_DD[] = {DDA7, DDA6, DDA5, DDA4};
+const int DC_PCINT[] = {PCINT7, PCINT6, PCINT5, PCINT4};
+const int DC_DD[] = {DDA7, DDA6, DDA5, DDA4};
+const int DC_PTNB[] = {0X80, 0X40, 0X20, 0X10};
 
 DStream ODStream;
 
@@ -124,8 +125,10 @@ void DStream::CreateExternalChannel(uint8_t nb, uint8_t edge)
     if(channels[0].dctype == BURST_TYPE)
         channels[0].Destroy();      //if any channel configured as external, burst mode is disabled
 
-    PCMSK0 |= _BV(DC_PCINT[nb-1]);  //Pin Change Enable Mask
+		//PCMSK0 |= _BV(PCINT7);  				//Pin Change Enable Mask
+	//	DDRA &= ~(_BV(DDA7));					//input direction
     DDRA &= ~(_BV(DC_DD[nb-1]));    //input direction
+    PCMSK0 |= _BV(DC_PCINT[nb-1]);  //Pin Change Enable Mask
 
     //stores variable with actual external input
     usingch = 0;
@@ -344,11 +347,12 @@ void burst_sm()
 }
 
 
-void ext_sm(int current_value)
+void ext_sm(int bit_changes,int value)
 {
     for (int i=0; i<4; i++) {
-        if ((channels[i].state == CH_RUN) && (channels[i].dctype == EXTERNAL_TYPE) && ((current_value&0x80)>0)==channels[i].edge) {
-            //TODO: check that indeed there was a slope in this pin exactly
+        if ((channels[i].state == CH_RUN) && (channels[i].dctype == EXTERNAL_TYPE) &&                //channel external & running
+        ((bit_changes&DC_PTNB[i])!=0) && (((value&DC_PTNB[i])!=0)==channels[i].edge) ) {            //edge detected & correct polarity
+            
             ledSet(LEDRED, 1);
             channels[i].Activate();
             channels[i].waitStabilization();
@@ -363,19 +367,24 @@ void ext_sm(int current_value)
 // INTERRUPT GENERAL ROUTINES:
 /////////////////////////////////////////////////////////////////////////////
 
+//Timer 2 interrupt: Stream And Burst experiments
 ISR(TIMER2_COMPA_vect)
 {
     ODStream.tstreamCallback();
 }
 
-
+//External interrupt: External experiments on D1-D4 edge inputs
 ISR(PCINT0_vect)
 {
     static unsigned interrupt;
-    unsigned int i, j;
-    int currentValue, refreshValue;
+    unsigned int i,j;
+    static int lastValue=0xF0;
+    int refreshValue;
+    int dif;
+    
     if (PCIFR != 0)
         return;
+    
     if (interrupt) {
         interrupt = 0;
         return;
@@ -384,11 +393,14 @@ ISR(PCINT0_vect)
     for (i = 0; i < 200; i++) {
         refreshValue = PINA;
         for (j = 0; j < 200; j++) {
-            refreshValue += PINA;
+            refreshValue &= PINA;
         }
     }
-
-    ext_sm(refreshValue);
+    
+    dif = refreshValue^lastValue;
+    ext_sm(dif,refreshValue);
+    
+    lastValue = refreshValue;
 
     //if a interrupt was detected, next re-entry will return inmediatly
     if (PCIFR != 0)
