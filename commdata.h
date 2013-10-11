@@ -23,9 +23,8 @@
 #define COMMDATA_H
 
 //#define SERIAL_DEBUG
-
 //Firmware version:
-#define FVER        100
+#define FVER        110
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
