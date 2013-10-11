@@ -347,13 +347,13 @@ void burst_sm()
 void ext_sm(int current_value)
 {
     for (int i=0; i<4; i++) {
-        if ((channels[i].state == CH_RUN) &&
-                (channels[i].dctype == EXTERNAL_TYPE) &&
-                ((current_value & 0x80) > 0) == channels[i].edge) {
+        if ((channels[i].state == CH_RUN) && (channels[i].dctype == EXTERNAL_TYPE) && ((current_value&0x80)>0)==channels[i].edge) {
             //TODO: check that indeed there was a slope in this pin exactly
+            ledSet(LEDRED, 1);
             channels[i].Activate();
             channels[i].waitStabilization();
             channels[i].Action();
+            ledSet(LEDRED, 0);
         }
     }
 }
@@ -380,7 +380,7 @@ ISR(PCINT0_vect)
         interrupt = 0;
         return;
     }
-    //This is a bucle for waiting and avoid fakes edges
+    //This is a bucle for waiting and avoid fake edges
     for (i = 0; i < 200; i++) {
         refreshValue = PINA;
         for (j = 0; j < 200; j++) {
@@ -390,7 +390,7 @@ ISR(PCINT0_vect)
 
     ext_sm(refreshValue);
 
-    //if a interrupt was caused, next re-entry will return inmediatly
+    //if a interrupt was detected, next re-entry will return inmediatly
     if (PCIFR != 0)
         interrupt = 1;
     else
