@@ -22,9 +22,9 @@
 #ifndef COMMDATA_H
 #define COMMDATA_H
 
-//#define SERIAL_DEBUG
+#define SERIAL_DEBUG
 //Firmware version:
-#define FVER        110
+#define FVER        112
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -37,6 +37,7 @@
 #include "encoder.h"
 #include "debug.h"
 #include "odstream.h"
+#include "bbspi.h"
 
 
 #define MAX_DATA_BYTES 128 // max number of data bytes in messages
@@ -102,7 +103,10 @@
 
 #define C_ENABLE_CRC    55
 
-#define C_MCP23S17      70
+#define C_SPISW_SETUP       28  //Bit bang spi configure
+#define C_SPISW_TRANSFER    29  //Bit bang spi transfer (send+receive)
+
+//#define C_MCP23S17      70
 
 //other constants
 #define ID_OVERWRITE            4

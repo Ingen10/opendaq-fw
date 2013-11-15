@@ -21,7 +21,6 @@
 
 #include "commdata.h"
 #include "debug.h"
-#include "mcp23s17.h"
 
 extern "C" {
 #include <string.h>
@@ -233,19 +232,20 @@ void CommDataClass::processStream(void)
 void CommDataClass::processCommand(void)
 {
     uint16_t word1, word2, word3;
-    byte byte1, byte2, i;
+    byte byte1, byte2, byte3;
+    byte i;
     byte resp_len = 0;
     byte response[MAX_DATA_BYTES];
 
 #ifdef SERIAL_DEBUG
     float f;
 
-    _DEBUG("crc16: %X <> %X\n", my_crc16, crc16(data_len + 2, input_data + 2));
-    _DEBUG("command: %X\n", next_command);
-    _DEBUG("bytes: %X\n", data_len);
+    _DEBUG("crc16: %X <> %X\r\n", my_crc16, crc16(data_len + 2, input_data + 2));
+    _DEBUG("command: %X\r\n", next_command);
+    _DEBUG("bytes: %X\r\n", data_len);
     for(i = 0; i < data_len; i += 2)
         _DEBUG("%X ", make16(input_data + i + 4));
-    _DEBUG("\n");
+    _DEBUG("\r\n");
 #endif
 
     switch(next_command) {
@@ -256,11 +256,11 @@ void CommDataClass::processCommand(void)
         response[5] = make8(word1, 0);
         resp_len = 2;
 
-        _DEBUG("AIN: %d\n", word1);
+        _DEBUG("AIN: %d\r\n", word1);
         _DEBUG("P: %d ", my_chp);
         _DEBUG("N: %d ", my_chn);
         _DEBUG("GAIN: %d ", my_gain);
-        _DEBUG("NSAMPLES: %d\n", my_nsamples);
+        _DEBUG("NSAMPLES: %d\r\n", my_nsamples);
         break;
 
     case C_AIN_CFG:
@@ -283,11 +283,11 @@ void CommDataClass::processCommand(void)
         response[9] = my_nsamples;
         resp_len = 6;
 
-        _DEBUG("AIN_CFG: %d\n", word1);
+        _DEBUG("AIN_CFG: %d\r\n", word1);
         _DEBUG("P: %d ", my_chp);
         _DEBUG("N: %d ", my_chn);
         _DEBUG("GAIN: %d ", my_gain);
-        _DEBUG("NSAMPLES: %d\n", my_nsamples);
+        _DEBUG("NSAMPLES: %d\r\n", my_nsamples);
         break;
 
     case C_SET_DAC:
@@ -298,7 +298,7 @@ void CommDataClass::processCommand(void)
         response[5] = make8(my_vout, 0);
         resp_len = 2;
 
-        _DEBUG("C_SET_DAC: %d\n", my_vout);
+        _DEBUG("C_SET_DAC: %d\r\n", my_vout);
         break;
 
     case C_SET_ANALOG:
@@ -313,7 +313,7 @@ void CommDataClass::processCommand(void)
         response[5] = make8(my_vout, 0);
         resp_len = 2;
 
-        _DEBUG("C_SET_ANALOG: %d\n", my_vout);
+        _DEBUG("C_SET_ANALOG: %d\r\n", my_vout);
         break;
 
         ///// PIO & PORT COMMANDS  /////////////////////////////////////
@@ -323,61 +323,59 @@ void CommDataClass::processCommand(void)
         if(data_len > 1) {
             byte2 = input_data[5];
             pioWrite(byte1 - 1, byte2);
-        } else
+        } else {
             byte2 = pioRead(byte1 - 1);
+        }
 
         response[4] = byte1;
         response[5] = byte2;
         resp_len = 2;
 
-        _DEBUG("C_PIO: %d: %d\n", byte1, byte2);
+        _DEBUG("C_PIO: %d: %d\r\n", byte1, byte2);
         break;
 
     case C_PIO_DIR:
         byte1 = input_data[4];
         if(data_len > 1) {
             byte2 = input_data[5];
-            if(byte2 != 0)
-                SetpioMode(byte1 - 1, OUTPUT);
-            else
-                //pinMode(8,INPUT);
-                SetpioMode(byte1 - 1, INPUT);
-        } else
+            SetpioMode(byte1 - 1, byte2>0);
+        } else {
             byte2 = GetpioMode(word1 - 1);
-
+        }
+        
         response[4] = byte1;
         response[5] = byte2;
         resp_len = 2;
 
-        _DEBUG("C_PIO_DIR: %d: %d\n", byte1, byte2);
+        _DEBUG("C_PIO_DIR: %d: %d\r\n", byte1, byte2);
         break;
 
     case C_PORT:
         if(data_len > 0) {
-            //TODO: verificar si los 1 o los 0 son las salidas
             byte1 = input_data[4];
             OutputDigital(byte1);
             byte1 = ReadDigital();
-        } else
+        } else {
             byte1 = ReadDigital();
-
+        }
+        
         response[4] = byte1;
         resp_len = 1;
 
-        _DEBUG("C_PORT: %d\n", byte1);
+        _DEBUG("C_PORT: %d\r\n", byte1);
         break;
 
     case C_PORT_DIR:
         if(data_len > 0) {
             byte1 = input_data[4];
             SetDigitalDir(byte1);
-        } else
+        } else {
             byte1 = GetDigitalDir();
-
+        }
         response[4] = byte1;
         resp_len = 1;
 
-        _DEBUG("C_PORT_DIR: %d\n", byte1);
+        _DEBUG("C_PORT_DIR: %d\r\n", byte1);
         break;
 
         ///// EEPROM COMMANDS         /////////////////////////////////////
@@ -390,7 +388,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 2);
         resp_len = 2;
 
-        _DEBUG("EEPROM_WRITE: [%d] = %d\n", byte1, byte2);
+        _DEBUG("EEPROM_WRITE: [%d] = %d\r\n", byte1, byte2);
         break;
 
     case C_EEPROM_READ:
@@ -400,7 +398,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 2);
         resp_len = 2;
 
-        _DEBUG("EEPROM_READ: [%d] = %d\n", byte1, byte2);
+        _DEBUG("EEPROM_READ: [%d] = %d\r\n", byte1, byte2);
         break;
 
     case C_ID_CONFIG:
@@ -416,7 +414,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[6], &my_id, 4);
         resp_len = 6;
 
-        _DEBUG("C_ID_CONFIG: ID = %d  x%X\n", my_id, my_id);
+        _DEBUG("C_ID_CONFIG: ID = %d  x%X\r\n", my_id, my_id);
         break;
 
     case C_GET_CALIB:
@@ -462,7 +460,7 @@ void CommDataClass::processCommand(void)
         response[4] = byte1;
         resp_len = 1;
 
-        _DEBUG("C_COUNTER_INIT: f_%d\n", byte1);
+        _DEBUG("C_COUNTER_INIT: f_%d\r\n", byte1);
         break;
 
     case C_GET_COUNTER:
@@ -473,7 +471,7 @@ void CommDataClass::processCommand(void)
         response[5] = make8(word1, 0);
         resp_len = 2;
 
-        _DEBUG("C_GET_COUNTER: %d\n", word1);
+        _DEBUG("C_GET_COUNTER: %d\r\n", word1);
         break;
 
         ///// PWM COMMANDS       /////////////////////////////////////
@@ -485,7 +483,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 4);
         resp_len = 4;
 
-        _DEBUG("C_PWM_INIT: f_ %d , duty_ %d\n", word2, word1);
+        _DEBUG("C_PWM_INIT: f_ %d , duty_ %d\r\n", word2, word1);
         break;
 
     case C_PWM_DUTY:
@@ -495,7 +493,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 4);
         resp_len = 2;
 
-        _DEBUG("C_PWM_DUTY: %d\n", word1);
+        _DEBUG("C_PWM_DUTY: %d\r\n", word1);
         break;
 
     case C_PWM_STOP:
@@ -515,7 +513,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 4);
         resp_len = 2;
 
-        _DEBUG("C_CAPTURE_INIT: T = %d\n", word1);
+        _DEBUG("C_CAPTURE_INIT: T = %d\r\n", word1);
         break;
 
     case C_CAPTURE_STOP:
@@ -535,7 +533,7 @@ void CommDataClass::processCommand(void)
         response[6] = make8(word1, 0);
         resp_len = 3;
 
-        _DEBUG("C_GET_CAPTURE (%d): %d\n", byte1, word1);
+        _DEBUG("C_GET_CAPTURE (%d): %d\r\n", byte1, word1);
         break;
 
     ///// ENCODER COMMANDS        //////////////////////////////////////
@@ -546,7 +544,7 @@ void CommDataClass::processCommand(void)
         resp_len = 1;
 
         encoder.Start(word1);
-        _DEBUG("C_ENCODER_INIT: T = %d\n", byte1, word1);
+        _DEBUG("C_ENCODER_INIT: T = %d\r\n", byte1, word1);
         break;
 
     case C_ENCODER_STOP:
@@ -564,7 +562,7 @@ void CommDataClass::processCommand(void)
         response[5] = make8(word1, 0);
         resp_len = 2;
 
-        _DEBUG("C_GET_ENCODER: (%d): %d\n", byte1, word1);
+        _DEBUG("C_GET_ENCODER: (%d): %d\r\n", byte1, word1);
         break;
 
     ///// STREAM CONTROL COMMANDS      ///////////////////////////////////
@@ -577,7 +575,7 @@ void CommDataClass::processCommand(void)
 
         ODStream.CreateStreamChannel(byte1, word1);
 
-        _DEBUG("C_STREAM_CREATE [ %d ] => f(ms)= %d\n", byte1, word1);
+        _DEBUG("C_STREAM_CREATE [ %d ] => f(ms)= %d\r\n", byte1, word1);
         break;
 
     case C_BURST_CREATE:
@@ -588,7 +586,7 @@ void CommDataClass::processCommand(void)
 
         ODStream.CreateBurstChannel(word1);
 
-        _DEBUG("C_BURST_CREATE => f(us)= %d\n", word1);
+        _DEBUG("C_BURST_CREATE => f(us)= %d\r\n", word1);
         break;
 
     case C_EXTERNAL_CREATE:
@@ -600,21 +598,21 @@ void CommDataClass::processCommand(void)
         response[5] = byte2;
         resp_len = 2;
 
-        _DEBUG("C_EXTERNAL_CREATE [ %d ] => edge= %d\n", byte1, byte2);
+        _DEBUG("C_EXTERNAL_CREATE [ %d ] => edge= %d\r\n", byte1, byte2);
         break;
 
     case C_STREAM_START:
         ODStream.Start();
         resp_len = 0;
 
-        _DEBUG("C_STREAM_START\n");
+        _DEBUG("C_STREAM_START\r\n");
         break;
 
     case C_STREAM_STOP:
         ODStream.Stop();
         resp_len = 0;
 
-        _DEBUG("C_STREAM_STOP\n");
+        _DEBUG("C_STREAM_STOP\r\n");
         break;
 
 
@@ -625,7 +623,7 @@ void CommDataClass::processCommand(void)
         response[4] = byte1;
         resp_len = 1;
 
-        _DEBUG("C_CHANNEL_FLUSH: %d\n", byte1);
+        _DEBUG("C_CHANNEL_FLUSH: %d\r\n", byte1);
         break;
 
 
@@ -636,7 +634,7 @@ void CommDataClass::processCommand(void)
         response[4] = byte1;
         resp_len = 1;
 
-        _DEBUG("C_CHANNEL_DESTROY: %d\n", byte1);
+        _DEBUG("C_CHANNEL_DESTROY: %d\r\n", byte1);
         break;
 
     ///// DATA CHANNEL CONFIGURATION        //////////////////////////////////////
@@ -649,7 +647,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 4);
         resp_len = 4;
 
-        _DEBUG("C_CHANNEL_SETUP [ %d ] => Nb= %d repeat=%d\n", byte1, word1, byte2);
+        _DEBUG("C_CHANNEL_SETUP [ %d ] => Nb= %d repeat=%d\r\n", byte1, word1, byte2);
         break;
 
     case C_CHANNEL_CFG:
@@ -668,7 +666,7 @@ void CommDataClass::processCommand(void)
         response[9] = my_nsamples;
         resp_len = 6;
 
-        _DEBUG("C_CHANNEL_CFG [ %d ] => mode: %d P: %d N: %d GAIN: %d\n",
+        _DEBUG("C_CHANNEL_CFG [ %d ] => mode: %d P: %d N: %d GAIN: %d\r\n",
                 byte1, my_mode, my_chp, my_chn, my_gain);
         break;
 
@@ -681,7 +679,7 @@ void CommDataClass::processCommand(void)
         memcpy(&response[4], &input_data[4], 4);
         resp_len = 4;
 
-        _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\n", byte1, byte2, word1);
+        _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\r\n", byte1, byte2, word1);
         break;
 
     case C_SIGNAL_LOAD:
@@ -689,9 +687,9 @@ void CommDataClass::processCommand(void)
         word1 = make16(input_data + 4);         //index init
         word2 = (input_data[3] - 2)/2;
 
-        for(i = 0; i < word2; i++) {
+        for(i=0; i<word2 ; i++) {
             word3 = make16(input_data + 6 + 2*i);      //nb of total points
-            ODStream.Put(4,i + word1,word3);            //fills channel 4 buffer with the input data
+            ODStream.Put(4,i + word1,word3);           //fills channel 4 buffer with the input data
         }
 
         memcpy(&response[4], &input_data[4], 2);
@@ -699,7 +697,43 @@ void CommDataClass::processCommand(void)
 
         break;
 
-        ///// ALTERNATIVE COMMANDS         //////////////////////////////////////
+    
+    ///// BIT BANG SPI COMMANDS         //////////////////////////////////////
+    case C_SPISW_SETUP:
+        if(data_len > 0)
+            byte1 = input_data[4];
+        else
+            byte1 = 1;
+        if(data_len > 1)
+            byte2 = input_data[5];
+        else
+            byte2 = 2;
+        if(data_len > 2)
+            byte3 = input_data[6];
+        else
+            byte3 = 3;
+
+        spisw.setup(byte1,byte2,byte3);
+
+        response[4] = byte1;
+        response[5] = byte2;
+        response[6] = byte3;
+        resp_len = 3;
+
+        _DEBUG("C_SPISW_SETUP: CLK %d MOSI %d MISO %d\r\n", byte1, byte2, byte3);        
+        break;
+
+    case C_SPISW_TRANSFER:
+        _DEBUG("C_SPISW_TRANSFER:\r\n");        
+        for(i=0; i<data_len; i++){
+            response[4+i] = spisw.transfer(input_data[4+i]);
+            _DEBUG(">%d> <%d<\r\n",input_data[4+i], response[4+i]);        
+        }
+        resp_len = data_len;
+        break;
+
+
+    ///// ALTERNATIVE COMMANDS         //////////////////////////////////////
     case C_ENABLE_CRC:
         byte1 = input_data[4];
         crc_enabled = (byte1 > 0);
@@ -717,7 +751,7 @@ void CommDataClass::processCommand(void)
         response[4] = byte1;
         resp_len = 1;
 
-        _DEBUG("C_LED_W: %d\n", byte1);
+        _DEBUG("C_LED_W: %d\r\n", byte1);
         break;
 
     case C_RESET:
@@ -727,7 +761,7 @@ void CommDataClass::processCommand(void)
         response[3] = 0;
         resp_len = 0;
 
-        _DEBUG("C_RESET\n");
+        _DEBUG("C_RESET\r\n");
 #ifndef SERIAL_DEBUG
         sendCommand(response, resp_len + 4);
 #endif
@@ -743,12 +777,12 @@ void CommDataClass::processCommand(void)
         response[5] = make8(word1, 0);
         resp_len = 2;
 
-        _DEBUG("C_WAIT_MS: %d\n", word1);
+        _DEBUG("C_WAIT_MS: %d\r\n", word1);
         break;
-
+/*
     case C_MCP23S17:
-        /* Emulate an SPI port using some PIOs for controlling a MCP23S17
-         * port expander: PIO1=CLK, PIO2=MOSI, PIO4=SS */
+        // Emulate an SPI port using some PIOs for controlling a MCP23S17
+        // port expander: PIO1=CLK, PIO2=MOSI, PIO4=SS 
         word1 = make16(input_data + 4);
         SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
         mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
@@ -758,9 +792,9 @@ void CommDataClass::processCommand(void)
         response[5] = make8(word1, 0);
         resp_len = 2;
 
-        _DEBUG("C_MCP23S17: %d\n", word1);
+        _DEBUG("C_MCP23S17: %d\r\n", word1);
         break;
-
+*/
     case NACK:
     default:
         break;
@@ -778,7 +812,7 @@ void CommDataClass::processCommand(void)
     for(i = 0; i < resp_len + 4; i++)
         _DEBUG("%X ", response[i]);
 
-    _DEBUG("\n*************\n");
+    _DEBUG("\r\n*************\r\n");
 
 #else
     for(i = 0; i < resp_len + 4; i++)
