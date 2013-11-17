@@ -40,6 +40,9 @@ BbspiClass::BbspiClass()
     bb_clk = 0;     // clock pin
     bb_mosi = 1;    // master out, slave in
     bb_miso = 2;    // master in, slave out
+    
+    bb_cpol = 0;    // clock output low when inactive
+    bb_cpha = 1;    // data valid on clock trailing edges
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -67,6 +70,7 @@ int BbspiClass::setup(uint8_t my_clk, uint8_t my_mosi, uint8_t my_miso)
     SetpioMode(bb_clk, 1);
     SetpioMode(bb_mosi, 1);
     SetpioMode(bb_miso, 0);    
+    pioWrite (bb_clk, bb_cpol);
     return 0;
 }
 
@@ -76,7 +80,16 @@ int BbspiClass::setup()
     SetpioMode(bb_clk, 1);
     SetpioMode(bb_mosi, 1);
     SetpioMode(bb_miso, 0);  
+    pioWrite (bb_clk, bb_cpol);
     return 0;
+}
+
+//configure: set SPI transfer clock configuration
+int BbspiClass::configure(uint8_t my_cpol, uint8_t my_cpha)
+{
+    bb_cpol = my_cpol;
+    bb_cpha = my_cpha;
+    return bb_cpol;
 }
 
 // Bit shift the data out
@@ -84,7 +97,7 @@ uint8_t BbspiClass::transfer(uint8_t data)
 {
     uint8_t recv_data = 0;
     
-    pioWrite (bb_clk, 0);
+    pioWrite (bb_clk, bb_cpol);
     pioWrite (bb_mosi, 0);
     
     for(int i = 0; i < 8; i++) {
@@ -94,10 +107,13 @@ uint8_t BbspiClass::transfer(uint8_t data)
         else
             pioWrite (bb_mosi, 0);
             
-        pioWrite (bb_clk, 1);
+        pioWrite (bb_clk, !bb_cpol);
+        if(bb_cpha == 0)
+            recv_data |= pioRead (bb_miso);
         data = data << 1;
-        recv_data |= pioRead (bb_miso);
-        pioWrite (bb_clk, 0);
+        pioWrite (bb_clk, bb_cpol);
+        if(bb_cpha == 1)
+            recv_data |= pioRead (bb_miso);
     }
     return recv_data;
 }

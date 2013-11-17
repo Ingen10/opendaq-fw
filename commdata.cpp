@@ -699,6 +699,26 @@ void CommDataClass::processCommand(void)
 
     
     ///// BIT BANG SPI COMMANDS         //////////////////////////////////////
+    case C_SPISW_CONFIG:
+        if(data_len > 0)
+            byte1 = input_data[4]>0;
+        else
+            byte1 = 0;
+        if(data_len > 1)
+            byte2 = input_data[5]>0;
+        else
+            byte2 = 1;
+
+        spisw.configure(byte1,byte2);
+
+        response[4] = byte1;
+        response[5] = byte2;
+        resp_len = 2;
+
+        _DEBUG("C_SPISW_CONFIG: CPOL %d CPHA %d\r\n", byte1, byte2);        
+        break;
+
+
     case C_SPISW_SETUP:
         if(data_len > 0)
             byte1 = input_data[4];

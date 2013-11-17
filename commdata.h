@@ -103,7 +103,8 @@
 
 #define C_ENABLE_CRC    55
 
-#define C_SPISW_SETUP       28  //Bit bang spi configure
+#define C_SPISW_CONFIG      26  //Bit bang spi configure (clock properties)
+#define C_SPISW_SETUP       28  //Bit bang spi setup (pio numbers to use)
 #define C_SPISW_TRANSFER    29  //Bit bang spi transfer (send+receive)
 
 //#define C_MCP23S17      70
