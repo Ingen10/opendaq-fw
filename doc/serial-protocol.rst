@@ -109,6 +109,7 @@ PORT_            7    Write/read the port including all PIOS
 PORT_DIR_        9    Configure/read all PIOs direction
 LED_W_           18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
 SET_DAC_         13   Set output voltage (-4096 to +4096mV)
+SET_ANALOG_		 24   Set output voltage (-8192 to +8192)
 PWM_INIT_        10   Init PWM: period, duty
 PWM_STOP_        11   Disable PWM
 PWM_DUTY_        12   Configure PWM duty
@@ -141,6 +142,9 @@ GET_CALIB_       36   Read device calibration
 SET_CALIB_       37   Set device calibration
 RESET_CALIB_     38   Reset device calibration
 ENABLE_CRC_      55   Enable/disable cyclic redundancy check.
+SPISW_CONFIG	 26   Bit bang spi configure (clock properties)
+SPISW_SETUP		 28	  Bit bang spi setup (pio numbers to use)
+SPISW_TRANFER	 29   Bit bang spi transfer (send+receive)
 NACK_                 Invalid command (response only)
 ================ ==== ================================================================================
 
@@ -200,7 +204,7 @@ Byte    Description         Value           Notes
 1       CRC16L
 2       command number      2
 3       number of bytes     6
-4:5     value (byteH:byteL)                 ADC response (big-endian)
+4,5     value (byteH:byteL)                 ADC response (big-endian)
 6       p-input             1-8
 7       n-input             0, 5-8, 25
 8       gain                0-4
@@ -354,7 +358,25 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      13
 3       number of bytes     2
-4:5     value               -8192 to 8191   Signed word (16 bit) value for output voltage
+4,5     value               -8192 to 8191   Signed word (16 bit) value for output voltage
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
+
+SET_ANALOG
+-------
+Set DAC output voltage (RAW value). DAC resolution depends on device model (14 bits for openDAQ [M], 12bits for openDAQ[S]).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      24
+3       number of bytes     2
+4,5     value               -8192 to 8191   Signed word (16 bit) value for output voltage
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
@@ -363,45 +385,191 @@ PWM_INIT
 --------
 Init PWM: period, duty.
 
+
+
 PWM_STOP
 --------
 Disable PWM.
+
+
 
 PWM_DUTY
 --------
 Configure PWM duty.
 
+
+
 CAPTURE_INIT
 ------------
 Start capture mode around a given period.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      14
+3       number of bytes     2
+4       period              0-65535         Aproximate period of the wave (microseconds)
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
 
 CAPTURE_STOP
 ------------
 Stop capture mode.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      15
+3       number of bytes     0
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 GET_CAPTURE
 -----------
 Get current period length: 0 (low cycle), 1(high cycle), 2(full period).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      16
+3       number of bytes     1
+4       edge                0-1-2           0 Low cycle, 1 High cycle, 2 Full period
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      14
+3       number of bytes     2
+4       edge                0-1-2
+5       period              0:65535         Period (microseconds)
+======= =================== ==============  ====================================================
 
 ENCODER_INIT
 ------------
 Init encoder function.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      50
+3       number of bytes     1
+4       resolution          0:255           Max. number of ticks per round
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 ENCODER_STOP
 ------------
 Stop encoder function.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      51
+3       number of bytes     0
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
 
 GET_ENCODER
 -----------
 Get current encoder relative position.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      52
+3       number of bytes     0
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      52
+3       number of bytes     2
+4		position			0:65535			Actual encoder value (must be<resolution)
+======= =================== ==============  ====================================================
+
 COUNTER_INIT
 ------------
 Initialize the edge counter (0 h_to_l, 1 l_to_h).
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      41
+3       number of bytes     1
+4       edge                0-1             Which edge increments the count (1 L_to_H, 0 H_to_L)
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 GET_COUNTER
 -----------
 Get counter value (>0 resets accumulator).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      42
+3       number of bytes     1
+4       reset count         0:1             1 reset accumulator
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      42
+3       number of bytes     2
+4       count               0:65535         Number of edges actually detected
+======= =================== ==============  ====================================================
 
 EEPROM_WRITE
 ------------
@@ -416,12 +584,11 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      30
 3       number of bytes     2
-4       address                             Address of byte to write
+4       address             16:2000         Address of byte to write
 5       data byte
 ======= =================== ==============  ====================================================
 
 **Response:** Same as command.
-
 
 EEPROM_READ
 -----------
@@ -436,7 +603,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      31
 3       number of bytes     1
-4       address                             Address of byte to be read
+4       address             16:2000         Address of byte to be read
 ======= =================== ==============  ====================================================
 
 **Response:**
@@ -448,7 +615,7 @@ Byte    Description         Value           Notes
 1       CRC16L
 2       command number      31
 3       number of bytes     2
-4       address                             Address of byte
+4       address             16:2000         Address of byte
 5       data byte                           Value of byte
 ======= =================== ==============  ====================================================
 
@@ -456,37 +623,185 @@ STREAM_CREATE
 -------------
 Create stream experiment.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      19
+3       number of bytes     3
+4       number              1:4             Number of DataChannel to assign
+5:6     period	            1:65536         Period
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 EXTERNAL_CREATE
 ---------------
 Create external experiment.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      20
+3       number of bytes     2
+4       number              1:4             Number of DataChannel to assign
+5       edge                0-1
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
 
 BURST_CREATE
 ------------
 Create burst experiment.
 
+
+
 STREAM_START
 ------------
 Start an automated measurement.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      64
+3       number of bytes     0
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
 
 STREAM_STOP
 -----------
 Stop current measurement.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      80
+3       number of bytes     0
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 CHANNEL_SETUP
 -------------
 Configure Experiment number of points.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      32
+3       number of bytes     4
+4       number              1:4             Number of DataChannel to assign
+5:6     total of points     0:65536         0 indicates continuous acquisition
+7       repetition mode     0:1             0:continuous, 1:run once
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
 
 CHANNEL_CFG
 -----------
 Configure one of the experiments (analog +IN,-IN, GAIN).
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      22
+3       number of bytes     5
+4       number              1:4             Number of DataChannel to assign
+5       mode                0:5             ANALOG_INPUT 0, ANALOG_OUTPUT 1, DIGITAL_INPUT 2, DIGITAL_OUTPUT 3, COUNTER_INPUT 4, CAPTURE_INPUT 5
+6       p-input             1:8             Positive/SE analog input (default 5)
+7       n-input             0, 25, 5:8      Negative analog input (default 0)
+8       gain	            0:4             00:x1/3, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+9       number of samples   1:255           Number of samples per point
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      22
+3       number of bytes     5
+4       number              1:4             
+5       mode                1:5             
+6       p-input             1:8             
+7       n-input             0, 25, 5:8      
+8       gain	            0:3, 8          
+9       number of samples   1:255           
+======= =================== ==============  ====================================================
+
 TRIGGER_SETUP
 -------------
 Configure experiment trigger.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      33
+3       number of bytes     4
+4       number              1:4             Number of DataChannel to assign
+5       trigger mode        1:5             SW_TRG 0-->Software trigger (run on start) DIN1_TRG 1-->Digital triggers, DIN2_TRG 2, DIN3_TRG 3, DIN4_TRG 4, DIN5_TRG 5, DIN6_TRG 6, ABIG_TRG 10-->Analog triggers (use current channel configuration: chp, chm, gain), ASML_TRG 20
+6       trigger value       1:65535
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 CHANNEL_DESTROY
 ---------------
 Delete Datachannel structure.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      57
+3       number of bytes    	1
+4		number				0:4				Number of DataChannel to clear (0=reset all DataChannels)
+======= =================== ==============  ====================================================
+
+**Response:** 
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      57
+3       number of bytes    	3
+4		number				0:4
+======= =================== ==============  ====================================================
 
 CHANNEL_FLUSH
 -------------
@@ -500,29 +815,174 @@ SIGNAL_LOAD
 -----------
 Load an array of values to preload DAC output.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      23
+3       number of bytes     2
+4,5     number of data		1:400
+6,N		data points		
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      23
+3       number of bytes     5
+4,5		number of data		1:400
+======= =================== ==============  ====================================================
+
 RESET
 -----
 System reset and restart.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      27
+3       number of bytes    	0
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
 
 WAIT_MS
 -------
 Do nothing until a time has elapsed (milliseconds).
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      17
+3       number of bytes    	2
+4,5		time				0:65535			Period of time to wait without doing anything (miliseconds)
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 ID_CONFIG
 ---------
 Read device config: serial number, firmware version, hardware version.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      39
+3       number of bytes    	0
+======= =================== ==============  ====================================================
+
+**Response:** 
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      39
+3       number of bytes    	4
+4		hardware version	0:255
+5		firmware version	0:255
+6:9		Device serial #		0:65535
+======= =================== ==============  ====================================================
 
 GET_CALIB
 ---------
 Read device calibration.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      36
+3       number of bytes    	1
+4		gain channel		0:4				00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+======= =================== ==============  ====================================================
+
+**Response:** 
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      36
+3       number of bytes    	5
+4		gain channel		0:4
+5,6     slope				0:65535 		Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
+7,8		offset				-32768:32768	Offset raw value
+======= =================== ==============  ====================================================
+
 SET_CALIB
 --------
 Set device calibration.
 
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      37
+3       number of bytes    	5
+4		gain channel		0:4 			00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+5,6     slope				0:65535 		Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
+7,8		offset				-32768:32768	Offset raw value
+======= =================== ==============  ====================================================
+
+**Response:** Same as command.
+
 RESET_CALIB
 -----------
 Reset device calibration.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      38
+3       number of bytes    	1
+4		gain channel		0:4				00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+======= =================== ==============  ====================================================
+
+**Response:** 
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      38
+3       number of bytes    	5
+4		gain channel		0:4
+5,6     slope				0:65535 		Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
+7,8		offset				-32768:32768	Offset raw value
+======= =================== ==============  ====================================================
 
 ENABLE_CRC
 ----------
