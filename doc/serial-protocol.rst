@@ -399,6 +399,73 @@ Configure PWM duty.
 
 
 
+SPISW_CONFIG
+--------
+Bit bang spi configure (clock properties).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      26
+3       number of bytes     2
+4     	CPOL option         0:1             Clock polarity: clock pin state when inactive
+5		CPHA option			0:1				Clock phase: data valid on clock leading (0) or trailing (1) edges   
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
+
+SPISW_SETUP
+--------
+Bit bang spi setup (pio numbers to use).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      28
+3       number of bytes     0:3				0: Use default pin values (BBSCK=PIO1, BBMOSI=PIO2, BBMISO=PIO3)
+4     	BBSCK pin number    1:6             Clock pin for bit bang SPI transfer
+5		BBMOSI pin number 	1:6				Master out-Slave in pin for bit bang SPI transfer
+6   	BBMISO pin number   1:6				Master in-Slave out pin for bit bang SPI transfer
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
+
+SPISW_TRANSFER
+--------
+Bit bang spi transfer (send+receive).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      29
+3       number of bytes     1:64            Number of bytes to transmit via SPI (transmit or receive)
+4:64    data to send		HEX				Bytes to transmit (MOSI output)
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L
+2       command number      29
+3       number of bytes     1:64
+4:64    data received		HEX				Bytes received in the transmission (MISO input)
+======= =================== ==============  ====================================================
+
 CAPTURE_INIT
 ------------
 Start capture mode around a given period.
@@ -991,6 +1058,17 @@ Enable/disable cyclic redundancy check.
 NACK
 ----
 Invalid command (response only).
+
+**Response:** 
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              
+2       command number      160
+3       number of bytes    	0
+======= =================== ==============  ====================================================
 
 
 .. _Arduino: http://www.arduino.cc
