@@ -385,19 +385,55 @@ PWM_INIT
 --------
 Init PWM: period, duty.
 
+**Command:**
 
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      10				Starts PWM output at the given frecuency and duty cycle
+3       number of bytes     4
+4,5     frecuency			0:65535			Frecuency of the signal (microseconds)
+6,7		duty				0:1023			High time of the signal: 0 means always low, 1023 means always high
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
 
 PWM_STOP
 --------
 Disable PWM.
 
+**Command:**
 
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      11				Stops PWM output
+3       number of bytes     0
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
 
 PWM_DUTY
 --------
 Configure PWM duty.
 
+**Command:**
 
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      10				
+3       number of bytes     4
+4,5     duty				0:1023			High time of the signal: 0 means always low, 1023 means always high
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
 
 SPISW_CONFIG
 --------
@@ -728,7 +764,19 @@ BURST_CREATE
 ------------
 Create burst experiment.
 
+**Command:**
 
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      21				
+3       number of bytes     2
+4,5     period				100:65535		Period (microseconds)
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
 
 STREAM_START
 ------------
@@ -873,6 +921,20 @@ Byte    Description         Value           Notes
 CHANNEL_FLUSH
 -------------
 Reset buffer of data in the Datachannel.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      45				Flush channel (empty all the buffers and reinitiale)
+3       number of bytes     1
+4       number				0:4				Number of DataChannel to flush(0 =reset all DataChannel)
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
 
 STREAM_DATA
 -----------
@@ -1054,6 +1116,20 @@ Byte    Description         Value           Notes
 ENABLE_CRC
 ----------
 Enable/disable cyclic redundancy check.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      55				Enables CRC16 validation for commands received in openDAQ
+3       number of bytes     1
+4      	CRC active			0:1				0: disabled 1: enabled
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
 
 NACK
 ----
