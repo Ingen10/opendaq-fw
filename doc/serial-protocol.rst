@@ -22,7 +22,7 @@ with host computer by means of a binary serial protocol. There are two kinds of
 commands used by openDAQ:
 
 - `Regular command format`_, used for most of the commands.
-- `Stream data format`_, used by the STREAM_DATA_ packet to transmit large
+- `Stream data format`_, used by the STREAMDATA_ packet to transmit large
   chunks of data when the device is running in Stream mode.
 
 Regular command format
@@ -102,10 +102,11 @@ List of commands
 Command          Code Description
 ---------------- ---- --------------------------------------------------------------------------------
 AIN_             1    Read ADC with current settings
-AIN_CFG_         2    Read ADC after configuring analog settings: positive input, negative input, gain
+AINCFG_          2    Read ADC after configuring analog settings: positive input, negative input, gain
 PIO_             3    Write/read PIO output: 1 or 0
-PIO_DIR_         5    Configure PIO direction: 1 output, 0 input
+PIODIR_          5    Configure PIO direction: 1 output, 0 input
 PORT_            7    Write/read the port including all PIOS
+<<<<<<< HEAD
 `PORT_DIR`_      9    Configure/read all PIOs direction
 LED_W_           18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
 SET_DAC_         13   Set output voltage (-4096 to +4096mV)
@@ -145,6 +146,47 @@ ENABLE_CRC_      55   Enable/disable cyclic redundancy check.
 SPISW_CONFIG_	 26   Bit bang spi configure (clock properties)
 SPISW_SETUP_	 28	  Bit bang spi setup (pio numbers to use)
 SPISW_TRANFER_	 29   Bit bang spi transfer (send+receive)
+=======
+PORTDIR_         9    Configure/read all PIOs direction
+LEDW_            18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
+SETDAC_          13   Set output voltage (-4096 to +4096mV)
+SETANALOG_		 24   Set output voltage (-8192 to +8192)
+PWMINIT_         10   Init PWM: period, duty
+PWMSTOP_         11   Disable PWM
+PWMDUTY_         12   Configure PWM duty
+CAPTUREINIT_     14   Start capture mode around a given period
+CAPTURESTOP_     15   Stop capture mode
+GETCAPTURE_      16   Get current period length: 0 (low cycle), 1(high cycle), 2(full period)
+ENCODERINIT_     50   Init encoder function
+ENCODERSTOP_     51   Stop encoder function
+GETENCODER_      52   Get current encoder relative position
+COUNTERINIT_     41   Initialize the edge counter (0 h_to_l, 1 l_to_h)
+GETCOUNTER_      42   Get counter value (>0 resets accumulator)
+EEPROMWRITE_     30   Write a byte in EEPROM memory position
+EEPROMREAD_      31   Read byte from EEPROM memory position
+STREAMCREATE_    19   Create stream experiment
+EXTERNALCREATE_  20   Create external experiment
+BURSTCREATE_     21   Create burst experiment
+STREAMSTART_     64   Start an automated measurement
+STREAMSTOP_      80   Stop current measurement
+CHANNELSETUP_    32   Configure Experiment number of points
+CHANNELCFG_      22   Configure one of the experiments (analog +IN,-IN, GAIN)
+TRIGGERSETUP_    33   Configure experiment trigger
+CHANNELDESTROY_  57   Delete Datachannel structure
+CHANNELFLUSH_    45   Reset buffer of data in the Datachannel
+STREAMDATA_      25   Device writes a packet with measured data coming from one of the channels (response only)
+SIGNALLOAD_      23   Load an array of values to preload DAC output
+RESET_           27   System reset and restart
+WAITMS_          17   Do nothing until a time has elapsed (milliseconds)
+IDCONFIG_        39   Read device config: serial number, firmware version, hardware version
+GETCALIB_        36   Read device calibration
+SETCALIB_        37   Set device calibration
+RESETCALIB_      38   Reset device calibration
+ENABLECRC_       55   Enable/disable cyclic redundancy check.
+SPISWCONFIG_     26   Bit bang spi configure (clock properties)
+SPISWSETUP_      28	  Bit bang spi setup (pio numbers to use)
+SPISWTRANSFER_   29   Bit bang spi transfer (send+receive)
+>>>>>>> develop
 NACK_                 Invalid command (response only)
 ================ ==== ================================================================================
 
@@ -176,7 +218,7 @@ Byte    Description         Value           Notes
 4:5     value (byteH:byteL)                 ADC response (big-endian)
 ======= =================== ==============  ====================================================
 
-AIN_CFG
+AINCFG
 -------
 Read ADC after configuring analog settings: positive input, negative input, gain.
 
@@ -241,7 +283,7 @@ Byte    Description         Value           Notes
 5       value               0, 1
 ======= =================== ==============  ====================================================
 
-PIO_DIR
+PIODIR
 -------
 Configure/read PIO direction: 1 output, 0 input.
 
@@ -299,7 +341,7 @@ Byte    Description         Value           Notes
 4       value               0x00-0x3F       Value of PIOs
 ======= =================== ==============  ====================================================
 
-PORT_DIR
+PORTDIR
 --------
 Configure/read all PIOs direction.
 
@@ -327,7 +369,7 @@ Byte    Description         Value           Notes
 4       directions          0x00-0x3F
 ======= =================== ==============  ====================================================
 
-LED_W
+LEDW
 -----
 Set LED color (0=off, 1=green, 2=red, 3=orange).
 
@@ -345,9 +387,10 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-SET_DAC
+SETDAC
 -------
-Set DAC output voltage (RAW value). DAC resolution depends on device model (14 bits for openDAQ [M], 12bits for openDAQ[S]).
+Set DAC output voltage (RAW value). DAC resolution depends on device model 
+(14 bits for openDAQ [M], 12bits for openDAQ[S]).
 
 **Command:**
 
@@ -363,9 +406,10 @@ Byte    Description         Value           Notes
 
 **Response**: Same as command.
 
-SET_ANALOG
--------
-Set DAC output voltage (RAW value). DAC resolution depends on device model (14 bits for openDAQ [M], 12bits for openDAQ[S]).
+SETANALOG
+---------
+Set DAC output voltage (RAW value). DAC resolution depends on device model 
+(14 bits for openDAQ [M], 12bits for openDAQ[S]).
 
 **Command:**
 
@@ -381,7 +425,7 @@ Byte    Description         Value           Notes
 
 **Response**: Same as command.
 
-PWM_INIT
+PWMINIT
 --------
 Init PWM: period, duty.
 
@@ -393,14 +437,20 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      10              Starts PWM at the given frecuency and duty cycle
+<<<<<<< HEAD
 3       number of bytes     4               
 4,5     PIO number          0:65535         Frecuency of the signal (microseconds)
 5,6     duty                0:1023          High time for signal: 0 always low, 1023 always high
+=======
+3       number of bytes     4
+4,5     frecuency           0:65535         Frecuency of the signal (microseconds)
+6,7     duty                0:1023          High time of signal: 0 always low, 1023 always high
+>>>>>>> develop
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
 
-PWM_STOP
+PWMSTOP
 --------
 Disable PWM.
 
@@ -417,7 +467,7 @@ Byte    Description         Value           Notes
 
 **Response**: Same as command.
 
-PWM_DUTY
+PWMDUTY
 --------
 Configure PWM duty.
 
@@ -430,6 +480,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      10				
 3       number of bytes     4
+<<<<<<< HEAD
 4,5     duty				0:1023			High time for signal: 0 always low, 1023 always high
 ======= =================== ==============  ====================================================
 
@@ -470,39 +521,14 @@ Byte    Description         Value           Notes
 4     	BBSCK pin number    1:6             Clock pin for bit bang SPI transfer
 5		BBMOSI pin number 	1:6				Master out-Slave in pin for bit bang SPI transfer
 6   	BBMISO pin number   1:6				Master in-Slave out pin for bit bang SPI transfer
+=======
+4,5     duty                0:1023          High time of signal: 0 always low, 1023 always high
+>>>>>>> develop
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
 
-SPISW_TRANSFER
---------
-Bit bang spi transfer (send+receive).
-
-**Command:**
-
-======= =================== ==============  ====================================================
-Byte    Description         Value           Notes
-------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              Sum of all bytes complemented with 0xFFFF
-2       command number      29
-3       number of bytes     1:64            Number of bytes to transmit via SPI (transmit or receive)
-4:64    data to send		HEX				Bytes to transmit (MOSI output)
-======= =================== ==============  ====================================================
-
-**Response:**
-
-======= =================== ==============  ====================================================
-Byte    Description         Value           Notes
-------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L
-2       command number      29
-3       number of bytes     1:64
-4:64    data received		HEX				Bytes received in the transmission (MISO input)
-======= =================== ==============  ====================================================
-
-CAPTURE_INIT
+CAPTUREINIT
 ------------
 Start capture mode around a given period.
 
@@ -520,7 +546,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-CAPTURE_STOP
+CAPTURESTOP
 ------------
 Stop capture mode.
 
@@ -537,7 +563,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-GET_CAPTURE
+GETCAPTURE
 -----------
 Get current period length: 0 (low cycle), 1(high cycle), 2(full period).
 
@@ -566,7 +592,7 @@ Byte    Description         Value           Notes
 5       period              0:65535         Period (microseconds)
 ======= =================== ==============  ====================================================
 
-ENCODER_INIT
+ENCODERINIT
 ------------
 Init encoder function.
 
@@ -584,7 +610,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-ENCODER_STOP
+ENCODERSTOP
 ------------
 Stop encoder function.
 
@@ -601,7 +627,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-GET_ENCODER
+GETENCODER
 -----------
 Get current encoder relative position.
 
@@ -628,7 +654,7 @@ Byte    Description         Value           Notes
 4		position			0:65535			Actual encoder value (must be<resolution)
 ======= =================== ==============  ====================================================
 
-COUNTER_INIT
+COUNTERINIT
 ------------
 Initialize the edge counter (0 h_to_l, 1 l_to_h).
 
@@ -646,7 +672,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-GET_COUNTER
+GETCOUNTER
 -----------
 Get counter value (>0 resets accumulator).
 
@@ -674,7 +700,7 @@ Byte    Description         Value           Notes
 4       count               0:65535         Number of edges actually detected
 ======= =================== ==============  ====================================================
 
-EEPROM_WRITE
+EEPROMWRITE
 ------------
 Write a byte in EEPROM memory position.
 
@@ -693,7 +719,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-EEPROM_READ
+EEPROMREAD
 -----------
 Read byte from EEPROM memory position.
 
@@ -722,7 +748,7 @@ Byte    Description         Value           Notes
 5       data byte                           Value of byte
 ======= =================== ==============  ====================================================
 
-STREAM_CREATE
+STREAMCREATE
 -------------
 Create stream experiment.
 
@@ -741,7 +767,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-EXTERNAL_CREATE
+EXTERNALCREATE
 ---------------
 Create external experiment.
 
@@ -760,7 +786,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-BURST_CREATE
+BURSTCREATE
 ------------
 Create burst experiment.
 
@@ -773,12 +799,12 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      21				
 3       number of bytes     2
-4,5     period				100:65535		Period (microseconds)
+4,5     period              100:65535       Period (microseconds)
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
 
-STREAM_START
+STREAMSTART
 ------------
 Start an automated measurement.
 
@@ -795,7 +821,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-STREAM_STOP
+STREAMSTOP
 -----------
 Stop current measurement.
 
@@ -812,7 +838,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-CHANNEL_SETUP
+CHANNELSETUP
 -------------
 Configure Experiment number of points.
 
@@ -832,7 +858,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-CHANNEL_CFG
+CHANNELCFG
 -----------
 Configure one of the experiments (analog +IN,-IN, GAIN).
 
@@ -870,7 +896,7 @@ Byte    Description         Value           Notes
 9       number of samples   1:255           
 ======= =================== ==============  ====================================================
 
-TRIGGER_SETUP
+TRIGGERSETUP
 -------------
 Configure experiment trigger.
 
@@ -890,7 +916,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-CHANNEL_DESTROY
+CHANNELDESTROY
 ---------------
 Delete Datachannel structure.
 
@@ -918,7 +944,7 @@ Byte    Description         Value           Notes
 4		number				0:4
 ======= =================== ==============  ====================================================
 
-CHANNEL_FLUSH
+CHANNELFLUSH
 -------------
 Reset buffer of data in the Datachannel.
 
@@ -931,16 +957,16 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      45				Flush channel (empty all the buffers and reinitiale)
 3       number of bytes     1
-4       number				0:4				Number of DataChannel to flush(0 =reset all DataChannel)
+4       number              0:4             Number of DataChannel to flush(0 =reset all DataChannel)
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
 
-STREAM_DATA
+STREAMDATA
 -----------
 See `Stream data format`_.
 
-SIGNAL_LOAD
+SIGNALLOAD
 -----------
 Load an array of values to preload DAC output.
 
@@ -966,7 +992,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      23
 3       number of bytes     5
-4,5		number of data		1:400
+4,5     number of data      1:400
 ======= =================== ==============  ====================================================
 
 RESET
@@ -986,7 +1012,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-WAIT_MS
+WAITMS
 -------
 Do nothing until a time has elapsed (milliseconds).
 
@@ -1004,7 +1030,7 @@ Byte    Description         Value           Notes
 
 **Response:** Same as command.
 
-ID_CONFIG
+IDCONFIG
 ---------
 Read device config: serial number, firmware version, hardware version.
 
@@ -1028,12 +1054,12 @@ Byte    Description         Value           Notes
 1       CRC16L                              
 2       command number      39
 3       number of bytes    	4
-4		hardware version	0:255
-5		firmware version	0:255
-6:9		Device serial #		0:65535
+4       hardware version    0:255
+5       firmware version    0:255
+6:9     Device serial #     0:65535
 ======= =================== ==============  ====================================================
 
-GET_CALIB
+GETCALIB
 ---------
 Read device calibration.
 
@@ -1045,8 +1071,8 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              
 2       command number      36
-3       number of bytes    	1
-4		gain channel		0:4				00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+3       number of bytes     1
+4       gain channel        0:4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
 ======= =================== ==============  ====================================================
 
 **Response:** 
@@ -1058,12 +1084,12 @@ Byte    Description         Value           Notes
 1       CRC16L                              
 2       command number      36
 3       number of bytes    	5
-4		gain channel		0:4
-5,6     slope				0:65535 		Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
-7,8		offset				-32768:32768	Offset raw value
+4       gain channel        0:4
+5,6     slope               0:65535         Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
+7,8     offset              -32768:32768    Offset raw value
 ======= =================== ==============  ====================================================
 
-SET_CALIB
+SETCALIB
 --------
 Set device calibration.
 
@@ -1075,15 +1101,15 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              
 2       command number      37
-3       number of bytes    	5
-4		gain channel		0:4 			00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
-5,6     slope				0:65535 		Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
-7,8		offset				-32768:32768	Offset raw value
+3       number of bytes     5
+4       gain channel        0:4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+5,6     slope               0:65535         Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
+7,8     offset              -32768:32768    Offset raw value
 ======= =================== ==============  ====================================================
 
 **Response:** Same as command.
 
-RESET_CALIB
+RESETCALIB
 -----------
 Reset device calibration.
 
@@ -1096,7 +1122,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              
 2       command number      38
 3       number of bytes    	1
-4		gain channel		0:4				00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
+4       gain channel        0:4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
 ======= =================== ==============  ====================================================
 
 **Response:** 
@@ -1108,12 +1134,12 @@ Byte    Description         Value           Notes
 1       CRC16L                              
 2       command number      38
 3       number of bytes    	5
-4		gain channel		0:4
-5,6     slope				0:65535 		Gain multiplied by 100000 (m=Slope/100000, 0 to 0.65)
-7,8		offset				-32768:32768	Offset raw value
+4       gain channel        0:4
+5,6     slope               0:65535         Gain multiplied by 100000 (m=Slope/100000,0 to 0.65)
+7,8     offset              -32768:32768    Offset raw value
 ======= =================== ==============  ====================================================
 
-ENABLE_CRC
+ENABLECRC
 ----------
 Enable/disable cyclic redundancy check.
 
@@ -1126,10 +1152,78 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      55				Enables CRC16 validation for commands received in openDAQ
 3       number of bytes     1
-4      	CRC active			0:1				0: disabled 1: enabled
+4       CRC active          0:1             0: disabled 1: enabled
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
+
+SPISWCONFIG
+-----------
+Bit-Bang SPI configure (clock properties).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      26
+3       number of bytes     2
+4     	CPOL option         0:1             Clock polarity: clock pin state when inactive
+5		CPHA option			0:1				Clock phase: leading (0) or trailing (1) edges read  
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
+
+SPISWSETUP
+----------
+Bit-Bang SPI setup (pio numbers to use).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      28
+3       number of bytes     0:3				0: Use default values (BBSCK=1, BBMOSI=2, BBMISO=3)
+4     	BBSCK pin number    1:6             Clock pin for bit bang SPI transfer
+5       BBMOSI pin number   1:6             Master out-Slave in pin for bit bang SPI transfer
+6       BBMISO pin number   1:6             Master in-Slave out pin for bit bang SPI transfer
+======= =================== ==============  ====================================================
+
+**Response**: Same as command.
+
+SPISWTRANSFER
+-------------
+Bit-Bang SPI transfer (send+receive).
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      29
+3       number of bytes     1:64            Number of bytes to transmit via SPI
+4:64    data to send		HEX				Bytes to transmit (MOSI output)
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H              
+1       CRC16L
+2       command number      29
+3       number of bytes     1:64
+4:64    data received		HEX				Bytes received in the transmission (MISO input)
+======= =================== ==============  ====================================================
+
 
 NACK
 ----
