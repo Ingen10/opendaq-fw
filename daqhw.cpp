@@ -507,7 +507,7 @@ void daqInit()
 
 int availableMemory()
 {
-    int size = 4096; // ATMEGA644P. Use 2048 with ATmega328
+    int size = 4096; // ATMEGA644P
     byte *buf;
 
     while ((buf = (byte *) malloc(--size)) == NULL);

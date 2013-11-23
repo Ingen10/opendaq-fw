@@ -102,7 +102,7 @@ void CalibrationClass::ID_Save(uint32_t device_id)
 }
 
 
-/* Calibration storage functions */
+// Calibration storage functions 
 
 void CalibrationClass::SaveCalibration()
 {
@@ -167,7 +167,7 @@ int CalibrationClass::RecallCalibration()
 
 
 
-/* Low level eeprom calls */
+// Low level eeprom calls 
 
 uint8_t CalibrationClass::read(int address)
 {

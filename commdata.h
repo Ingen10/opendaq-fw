@@ -22,9 +22,9 @@
 #ifndef COMMDATA_H
 #define COMMDATA_H
 
-#define SERIAL_DEBUG
+//#define SERIAL_DEBUG
 //Firmware version:
-#define FVER        112
+#define FVER     113
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -40,7 +40,7 @@
 #include "bbspi.h"
 
 
-#define MAX_DATA_BYTES 128 // max number of data bytes in messages
+#define MAX_DATA_BYTES 128      //max number of data bytes in messages
 
 #define NACK            0xA0
 
@@ -52,7 +52,7 @@
 #define C_PORT          7
 #define C_PORT_DIR      9
 
-#define C_LED_W         18          //Configure device LED status: bit 1 sets green LED, bit 2 sets red LED
+#define C_LED_W         18      //Configure device LED status: bit 1 sets green LED, bit 2 sets red LED
 
 #define C_SET_DAC       13
 #define C_SET_ANALOG    24
@@ -78,28 +78,28 @@
 #define C_EXTERNAL_CREATE 20    //Create external channel
 #define C_BURST_CREATE    21    //Create burst experiment
 
-#define C_STREAM_START  64  //Start an automated measurement
-#define C_STREAM_STOP   80  //Stop actual measurement
-#define C_CHANNEL_FLUSH 45  //Resets buffer of data in the channel 
+#define C_STREAM_START  64      //Start an automated measurement
+#define C_STREAM_STOP   80      //Stop actual measurement
+#define C_CHANNEL_FLUSH 45      //Resets buffer of data in the channel 
 
-#define C_CHANNEL_CFG   22  //Configure one of the measurement experiments (analog +IN,-IN, GAIN)
-#define C_CHANNEL_SETUP 32  //Configure experiment number of points and repeat mode
-#define C_TRIGGER_SETUP 33  //Configure experiment initial trigger mode and conditions
+#define C_CHANNEL_CFG   22      //Configure one of the measurement experiments (analog +IN,-IN, GAIN)
+#define C_CHANNEL_SETUP 32      //Configure experiment number of points and repeat mode
+#define C_TRIGGER_SETUP 33      //Configure experiment initial trigger mode and conditions
 
-#define C_SIGNAL_LOAD   23  //Load an array of values to preload DAC output
+#define C_SIGNAL_LOAD   23      //Load an array of values to preload DAC output
 
-#define C_RESET         27  //System reset and restart                                                              
-#define C_WAIT_MS       17  //Do nothing until a time has elapsed (milliseconds)                                                                
+#define C_RESET         27      //System reset and restart                                                              
+#define C_WAIT_MS       17      //Do nothing until a time has elapsed (milliseconds)                                                                
 
-#define C_ID_CONFIG     39  //Read device config:serial number, firmware version, hardware version
+#define C_ID_CONFIG     39      //Read device config:serial number, firmware version, hardware version
 
-#define C_GET_CALIB     36  //Read device calibration
-#define C_SET_CALIB     37  //Set device calibration
-#define C_RESET_CALIB   38  //Reset device calibration
+#define C_GET_CALIB     36      //Read device calibration
+#define C_SET_CALIB     37      //Set device calibration
+#define C_RESET_CALIB   38      //Reset device calibration
 
 #define C_CHANNEL_DESTROY 57    //Delete channel structure
 
-#define C_STREAM_DATA   25  //Device writes a packet with measured data coming from one of the channels
+#define C_STREAM_DATA   25      //Device writes a packet with measured data coming from one of the channels
 
 #define C_ENABLE_CRC    55
 
@@ -107,28 +107,26 @@
 #define C_SPISW_SETUP       28  //Bit bang spi setup (pio numbers to use)
 #define C_SPISW_TRANSFER    29  //Bit bang spi transfer (send+receive)
 
-//#define C_MCP23S17      70
-
 //other constants
 #define ID_OVERWRITE            4
 #define CALIBRATION_OVERWRITE   5
 #define CALIBRATION_RESET       3
 
-/******************************************************************************
- * Class
- ******************************************************************************/
+//*****************************************************************************
+// Class
+//*****************************************************************************
 
-/* CommData Class defines all the variables and functions used for managing the
- * serial communications for openDAQ */
+// CommData Class defines all the variables and functions used for managing the
+// serial communications for openDAQ 
 
 class CommDataClass {
 private:
     // properties
     byte received_bytes;
-    byte wait_for_data;   // shows how many input bytes are left in the message
-    byte data_len;      // length of received packet (bytes)
-    uint16_t my_crc16;  // received 16bit crc
-    byte next_command;  // short command being executed
+    byte wait_for_data;     // shows how many input bytes are left in the message
+    byte data_len;          // length of received packet (bytes)
+    uint16_t my_crc16;      // received 16bit crc
+    byte next_command;      // short command being executed
     uint8_t my_chp, my_chn, my_gain, my_nsamples, my_mode;
     int16_t my_vout;
     uint32_t my_id;

@@ -69,12 +69,12 @@
 #define ASML_TRG    20
 
 
-/******************************************************************************
- * Class
- ******************************************************************************/
+//*****************************************************************************
+// Class
+//*****************************************************************************
 
-/* DataChannel Class defines all the variables and functions used for managing
- * the automated data acquisition for openDAQ */
+// DataChannel Class defines all the variables and functions used for managing
+// the automated data acquisition for openDAQ 
 
 class DataChannel {
 private:

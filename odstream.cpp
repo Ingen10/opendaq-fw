@@ -152,8 +152,8 @@ void DStream::CreateBurstChannel(unsigned long us_period)
 
     TCCR2A = 0X82;            //CTC MODE, CLEAR OC2A ON COMPARE
 
-    /* the counter runs backwards after TOP, interrupt is at BOTTOM so divide
-     * microseconds by 2 */
+    // the counter runs backwards after TOP, interrupt is at BOTTOM so divide
+    // microseconds by 2 
     long cycles = (F_CPU / 1000000) * us_period;
 
     if((cycles >>= 3) < T2_RESOLUTION)
@@ -321,7 +321,8 @@ void DStream::Reset(uint8_t nb)
 void stream_sm()
 {
     static int led_status = 0;
-    static unsigned long ntemp = 0; // counts slots of 500us
+    static unsigned long ntemp = 0;
+    // counts slots of 500us
 
     for (int i=0; i<4; i++) {
         if ((channels[i].state == CH_RUN) && (channels[i].dctype == STREAM_TYPE) && !(ntemp % channels[i].period)) {

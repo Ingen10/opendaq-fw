@@ -44,14 +44,13 @@ void ext_sm(int bit_changes,int value);
 
 
 
-/******************************************************************************
- * Class
- ******************************************************************************/
+//*****************************************************************************
+// Class
+//*****************************************************************************
 
 //! DStream Class
-/*!
-    DStream Class defines all the variables and functions used for managing the automated data acquisition for openDAQ
- */
+// DStream Class defines all the variables and functions used for managing the automated data acquisition for openDAQ
+
 
 class DStream {
 public:

@@ -1,12 +1,5 @@
 /*
- *  TIMER1 utilities for ATmega644P
- *
- *  Original code by Jesse Tane for http://labs.ideo.com August 2008
- *  Modified March 2009 by Jérôme Despatis and Jesse Tane for ATmega328 support
- *  Modified June 2009 by Michael Polli and Jesse Tane to fix a bug in setPeriod() which caused the timer to stop
- *  Modified June 2011 by Lex Talionis to add a function to read the timer
- *  Modified Oct 2011 by Andrew Richards to avoid certain problems:
- *  Modified 7:26 PM Sunday, October 09, 2011 by Lex Talionis
+ *  TIMER1 utilities
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -201,8 +194,6 @@ unsigned long TimerOne::read()      //returns the value of the timer in microsec
     tmp = (  (tcnt1 > tmp) ? (tmp) : (long)(ICR1 - tcnt1) + (long)ICR1  );  // AR amended to add casts and reuse previous TCNT1
     return ((tmp * 1000L) / (F_CPU / 1000L)) << scale;
 }
-
-// JRB: NEW CODE      ///////////////////////////////////////////////////////////////////
 
 void TimerOne::startCapture(unsigned long microseconds)
 //Capture mode. Approximate period in argument to set clock divider
