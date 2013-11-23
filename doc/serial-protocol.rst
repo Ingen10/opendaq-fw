@@ -106,7 +106,7 @@ AIN_CFG_         2    Read ADC after configuring analog settings: positive input
 PIO_             3    Write/read PIO output: 1 or 0
 PIO_DIR_         5    Configure PIO direction: 1 output, 0 input
 PORT_            7    Write/read the port including all PIOS
-PORT_DIR_        9    Configure/read all PIOs direction
+`PORT_DIR`_      9    Configure/read all PIOs direction
 LED_W_           18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
 SET_DAC_         13   Set output voltage (-4096 to +4096mV)
 SET_ANALOG_		 24   Set output voltage (-8192 to +8192)
@@ -142,9 +142,9 @@ GET_CALIB_       36   Read device calibration
 SET_CALIB_       37   Set device calibration
 RESET_CALIB_     38   Reset device calibration
 ENABLE_CRC_      55   Enable/disable cyclic redundancy check.
-SPISW_CONFIG	 26   Bit bang spi configure (clock properties)
-SPISW_SETUP		 28	  Bit bang spi setup (pio numbers to use)
-SPISW_TRANFER	 29   Bit bang spi transfer (send+receive)
+SPISW_CONFIG_	 26   Bit bang spi configure (clock properties)
+SPISW_SETUP_	 28	  Bit bang spi setup (pio numbers to use)
+SPISW_TRANFER_	 29   Bit bang spi transfer (send+receive)
 NACK_                 Invalid command (response only)
 ================ ==== ================================================================================
 
@@ -392,10 +392,10 @@ Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
-2       command number      10				Starts PWM output at the given frecuency and duty cycle
-3       number of bytes     4
-4,5     frecuency			0:65535			Frecuency of the signal (microseconds)
-6,7		duty				0:1023			High time of the signal: 0 means always low, 1023 means always high
+2       command number      10              Starts PWM at the given frecuency and duty cycle
+3       number of bytes     4               
+4,5     PIO number          0:65535         Frecuency of the signal (microseconds)
+5,6     duty                0:1023          High time for signal: 0 always low, 1023 always high
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
@@ -430,7 +430,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      10				
 3       number of bytes     4
-4,5     duty				0:1023			High time of the signal: 0 means always low, 1023 means always high
+4,5     duty				0:1023			High time for signal: 0 always low, 1023 always high
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
