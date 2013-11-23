@@ -106,47 +106,6 @@ AINCFG_          2    Read ADC after configuring analog settings: positive input
 PIO_             3    Write/read PIO output: 1 or 0
 PIODIR_          5    Configure PIO direction: 1 output, 0 input
 PORT_            7    Write/read the port including all PIOS
-<<<<<<< HEAD
-`PORT_DIR`_      9    Configure/read all PIOs direction
-LED_W_           18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
-SET_DAC_         13   Set output voltage (-4096 to +4096mV)
-SET_ANALOG_		 24   Set output voltage (-8192 to +8192)
-PWM_INIT_        10   Init PWM: period, duty
-PWM_STOP_        11   Disable PWM
-PWM_DUTY_        12   Configure PWM duty
-CAPTURE_INIT_    14   Start capture mode around a given period
-CAPTURE_STOP_    15   Stop capture mode
-GET_CAPTURE_     16   Get current period length: 0 (low cycle), 1(high cycle), 2(full period)
-ENCODER_INIT_    50   Init encoder function
-ENCODER_STOP_    51   Stop encoder function
-GET_ENCODER_     52   Get current encoder relative position
-COUNTER_INIT_    41   Initialize the edge counter (0 h_to_l, 1 l_to_h)
-GET_COUNTER_     42   Get counter value (>0 resets accumulator)
-EEPROM_WRITE_    30   Write a byte in EEPROM memory position
-EEPROM_READ_     31   Read byte from EEPROM memory position
-STREAM_CREATE_   19   Create stream experiment
-EXTERNAL_CREATE_ 20   Create external experiment
-BURST_CREATE_    21   Create burst experiment
-STREAM_START_    64   Start an automated measurement
-STREAM_STOP_     80   Stop current measurement
-CHANNEL_SETUP_   32   Configure Experiment number of points
-CHANNEL_CFG_     22   Configure one of the experiments (analog +IN,-IN, GAIN)
-TRIGGER_SETUP_   33   Configure experiment trigger
-CHANNEL_DESTROY_ 57   Delete Datachannel structure
-CHANNEL_FLUSH_   45   Reset buffer of data in the Datachannel
-STREAM_DATA_     25   Device writes a packet with measured data coming from one of the channels (response only)
-SIGNAL_LOAD_     23   Load an array of values to preload DAC output
-RESET_           27   System reset and restart
-WAIT_MS_         17   Do nothing until a time has elapsed (milliseconds)
-ID_CONFIG_       39   Read device config: serial number, firmware version, hardware version
-GET_CALIB_       36   Read device calibration
-SET_CALIB_       37   Set device calibration
-RESET_CALIB_     38   Reset device calibration
-ENABLE_CRC_      55   Enable/disable cyclic redundancy check.
-SPISW_CONFIG_	 26   Bit bang spi configure (clock properties)
-SPISW_SETUP_	 28	  Bit bang spi setup (pio numbers to use)
-SPISW_TRANFER_	 29   Bit bang spi transfer (send+receive)
-=======
 PORTDIR_         9    Configure/read all PIOs direction
 LEDW_            18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
 SETDAC_          13   Set output voltage (-4096 to +4096mV)
@@ -186,7 +145,6 @@ ENABLECRC_       55   Enable/disable cyclic redundancy check.
 SPISWCONFIG_     26   Bit bang spi configure (clock properties)
 SPISWSETUP_      28	  Bit bang spi setup (pio numbers to use)
 SPISWTRANSFER_   29   Bit bang spi transfer (send+receive)
->>>>>>> develop
 NACK_                 Invalid command (response only)
 ================ ==== ================================================================================
 
@@ -437,15 +395,9 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      10              Starts PWM at the given frecuency and duty cycle
-<<<<<<< HEAD
-3       number of bytes     4               
-4,5     PIO number          0:65535         Frecuency of the signal (microseconds)
-5,6     duty                0:1023          High time for signal: 0 always low, 1023 always high
-=======
 3       number of bytes     4
 4,5     frecuency           0:65535         Frecuency of the signal (microseconds)
 6,7     duty                0:1023          High time of signal: 0 always low, 1023 always high
->>>>>>> develop
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
@@ -480,50 +432,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      10				
 3       number of bytes     4
-<<<<<<< HEAD
-4,5     duty				0:1023			High time for signal: 0 always low, 1023 always high
-======= =================== ==============  ====================================================
-
-**Response**: Same as command.
-
-SPISW_CONFIG
---------
-Bit bang spi configure (clock properties).
-
-**Command:**
-
-======= =================== ==============  ====================================================
-Byte    Description         Value           Notes
-------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              Sum of all bytes complemented with 0xFFFF
-2       command number      26
-3       number of bytes     2
-4     	CPOL option         0:1             Clock polarity: clock pin state when inactive
-5		CPHA option			0:1				Clock phase: data valid on clock leading (0) or trailing (1) edges   
-======= =================== ==============  ====================================================
-
-**Response**: Same as command.
-
-SPISW_SETUP
---------
-Bit bang spi setup (pio numbers to use).
-
-**Command:**
-
-======= =================== ==============  ====================================================
-Byte    Description         Value           Notes
-------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              Sum of all bytes complemented with 0xFFFF
-2       command number      28
-3       number of bytes     0:3				0: Use default pin values (BBSCK=PIO1, BBMOSI=PIO2, BBMISO=PIO3)
-4     	BBSCK pin number    1:6             Clock pin for bit bang SPI transfer
-5		BBMOSI pin number 	1:6				Master out-Slave in pin for bit bang SPI transfer
-6   	BBMISO pin number   1:6				Master in-Slave out pin for bit bang SPI transfer
-=======
 4,5     duty                0:1023          High time of signal: 0 always low, 1023 always high
->>>>>>> develop
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
