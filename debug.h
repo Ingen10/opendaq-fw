@@ -15,16 +15,18 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Author:   JMB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #define Serialprint(format, ...) StreamPrint_progmem(Serial,PSTR(format),##__VA_ARGS__)
 #define Streamprint(stream,format, ...) StreamPrint_progmem(stream,PSTR(format),##__VA_ARGS__)
 
 #ifdef SERIAL_DEBUG
-    #define _DEBUG Serialprint
+#define _DEBUG Serialprint
 #else
-    #define _DEBUG
+#define _DEBUG
 #endif
 
-void StreamPrint_progmem(Print &out,PGM_P format,...);
+void StreamPrint_progmem(Print &out, PGM_P format, ...);

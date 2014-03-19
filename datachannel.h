@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:  120407
- *  Author:   JRB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #ifndef DATACHANNEL_H
@@ -98,7 +99,7 @@ public:
 
     //trigger controlling variables
     int trg_mode;
-    int16_t  trg_value;
+    int16_t trg_value;
 
     unsigned int bufferlen;
     signed int *databuffer;
@@ -110,7 +111,7 @@ public:
     int pch, nch, g;
 
     unsigned int npoints;
-    signed long  addsum;
+    signed long addsum;
 
     // methods
     DataChannel(int dtype);
@@ -124,7 +125,7 @@ public:
 
     void Read();
     void Write();
-    void Put(unsigned int index,signed int value);
+    void Put(unsigned int index, signed int value);
 
     int waitStabilization();
 
