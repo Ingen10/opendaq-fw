@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:  120522
- *  Author:   JRB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #ifndef ENCODER_H

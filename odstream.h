@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:  120507
- *  Author:   JRB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #ifndef ODSTREAM_H
@@ -37,7 +38,7 @@
 
 void stream_sm();
 void burst_sm();
-void ext_sm(int bit_changes,int value);
+void ext_sm(int bit_changes, int value);
 
 #define ainToDEChan(P) ( pgm_read_byte( ain_to_deadc_PGM + (P) ) )
 
@@ -50,7 +51,6 @@ void ext_sm(int bit_changes,int value);
 
 //! DStream Class
 // DStream Class defines all the variables and functions used for managing the automated data acquisition for openDAQ
-
 
 class DStream {
 public:
@@ -85,10 +85,10 @@ public:
 
     void DeleteExperiments(uint8_t nb);
     void FlushChan(uint8_t nb);
-    
-    
-    void Put(uint8_t nb,unsigned int index,signed int value);
-    
+
+
+    void Put(uint8_t nb, unsigned int index, signed int value);
+
     unsigned int ReadIndex(uint8_t nb);
     unsigned int WriteIndex(uint8_t nb);
 
@@ -104,9 +104,9 @@ public:
 
     int endReached(uint8_t nb);
     void Reset(uint8_t nb);
-    
-    
-    
+
+
+
 };
 
 #endif

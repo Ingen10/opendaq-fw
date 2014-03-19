@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:  120522
- *  Author:   JRB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #include "daqhw.h"
@@ -24,17 +25,22 @@
 ////////////////////////////////////////////
 //fake functions for time counting verification
 
-void ActivateAnalogInput(int number)
-{
-    if(number > 0)
+/** \brief
+ *  fake functions for time counting verification
+ *
+ */
+void ActivateAnalogInput(int number) {
+    if (number > 0)
         PORTA = 1 << (8 - number);
     else
         PORTA = 0;
 }
 
-
-signed int ReadAnalog()
-{
+/** \brief
+ *  fake functions for time counting verification
+ *
+ */
+signed int ReadAnalog() {
     return -100;
 }
 
@@ -43,8 +49,14 @@ signed int ReadAnalog()
 
 // !! for all functions: pio indicates Digital input number - 1 (from 0 to 5)
 
-void SetpioMode(uint8_t pio, uint8_t mode)
-{
+/** \brief
+ *  Set pio mode
+ *
+ *  \param
+ *  pio: digital input number
+ *  mode: mode to set pio
+ */
+void SetpioMode(uint8_t pio, uint8_t mode) {
     uint8_t bit = digitalPinToBitMask(pio);
     volatile uint8_t *reg;
 
@@ -54,9 +66,15 @@ void SetpioMode(uint8_t pio, uint8_t mode)
     else *reg |= bit;
 }
 
-
-int GetpioMode(uint8_t pio)
-{
+/** \brief
+ *  Get pio mode
+ *
+ *  \param
+ *  pio: digital input number
+ *  \return
+ *  pio mode
+ */
+int GetpioMode(uint8_t pio) {
     uint8_t bit = digitalPinToBitMask(pio);
     volatile uint8_t *reg;
 
@@ -65,9 +83,14 @@ int GetpioMode(uint8_t pio)
     return (*reg & bit) != 0;
 }
 
-
-void pioWrite(uint8_t pio, uint8_t val)
-{
+/** \brief
+ *  Write a value into pio
+ *
+ *  \param
+ *  pio: digital input number
+ *  val: value to write into pio
+ */
+void pioWrite(uint8_t pio, uint8_t val) {
     uint8_t bit = digitalPinToBitMask(pio);
     volatile uint8_t *out;
 
@@ -77,9 +100,15 @@ void pioWrite(uint8_t pio, uint8_t val)
     else *out |= bit;
 }
 
-
-int pioRead(uint8_t pio)
-{
+/** \brief
+ *  Read a value from pio
+ *
+ *  \param
+ *  pio: digital input number
+ *  \return
+ *  1 if right, 0 if wrong
+ */
+int pioRead(uint8_t pio) {
     uint8_t bit = digitalPinToBitMask(pio);
 
     if (*portInputRegister(digitalPinToPort(pio)) & bit)
@@ -87,9 +116,13 @@ int pioRead(uint8_t pio)
     return 0;
 }
 
-
-void OutputDigital(int value)
-{
+/** \brief
+ *  Set the digital output
+ *
+ *  \param
+ *  value: value to set the digital output
+ */
+void OutputDigital(int value) {
     PORTA &= 0x0F;
     PORTD &= 0XD7;
     PORTA |= ((value & 0x01) > 0) ? (1 << 7) : 0;
@@ -101,9 +134,13 @@ void OutputDigital(int value)
 
 }
 
-
-void SetDigitalDir(int value)
-{
+/** \brief
+ *  Set digital dir
+ *
+ *  \param
+ *  value to set the digital dir
+ */
+void SetDigitalDir(int value) {
     DDRA &= 0x0F;
     DDRD &= 0XD7;
     DDRA |= ((value & 0x01) > 0) ? (1 << 7) : 0;
@@ -114,10 +151,13 @@ void SetDigitalDir(int value)
     DDRD |= ((value & 0x20) > 0) ? (1 << 3) : 0;
 }
 
-
-//TODO
-int ReadDigital()
-{
+/** \brief
+ *  Read the digital input
+ *
+ *  \return
+ *  Digital input value
+ */
+int ReadDigital() {
     int k = 0;
     k |= (PINA & (1 << 7)) > 0;
     k |= ((PINA & (1 << 6)) > 0) << 1;
@@ -128,10 +168,13 @@ int ReadDigital()
     return k;
 }
 
-
-//TODO
-int GetDigitalDir()
-{
+/** \brief
+ *  Get the digital dir
+ *
+ *  \return
+ *  Digital dir value
+ */
+int GetDigitalDir() {
     int k = 0;
     k |= (DDRA & (1 << 7)) > 0;
     k |= ((DDRA & (1 << 6)) > 0) << 1;
@@ -142,10 +185,15 @@ int GetDigitalDir()
     return k;
 }
 
-
-void ledSet(uint8_t nb, uint8_t val)
-{
-    if( val == 0)
+/** \brief
+ *  Set the led value
+ *
+ *  \param
+ *  nb: led value
+ *  val: value to set
+ */
+void ledSet(uint8_t nb, uint8_t val) {
+    if (val == 0)
         PORTC |= (1 << (2 + nb)); //Inverted output logic for the leds (ON=0V)
     else
         PORTC &= ~(1 << (2 + nb));
@@ -153,35 +201,41 @@ void ledSet(uint8_t nb, uint8_t val)
 
 
 // ANALOG CHANNELS & SPI: /////////////////////////////////////////////
-signed int ReadADC()
-{
+
+/** \brief
+ *  Read ADC
+ *
+ *  \return
+ *  ADC value
+ */
+signed int ReadADC() {
 #if HW_VERSION==2
     unsigned long result;
     signed int a;
 
-    PORTB &= ~(0X01<<2); 
+    PORTB &= ~(0X01 << 2);
 
-    SPDR = 0x80|myGains|myChannels;
-    while(!(SPSR & (1<<SPIF))); 
+    SPDR = 0x80 | myGains | myChannels;
+    while (!(SPSR & (1 << SPIF)));
 
     SPDR = 0x61;
-    while(!(SPSR & (1<<SPIF))); 
+    while (!(SPSR & (1 << SPIF)));
 
     SPDR = 0;
-    while(!(SPSR & (1<<SPIF))); 
+    while (!(SPSR & (1 << SPIF)));
     result = SPDR;
 
     SPDR = 0;
-    while(!(SPSR & (1<<SPIF))); 
-    result = (result<<8)+SPDR;
+    while (!(SPSR & (1 << SPIF)));
+    result = (result << 8) + SPDR;
 
-    PORTB |= 0X01<<2; 
+    PORTB |= 0X01 << 2;
 
-    a = (signed int) result& 0xFFFC;
+    a = (signed int) result & 0xFFFC;
     a /= 4;
 
     return a;
-    
+
 #else
 
     unsigned long result;
@@ -189,15 +243,15 @@ signed int ReadADC()
     PORTB &= ~(0X01 << 2);
 
     SPDR = 0;
-    while(!(SPSR & (1 << SPIF)));
+    while (!(SPSR & (1 << SPIF)));
     result = SPDR;
 
     SPDR = 0;
-    while(!(SPSR & (1 << SPIF)));
+    while (!(SPSR & (1 << SPIF)));
     result = (result << 8) + SPDR;
 
     SPDR = 0;
-    while(!(SPSR & (1 << SPIF)));
+    while (!(SPSR & (1 << SPIF)));
     result = (result << 8) + SPDR;
 
     PORTB |= 0X01 << 2;
@@ -208,31 +262,43 @@ signed int ReadADC()
 #endif
 }
 
-
-signed int ReadNADC(int nsamples)
-{
+/** \brief
+ *  Read ADC nsamples times, and returns the average
+ *
+ *  \param
+ *  nsamples: number of times the ADC will be read
+ *  \return
+ *  ADC value average
+ */
+signed int ReadNADC(int nsamples) {
     uint8_t i = 0;
     int32_t sum = 0;
     do {
         sum += ReadADC();
         i++;
-    } while(i <= nsamples);
+    } while (i <= nsamples);
 
     sum /= nsamples + 1;
 
     return (signed int) sum;
 }
 
-
-signed int ReadAnalogIn(int n)
-{
+/** \brief
+ *  Read ADC n times, and returns the average calibrated
+ *
+ *  \param
+ *  n: number of times the ADC will be read
+ *  \return
+ *  ADC value average calibrated
+ */
+signed int ReadAnalogIn(int n) {
     signed long r;
 
     r = ReadNADC(n);
-    
+
 #if HW_VERSION==2
-	r*=2500;
-	r/=8192;
+    r *= 2500;
+    r /= 8192;
 #else
     r *= -153;
     r /= 1000;
@@ -240,16 +306,20 @@ signed int ReadAnalogIn(int n)
     return (signed int) r;
 }
 
-
-void ConfigAnalogGain(uint8_t gain)
-{
+/** \brief
+ *  Set analog gain
+ *
+ *  \param
+ *  gain: value to set the gain
+ */
+void ConfigAnalogGain(uint8_t gain) {
 #if HW_VERSION==2
-	myGains = gainToAdcset(gain);
+    myGains = gainToAdcset(gain);
 #else
     PORTC &= ~0X03;
     PORTC &= ~(0X01 << 4);
 
-    if(gain == 0) {
+    if (gain == 0) {
         PORTC |= (0X01 << 4);
     } else {
         PORTC |= ((gain - 1) & 0X03);
@@ -257,24 +327,29 @@ void ConfigAnalogGain(uint8_t gain)
 #endif
 }
 
-void ConfigAnalogChannels(uint8_t chp, uint8_t chm)
-{
+/** \brief
+ *  Setup the analog channels to be readed
+ *
+ *  \param
+ *  chp: positive channel
+ *  chm: second channel to take a differential reading
+ */
+void ConfigAnalogChannels(uint8_t chp, uint8_t chm) {
 #if HW_VERSION==2
     //If chm channel is different from ground (0), a differential reading will be taken
     //The firmware automatically selects the complementary channel to chp
     uint8_t c;
 
     c = chp;
-    if(c<1)
-        c=1;
-    if(c>8)
-        c=8;
+    if (c < 1)
+        c = 1;
+    if (c > 8)
+        c = 8;
 
-    if(chm == 0){
-        myChannels = ainToSEChan(chp-1);
-    }
-    else{
-        myChannels = ainToDEChan(chp-1);
+    if (chm == 0) {
+        myChannels = ainToSEChan(chp - 1);
+    } else {
+        myChannels = ainToDEChan(chp - 1);
     }
 #else
     uint8_t ain_pos, ain_neg;
@@ -290,9 +365,15 @@ void ConfigAnalogChannels(uint8_t chp, uint8_t chm)
 #endif
 }
 
-
-void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain)
-{
+/** \brief
+ *  Setup the analog gain and channels to be readed
+ *
+ *  \param
+ *  chp: positive channel
+ *  chm: second channel to take a differential reading
+ *  gain: gain value
+ */
+void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
 #if HW_VERSION==2
     Config7871();
 #endif
@@ -305,49 +386,61 @@ void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain)
 
 #if HW_VERSION==2
 
-void Config7871()
-{
-	PORTB &= ~(0X01<<2); 
-  
-	SPDR = 0x07;			//REF/OSC REGISTER
-  while(!(SPSR & (1<<SPIF))); 
-	
-  SPDR = 0x3C;			//INTERNAL OSC, CCLK OUTPUT ON, REF ON, BUF ON, 2.5V REF
-  while(!(SPSR & (1<<SPIF))); 
-	
-  PORTB |= 0X01<<2; 
+/** \brief
+ *  Setup internal parameters of hw version 2
+ *
+ */
+void Config7871() {
+    PORTB &= ~(0X01 << 2);
+
+    SPDR = 0x07; //REF/OSC REGISTER
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0x3C; //INTERNAL OSC, CCLK OUTPUT ON, REF ON, BUF ON, 2.5V REF
+    while (!(SPSR & (1 << SPIF)));
+
+    PORTB |= 0X01 << 2;
 }
 
-void config7871PIO(int x)
-{
-	int result;
-  
-	PORTB &= ~(0X01<<2); 
-  
-	SPDR = 0x06;			//PIO control register
-  while(!(SPSR & (1<<SPIF))); 
-	
-	SPDR = 0x0F&x;			//All outputs
-  while(!(SPSR & (1<<SPIF))); 
-	
-  PORTB |= 0X01<<2; 
-			
+/** \brief
+ *  Setup PIO control register
+ *
+ *  \param
+ *  x: value to set PIO
+ */
+void config7871PIO(int x) {
+    int result;
+
+    PORTB &= ~(0X01 << 2);
+
+    SPDR = 0x06; //PIO control register
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0x0F & x; //All outputs
+    while (!(SPSR & (1 << SPIF)));
+
+    PORTB |= 0X01 << 2;
+
 }
 
+/** \brief
+ *  Setup PIO state register
+ *
+ *  \param
+ *  x: value to set PIO
+ */
+void set7871PIO(int x) {
+    int result;
 
-void set7871PIO(int x)
-{
-	int result;
-  
-	PORTB &= ~(0X01<<2); 
-  
-	SPDR = 0x05;			//PIO state register
-  while(!(SPSR & (1<<SPIF))); 
-	
-	SPDR = 0x0F&x;		//Set outputs
-  while(!(SPSR & (1<<SPIF))); 
-	
-  PORTB |= 0X01<<2; 	
+    PORTB &= ~(0X01 << 2);
+
+    SPDR = 0x05; //PIO state register
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0x0F & x; //Set outputs
+    while (!(SPSR & (1 << SPIF)));
+
+    PORTB |= 0X01 << 2;
 }
 #endif
 
@@ -356,59 +449,76 @@ void set7871PIO(int x)
 // DAC functions ///////////////////////////////////////////////
 
 #if HW_VERSION==2
-    void setupLTC2630()
-    {
-        PORTB &= ~(0X01<<3); 
-      
-        SPDR = 0x60;			//Select Internal Reference (Power-on Reset Default)
-      while(!(SPSR & (1<<SPIF))); 	
 
-        SPDR = 0;
-      while(!(SPSR & (1<<SPIF))); 
+/** \brief
+ *  Setup LTC2630
+ *
+ */
+void setupLTC2630() {
+    PORTB &= ~(0X01 << 3);
 
-        SPDR = 0;
-      while(!(SPSR & (1<<SPIF))); 
-        
-      PORTB |= 0X01<<3; 	
-    }
+    SPDR = 0x60; //Select Internal Reference (Power-on Reset Default)
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0;
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0;
+    while (!(SPSR & (1 << SPIF)));
+
+    PORTB |= 0X01 << 3;
+}
 #endif
 
-int SetDacOutput(int value)
-{
-    PORTB &= ~(0X01<<3); 
+/** \brief
+ *  Set DAC output
+ *
+ *  \param
+ *  value: value to set DAC output
+ *  \return
+ *  0
+ */
+int SetDacOutput(int value) {
+    PORTB &= ~(0X01 << 3);
 #if HW_VERSION==2
-    SPDR = 0x30;			//Write to and Update (Power up) DAC Register
-    while(!(SPSR & (1<<SPIF))); 
+    SPDR = 0x30; //Write to and Update (Power up) DAC Register
+    while (!(SPSR & (1 << SPIF)));
     SPDR = (value & 0xFF00) >> 8;
-    while(!(SPSR & (1<<SPIF))); 
+    while (!(SPSR & (1 << SPIF)));
     SPDR = value & 0xF0;
-    while(!(SPSR & (1<<SPIF))); 
+    while (!(SPSR & (1 << SPIF)));
 #else
     SPDR = (value & 0xFF00) >> 8;
-    while(!(SPSR & (1 << SPIF)));
+    while (!(SPSR & (1 << SPIF)));
     SPDR = value & 0xFF;
-    while(!(SPSR & (1 << SPIF)));
+    while (!(SPSR & (1 << SPIF)));
 #endif
-    PORTB |= 0X01 << 3; 
+    PORTB |= 0X01 << 3;
     return 0;
 }
 
-
-int SetAnalogVoltage(signed int mv)
-{
+/** \brief
+ *  Set analog voltage
+ *
+ *  \param
+ *  mv: voltage to setup
+ *  \return
+ *  raw voltage value
+ */
+int SetAnalogVoltage(signed int mv) {
 #if HW_VERSION==2
-	unsigned int aux;
-	
-	if(mv<0)
-		aux = 0;
-	else if(mv>4096)
-		aux = 65536;
-	else
-		aux = 16*mv;
+    unsigned int aux;
 
-	SetDacOutput(aux);
-	
-	return (int)aux;
+    if (mv < 0)
+        aux = 0;
+    else if (mv > 4096)
+        aux = 65536;
+    else
+        aux = 16 * mv;
+
+    SetDacOutput(aux);
+
+    return (int) aux;
 #else
     unsigned long aux;
 
@@ -416,59 +526,92 @@ int SetAnalogVoltage(signed int mv)
         mv = -4096;
     else if (mv > 4096)
         mv = 4096;
-    
-    aux = 2*(mv + 4096);
+
+    aux = 2 * (mv + 4096);
     SetDacOutput(aux);
 
-    return (int)aux;
+    return (int) aux;
 #endif
 }
 
 // TIMER1 based functions ///////////////////////////////////////////////
 
-void pwmInit(int duty, long microseconds)
-{
+/** \brief
+ *  Initialize pwm
+ *
+ *  \param
+ *  microseconds: value in microseconds to initialize the timer
+ */
+void pwmInit(int duty, long microseconds) {
     //SetpioMode(4, OUTPUT);        //SI ponemos el pin del PIO5/OC1A/PD5 como salida, no funciona el PWM??!!
     Timer1.pwm(5, duty, microseconds * 2);
 }
 
-
-void PwmStop()
-{
+/** \brief
+ *  Stop pwm
+ *
+ */
+void PwmStop() {
     Timer1.disablePwm(5);
 }
 
-
-void setPwmDuty(int duty)
-{
+/** \brief
+ *  Setup the duty of pwm
+ *
+ *  \param
+ *  duty: duty to set pwm
+ */
+void setPwmDuty(int duty) {
     Timer1.setPwmDuty(5, duty);
 }
 
-void captureInit(unsigned long microseconds)
-{
+/** \brief
+ *  Initialize capture
+ *
+ *  \param
+ *  microseconds: value in microseconds to initialize the capture
+ */
+void captureInit(unsigned long microseconds) {
     SetpioMode(4, INPUT);
     Timer1.startCapture(microseconds);
 }
 
-
-void captureStop()
-{
+/** \brief
+ *  Stop capture
+ *
+ */
+void captureStop() {
     Timer1.stopCapture();
 }
 
-int  getCapture(int state)
-{
+/** \brief
+ *  Get a capture value
+ *
+ *  \param
+ *  state: high (1) or low (0)
+ */
+int getCapture(int state) {
     return (int) Timer1.getCapture(state);
 }
 
-void counterInit(int edge)
-{
+/** \brief
+ *  Initialize the counter
+ *
+ *  \param
+ *  edge: edge to start counter
+ */
+void counterInit(int edge) {
     SetpioMode(4, INPUT);
     Timer1.startCounter(edge);
 }
 
-int getCounter(int reset)
-{
+/** \brief
+ *  Get counter value
+ *
+ *  \param
+ *  reset: flag to reset the counter
+ */
+int getCounter(int reset) {
     return (int) Timer1.getCounter(reset);
 }
 
@@ -476,8 +619,12 @@ int getCounter(int reset)
 // GENERAL FUNCTIONS //////////////////////////////////////////////////////////
 
 //Hardware init:
-void daqInit()
-{
+
+/** \brief
+ *  Initialize DAC
+ *
+ */
+void daqInit() {
     //PORTA: MMA,MMB,MMC as outputs
     DDRA = 0X07;
 
@@ -492,21 +639,25 @@ void daqInit()
 
     //LEDG ON
     PORTC |= 1 << 3;
-    
+
 #if HW_VERSION==2
-        SPCR = (1<<SPE)|(1<<MSTR)|(0x0C)|1;             //fclk/16, CLK HIGH inactive, trailing edge
-        setupLTC2630();
-        Config7871();
+    SPCR = (1 << SPE) | (1 << MSTR) | (0x0C) | 1; //fclk/16, CLK HIGH inactive, trailing edge
+    setupLTC2630();
+    Config7871();
 #else
-        SPCR = (1<<SPE)|(1<<MSTR)|(0x04);               //fclk/4
+    SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4
 #endif
-    
-    
+
+
 }
 
-
-int availableMemory()
-{
+/** \brief
+ *  Return the avaiable memory
+ *
+ *  \return
+ *  size of the avaiable memory
+ */
+int availableMemory() {
     int size = 4096; // ATMEGA644P
     byte *buf;
 

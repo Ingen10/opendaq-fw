@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:  120407
- *  Author:   JRB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #include "datachannel.h"
@@ -28,31 +29,60 @@ extern "C" {
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-DataChannel::DataChannel(int dtype)
-{
+/** \brief
+ *  DataChannel constructor
+ *
+ *  \param
+ *  dtype: Type of DataChannel
+ *  \return
+ *  DataChannel created
+ */
+DataChannel::DataChannel(int dtype) {
     dctype = dtype;
     Initialize();
 }
 
-
-DataChannel::DataChannel(int dtype, unsigned long dperiod)
-{
+/** \brief
+ *  DataChannel constructor
+ *
+ *  \param
+ *  dtype: type of DataChannel
+ *  dperiod: period of DataChannel
+ *  \return
+ *  DataChannel created
+ */
+DataChannel::DataChannel(int dtype, unsigned long dperiod) {
     dctype = dtype;
     period = dperiod;
     Initialize();
 }
 
-
-DataChannel::DataChannel(int dtype, int dpin)
-{
+/** \brief
+ *  DataChannel constructor
+ *
+ *  \param
+ *  dtype: type of DataChannel
+ *  dpin: unused
+ *  \return
+ *  DataChannel created
+ */
+DataChannel::DataChannel(int dtype, int dpin) {
     edge = 1;
     dctype = dtype;
     Initialize();
 }
 
-
-DataChannel::DataChannel(int dtype, int dpin, int dedge)
-{
+/** \brief
+ *  DataChannel constructor
+ *
+ *  \param
+ *  dtype: type of DataChannel
+ *  dpin: unused
+ *  dedge: edge of DataChannel
+ *  \return
+ *  DataChannel created
+ */
+DataChannel::DataChannel(int dtype, int dpin, int dedge) {
     edge = dedge;
     dctype = dtype;
     Initialize();
@@ -61,20 +91,23 @@ DataChannel::DataChannel(int dtype, int dpin, int dedge)
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-void DataChannel::Action()
-{
-    if(dcmode == ANALOG_OUTPUT)
+/** \brief
+ *  Execute the DataChannel Action (write or read)
+ * 
+ */
+void DataChannel::Action() {
+    if (dcmode == ANALOG_OUTPUT)
         Write();
     else
         Read();
 
     ndata++;
-    if(ndata == maxndata) {
-        if(maxnrepeat == R_CONTINUOUS)
+    if (ndata == maxndata) {
+        if (maxnrepeat == R_CONTINUOUS)
             ndata = 0;
         else {
             nrepeat++;
-            if(maxnrepeat > nrepeat)
+            if (maxnrepeat > nrepeat)
                 ndata = 0;
             else
                 Disable();
@@ -82,25 +115,33 @@ void DataChannel::Action()
     }
 }
 
-
-int DataChannel::endReached()
-{
+/** \brief
+ *  Indicate if end of DataChannel has been reached
+ *
+ *  \return
+ *  Indicate if end of DataChannel has been reached
+ */
+int DataChannel::endReached() {
     return end_reached;
 }
 
-
-void DataChannel::Read()
-{
+/** \brief
+ *  Read ADC and store the readed value in the DataChannel buffer
+ *
+ */
+void DataChannel::Read() {
     signed int c;
 
-    c = actionCallback(option);//ReadNADC(1);//
+    c = actionCallback(option); //ReadNADC(1);//
     databuffer[writeindex % bufferlen] = c;
     writeindex++;
 }
 
-
-void DataChannel::Write()
-{
+/** \brief
+ *  Set DAC using a value from the DataChannel buffer
+ *
+ */
+void DataChannel::Write() {
     signed int c;
     unsigned int add;
 
@@ -110,9 +151,13 @@ void DataChannel::Write()
     readindex = writeindex;
 }
 
-
-signed int DataChannel::Get()
-{
+/** \brief
+ *  Read the buffer of the DataChannel and return the readed value
+ *
+ *  \return
+ *  The readed value from DataChannel
+ */
+signed int DataChannel::Get() {
     signed int c;
     int i;
 
@@ -121,87 +166,133 @@ signed int DataChannel::Get()
     else
         c = databuffer[readindex % bufferlen];
 
-    if(readindex < writeindex)
+    if (readindex < writeindex)
         readindex++;
 
     return c;
 }
 
-void DataChannel::Put(unsigned int index,signed int value)
-{
+/** \brief
+ *  Write a value in the buffer of the DataChannel
+ *
+ *  \param
+ *  index: position of the buffer to write the value
+ *  value: value to wrtie in the buffer of the DataChannel
+ */
+void DataChannel::Put(unsigned int index, signed int value) {
     databuffer[index] = value;
 }
 
-void DataChannel::Setup(unsigned long maxpoints, int maxrepeat)
-{
+/** \brief
+ *  Setup the max number of points and max number of repeats of DataChannel
+ *
+ *  \param
+ *  maxpoints: max number of points of the DataChannel
+ *  maxrepeat: max number of repeats of the DataChannel
+ */
+void DataChannel::Setup(unsigned long maxpoints, int maxrepeat) {
     maxndata = maxpoints;
-    if(dcmode == ANALOG_OUTPUT)
+    if (dcmode == ANALOG_OUTPUT)
         maxndata %= bufferlen;
 
     maxnrepeat = maxrepeat;
 }
 
-
-void DataChannel::TriggerConfig(int trigger_mode, int16_t trigger_value)
-{
+/** \brief
+ *  Configure the trigger of the DataChannel
+ *
+ *  \param
+ *  trigger_mode: mode of the trigger to setup in the DataChannel
+ *  trigger_value_ value of the trigger to setup in the DataChannel
+ */
+void DataChannel::TriggerConfig(int trigger_mode, int16_t trigger_value) {
     trg_mode = trigger_mode;
     trg_value = trigger_value;
 }
 
-
-int DataChannel::CheckMyTrigger()
-{
+/** \brief
+ *  Check the trigger of the DataChannel
+ *
+ *  \return
+ *  Indicate if trigger has been triggered
+ */
+int DataChannel::CheckMyTrigger() {
     signed int value;
 
-    if(state > CH_READY)
+    if (state > CH_READY)
         return 1;
 
-    if((trg_mode >= 1) && (trg_mode <= 6)) {
+    if ((trg_mode >= 1) && (trg_mode <= 6)) {
         SetpioMode(trg_mode - 1, INPUT);
         return (pioRead(trg_mode - 1) == trg_value);
-    } else if(trg_mode == ABIG_TRG) {
+    } else if (trg_mode == ABIG_TRG) {
         ConfigAnalog(pch, nch, g);
         value = ReadNADC(10);
         return (value > trg_value);
-    } else if(trg_mode == ASML_TRG) {
+    } else if (trg_mode == ASML_TRG) {
         ConfigAnalog(pch, nch, g);
         value = ReadNADC(10);
         return (value < trg_value);
     }
-        
+
     return 1;
 }
 
-
-void DataChannel::Configure(int mode)
-{
+/** \brief
+ *  Configure the mode of the DataChannel
+ *
+ *  \param
+ *  mode: mode to configure the DataChannel
+ */
+void DataChannel::Configure(int mode) {
     dcmode = mode;
     pch = 1;
     nch = 0;
     g = 0;
 }
 
-
-void DataChannel::Configure(int mode, int pchan, int nchan)
-{
+/** \brief
+ *  Configure the DataChannel
+ *
+ *  \param
+ *  mode: mode of the DataChannel
+ *  pchan: channel of the DataChannel
+ *  nchan: channel number
+ */
+void DataChannel::Configure(int mode, int pchan, int nchan) {
     dcmode = mode;
     pch = pchan;
     nch = nchan;
     g = 0;
 }
 
-
-void DataChannel::Configure(int mode, int pchan, int nchan, int gain)
-{
+/** \brief
+ *  Configure the DataChannel
+ *
+ *  \param
+ *  mode: mode of the DataChannel
+ *  pchan: channel of the DataChannel
+ *  nchan: channel number
+ *  gain: gain of the DataChannel
+ */
+void DataChannel::Configure(int mode, int pchan, int nchan, int gain) {
     dcmode = mode;
     pch = pchan;
     nch = nchan;
     g = gain;
 }
 
-
-void DataChannel::Configure(int mode, int pchan, int nchan, int gain, int nsamples)
-{
+/** \brief
+ *  Configure the DataChannel
+ *
+ *  \param
+ *  mode: mode of the DataChannel
+ *  pchan: channel of the DataChannel
+ *  nchan: channel number
+ *  gain: gain of the DataChannel
+ *  nsamples: number of samples of the DataChannel
+ */
+void DataChannel::Configure(int mode, int pchan, int nchan, int gain, int nsamples) {
     dcmode = mode;
     pch = pchan;
     nch = nchan;
@@ -209,51 +300,66 @@ void DataChannel::Configure(int mode, int pchan, int nchan, int gain, int nsampl
     option = nsamples;
 }
 
-
-void DataChannel::Configure(int mode, int channel)
-{
+/** \brief
+ *  Configure the DataChannel
+ *
+ *  \param
+ *  mode: mode of the DataChannel
+ *  channel: channel of the DataChannel
+ */
+void DataChannel::Configure(int mode, int channel) {
     dcmode = mode;
     pch = channel;
     nch = 0;
     g = 0;
 }
 
-
-void DataChannel::Begin()
-{
-    if(dcmode == ANALOG_INPUT)
+/** \brief
+ *  Prepare the DataChannel to begin
+ *
+ */
+void DataChannel::Begin() {
+    if (dcmode == ANALOG_INPUT)
         ConfigAnalog(pch, nch, g);
-    else if(dcmode == ANALOG_OUTPUT)
+    else if (dcmode == ANALOG_OUTPUT)
         SetDacOutput(0);
-    else if(dcmode == COUNTER_INPUT) {
+    else if (dcmode == COUNTER_INPUT) {
         option = pch;
         counterInit(option);
-    } else if(dcmode == DIGITAL_OUTPUT)
+    } else if (dcmode == DIGITAL_OUTPUT)
         SetDigitalDir(0xFF);
-    else if(dcmode == DIGITAL_INPUT)
+    else if (dcmode == DIGITAL_INPUT)
         SetDigitalDir(0);
-    else if(dcmode == CAPTURE_INPUT) {
+    else if (dcmode == CAPTURE_INPUT) {
         option = pch;
         captureInit(nch);
     }
 }
 
-
-void DataChannel::Activate()
-{
-    if(dcmode == ANALOG_INPUT)
-        ConfigAnalog(pch, nch,   g);
+/** \brief
+ *  Activate the DataChannel
+ *
+ */
+void DataChannel::Activate() {
+    if (dcmode == ANALOG_INPUT)
+        ConfigAnalog(pch, nch, g);
 }
 
-
-int DataChannel::Datalen()
-{
+/** \brief
+ *  Get the length of the buffer of the DataChannel
+ *
+ *  \return
+ *  Length of the buffer of the DataChannel
+ */
+int DataChannel::Datalen() {
     return bufferlen;
 }
 
-
-void DataChannel::Enable()
-{
+/** \brief
+ *  Enable the DataChannel
+ *
+ */
+void DataChannel::Enable() {
     end_reached = 0;
 
     switch (dcmode) {
@@ -265,7 +371,7 @@ void DataChannel::Enable()
 #endif
             break;
         case ANALOG_OUTPUT:
-            actionCallback = SetDacOutput;//SetAnalogVoltage;
+            actionCallback = SetDacOutput; //SetAnalogVoltage;
             break;
         case COUNTER_INPUT:
             actionCallback = getCounter;
@@ -289,54 +395,72 @@ void DataChannel::Enable()
     Begin();
 }
 
-
-void DataChannel::Disable()
-{
+/** \brief
+ *  Disable the DataChannel
+ *
+ */
+void DataChannel::Disable() {
     state = CH_STOP;
     end_reached = 1;
 }
 
-
-void DataChannel::reset()
-{
+/** \brief
+ *  Reset the DataChannel
+ *
+ */
+void DataChannel::reset() {
     writeindex = 0;
     readindex = 0;
 }
 
-
-void DataChannel::Destroy()
-{
-    if(dctype != INACTIVE_TYPE) {   //disable only if channel is enabled
+/** \brief
+ *  Destroy the DataChannel
+ *
+ */
+void DataChannel::Destroy() {
+    if (dctype != INACTIVE_TYPE) { //disable only if channel is enabled
         state = CH_IDLE;
         dctype = INACTIVE_TYPE;
-        free (databuffer);
+        free(databuffer);
     }
 }
 
-
-void DataChannel::Flush()
-{
+/** \brief
+ *  Flush the DataChannel
+ *
+ */
+void DataChannel::Flush() {
     writeindex = 0;
     readindex = 0;
     ndata = 0;
     nrepeat = 0;
 }
 
-
-int dummyfunction(int j)
-{
+/** \brief
+ *  Double an int
+ *
+ *  \param
+ *  j: int to be doubled
+ *  \return
+ *  Double of the param j
+ */
+int dummyfunction(int j) {
     return j * 2;
 }
 
-
-int DataChannel::waitStabilization()
-{
+/** \brief
+ *  Read ADC and wait to stabilization
+ *
+ *  \return
+ *  The last residtual value of the dummy function (15998)
+ */
+int DataChannel::waitStabilization() {
     int dummy, i, j;
 
     //call ReadACD to adapt analog input
     ReadADC();
-    for(i = 0; i < stabilization_time; i++) {
-        for(j = 0; j < 8000; j++)
+    for (i = 0; i < stabilization_time; i++) {
+        for (j = 0; j < 8000; j++)
             dummy = dummyfunction(j);
     }
 
@@ -346,9 +470,12 @@ int DataChannel::waitStabilization()
 
 // Private Methods /////////////////////////////////////////////////////////////
 
-void DataChannel::Initialize()
-{
-    stabilization_time = 100;   // 100 times 0.508 us
+/** \brief
+ *  Initialize the DataChannel
+ *
+ */
+void DataChannel::Initialize() {
+    stabilization_time = 100; // 100 times 0.508 us
     state = CH_READY;
     dcmode = ANALOG_INPUT;
     trg_mode = Sw_TRG;
@@ -359,8 +486,8 @@ void DataChannel::Initialize()
     option = 1;
     ready = 0;
     bufferlen = 150;
-    databuffer = (signed int*)malloc(bufferlen * sizeof(int));
+    databuffer = (signed int*) malloc(bufferlen * sizeof (int));
 
-    if(databuffer == NULL)
+    if (databuffer == NULL)
         _DEBUG("malloc error\n");
 }

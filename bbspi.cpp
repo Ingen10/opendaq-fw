@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 INGEN10 Ingenieria SL
+ *  Copyright (C) 2012 INGEN10 Ingenieria SL
  *  http://www.ingen10.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,105 +15,129 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Author:   JRB
- *
- *  BbspiClass
- *  Software controlled SPI for driving external devices.
- *  Pin functions may be configured using setup function.
- *  Chip Select pin must be externally (software) controlled
- *
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #include <pins_arduino.h>
 #include <inttypes.h>
 
 #include "daqhw.h"
-
 #include "bbspi.h"
-
 #define NPIOPINS 6
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-BbspiClass::BbspiClass()
-{
-    bb_clk = 0;     // clock pin
-    bb_mosi = 1;    // master out, slave in
-    bb_miso = 2;    // master in, slave out
-    
-    bb_cpol = 0;    // clock output low when inactive
-    bb_cpha = 1;    // data valid on clock trailing edges
+/** \brief
+ *  Bbspi constructor
+ *
+ *  \return
+ *  Bbspi object created
+ */
+BbspiClass::BbspiClass() {
+    bb_clk = 0; // clock pin
+    bb_mosi = 1; // master out, slave in
+    bb_miso = 2; // master in, slave out
+
+    bb_cpol = 0; // clock output low when inactive
+    bb_cpha = 1; // data valid on clock trailing edges
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-//setup: set pin numbers and functions
-int BbspiClass::setup(uint8_t my_clk, uint8_t my_mosi, uint8_t my_miso)
-{
+/** \brief
+ *  Setup Bbspi (pin numbers and functions)
+ *
+ *  \param
+ *  my_clk: clock pin number
+ *  my_mosi: mosi pin number
+ *  my_miso: miso pin number
+ *  \return
+ *  Error flag (0 -> right)
+ */
+int BbspiClass::setup(uint8_t my_clk, uint8_t my_mosi, uint8_t my_miso) {
     //assign pin numbers
-    if((my_clk<NPIOPINS+1)&&(my_clk>0))
+    if ((my_clk < NPIOPINS + 1)&&(my_clk > 0))
         bb_clk = my_clk - 1;
-    if((my_mosi<NPIOPINS+1)&&(my_mosi>0))
+    if ((my_mosi < NPIOPINS + 1)&&(my_mosi > 0))
         bb_mosi = my_mosi - 1;
-    if((my_miso<NPIOPINS+1)&&(my_miso>0))
+    if ((my_miso < NPIOPINS + 1)&&(my_miso > 0))
         bb_miso = my_miso - 1;
-    
+
     //error check
-    if(bb_clk == bb_mosi)
+    if (bb_clk == bb_mosi)
         return -1;
-    if(bb_clk == bb_miso)
+    if (bb_clk == bb_miso)
         return -1;
-    if(bb_miso == bb_mosi)
+    if (bb_miso == bb_mosi)
         return -1;
-    
+
     //set pin direction
     SetpioMode(bb_clk, 1);
     SetpioMode(bb_mosi, 1);
-    SetpioMode(bb_miso, 0);    
-    pioWrite (bb_clk, bb_cpol);
+    SetpioMode(bb_miso, 0);
+    pioWrite(bb_clk, bb_cpol);
     return 0;
 }
 
-//setup: set default pin numbers and functions
-int BbspiClass::setup()
-{
+/** \brief
+ *  Set default pin numbers and functions
+ *
+ *  \return
+ *  0
+ */
+int BbspiClass::setup() {
     SetpioMode(bb_clk, 1);
     SetpioMode(bb_mosi, 1);
-    SetpioMode(bb_miso, 0);  
-    pioWrite (bb_clk, bb_cpol);
+    SetpioMode(bb_miso, 0);
+    pioWrite(bb_clk, bb_cpol);
     return 0;
 }
 
-//configure: set SPI transfer clock configuration
-int BbspiClass::configure(uint8_t my_cpol, uint8_t my_cpha)
-{
+/** \brief
+ *  Set SPI transfer clock configuration
+ *
+ *  \param
+ *  my_cpol: clock output
+ *  my_cpha: data valid on clock trailing edges
+ *  \return
+ *  my_cpol inpunt param
+ */
+int BbspiClass::configure(uint8_t my_cpol, uint8_t my_cpha) {
     bb_cpol = my_cpol;
     bb_cpha = my_cpha;
     return bb_cpol;
 }
 
-// Bit shift the data out
-uint8_t BbspiClass::transfer(uint8_t data)
-{
+/** \brief
+ *  Bit shift the data out
+ *
+ *  \param
+ *  data: input data
+ *  \return
+ *  Received data
+ */
+uint8_t BbspiClass::transfer(uint8_t data) {
     uint8_t recv_data = 0;
-    
-    pioWrite (bb_clk, bb_cpol);
-    pioWrite (bb_mosi, 0);
-    
-    for(int i = 0; i < 8; i++) {
+
+    pioWrite(bb_clk, bb_cpol);
+    pioWrite(bb_mosi, 0);
+
+    for (int i = 0; i < 8; i++) {
         recv_data = recv_data << 1;
         if (data > 127)
-            pioWrite (bb_mosi, 1);
+            pioWrite(bb_mosi, 1);
         else
-            pioWrite (bb_mosi, 0);
-            
-        pioWrite (bb_clk, !bb_cpol);
-        if(bb_cpha == 0)
-            recv_data |= pioRead (bb_miso);
+            pioWrite(bb_mosi, 0);
+
+        pioWrite(bb_clk, !bb_cpol);
+        if (bb_cpha == 0)
+            recv_data |= pioRead(bb_miso);
         data = data << 1;
-        pioWrite (bb_clk, bb_cpol);
-        if(bb_cpha == 1)
-            recv_data |= pioRead (bb_miso);
+        pioWrite(bb_clk, bb_cpol);
+        if (bb_cpha == 1)
+            recv_data |= pioRead(bb_miso);
     }
     return recv_data;
 }

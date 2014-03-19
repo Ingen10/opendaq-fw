@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:  120507
- *  Author:   JRB
+ *  Version:    140207
+ *  Author:     JRB
+ *  Revised by: AV (07/02/14)
  */
 
 #ifndef COMMDATA_H
@@ -123,10 +124,10 @@ class CommDataClass {
 private:
     // properties
     byte received_bytes;
-    byte wait_for_data;     // shows how many input bytes are left in the message
-    byte data_len;          // length of received packet (bytes)
-    uint16_t my_crc16;      // received 16bit crc
-    byte next_command;      // short command being executed
+    byte wait_for_data; // shows how many input bytes are left in the message
+    byte data_len; // length of received packet (bytes)
+    uint16_t my_crc16; // received 16bit crc
+    byte next_command; // short command being executed
     uint8_t my_chp, my_chn, my_gain, my_nsamples, my_mode;
     int16_t my_vout;
     uint32_t my_id;
