@@ -105,8 +105,6 @@ public:
     int endReached(uint8_t nb);
     void Reset(uint8_t nb);
 
-
-
 };
 
 #endif

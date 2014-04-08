@@ -58,6 +58,7 @@ void DStream::Initialize() {
  *
  */
 void DStream::Start() {
+
     for (int i = 0; i < 4; i++)
         channels[i].Flush();
 
