@@ -23,6 +23,7 @@
 #ifndef COMMDATA_H
 #define COMMDATA_H
 
+#define byte uint8_t
 //#define SERIAL_DEBUG
 //Firmware version:
 #define FVER     113

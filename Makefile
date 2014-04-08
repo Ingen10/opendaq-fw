@@ -48,7 +48,7 @@ USERLIBS =
 ARDUINO_DIR = /usr/share/arduino
 
 # Arduino model:
-ARDUINO_MODEL = opendaq
+ARDUINO_MODEL = opendaq_m
 
 # Where are tools like avr-gcc located on your system?
 #AVR_TOOLS_PATH = $(ARDUINO_DIR)/hardware/tools/avr/bin
@@ -86,8 +86,8 @@ else
 ifeq "$(ARDUINO_MODEL)" "micro"
 ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/arduino/variants/micro
 else
-ifeq "$(ARDUINO_MODEL)" "opendaq"
-ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/arduino/variants/opendaq
+ifeq "$(ARDUINO_MODEL)" "opendaq_m"
+ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/variants/openDAQ_M
 else
 ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/arduino/variants/standard
 endif
@@ -133,7 +133,7 @@ OPT = s
 CDEFS = -DF_CPU=$(F_CPU) #-DSERIAL_DEBUG
 
 # Include directories
-CINCS = -I$(ARDUINO_CORE) -I$(ARDUINO_VARIANT) $(patsubst %,-I$(ARDUINO_DIR)/libraries/%,$(ARDLIBS)) $(patsubst %,-I$(HOME)/sketchbook/libraries/%,$(USERLIBS))
+CINCS = -I$(ARDUINO_CORE) -I$(ARDUINO_VARIANT)  $(patsubst %,-I$(ARDUINO_DIR)/libraries/%,$(ARDLIBS)) $(patsubst %,-I$(HOME)/sketchbook/libraries/%,$(USERLIBS))
 
 # Compiler flag to set the C Standard level.
 # c89	- "ANSI" C

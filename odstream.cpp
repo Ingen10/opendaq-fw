@@ -193,11 +193,12 @@ void DStream::CreateBurstChannel(unsigned long us_period) {
         t2bits = _BV(CS21) | _BV(CS22); // prescale by /256
     else if ((cycles >>= 2) < T2_RESOLUTION)
         t2bits = _BV(CS20) | _BV(CS21) | _BV(CS22); // prescale by /1024
-    else
+    else {
         cycles = T2_RESOLUTION - 1;
 
-    // request was out of bounds, set as maximum
-    t2bits = _BV(CS20) | _BV(CS21) | _BV(CS22);
+	// request was out of bounds, set as maximum
+	t2bits = _BV(CS20) | _BV(CS21) | _BV(CS22);
+    }
 
     OCR2A = cycles; // ICR1 is TOP in p & f correct pwm mode
     TCCR2B &= ~(_BV(CS20) | _BV(CS21) | _BV(CS22));
