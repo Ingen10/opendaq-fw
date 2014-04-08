@@ -94,7 +94,7 @@ public:
     int dcmode;
     int ready;
     int state;
-    int period;
+    unsigned long period;
     int edge;
 
     //trigger controlling variables
