@@ -104,6 +104,8 @@ public:
     unsigned int bufferlen;
     signed int *databuffer;
 
+    unsigned int stabilitation_points;
+
     unsigned int writeindex, readindex;
     unsigned long ndata, maxndata;
     unsigned int nrepeat, maxnrepeat;

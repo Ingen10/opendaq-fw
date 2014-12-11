@@ -101,6 +101,11 @@ void DataChannel::Action() {
     else
         Read();
 
+    if(stabilitation_points>0){
+	stabilitation_points --;
+	writeindex = 0;
+	return;
+    }
     ndata++;
     if (ndata == maxndata) {
         if (maxnrepeat == R_CONTINUOUS)
@@ -319,10 +324,11 @@ void DataChannel::Configure(int mode, int channel) {
  *
  */
 void DataChannel::Begin() {
+    stabilitation_points = 1;
     if (dcmode == ANALOG_INPUT)
         ConfigAnalog(pch, nch, g);
     else if (dcmode == ANALOG_OUTPUT)
-        SetDacOutput(0);
+	SetDacOutput(databuffer[0]);
     else if (dcmode == COUNTER_INPUT) {
         option = pch;
         counterInit(option);

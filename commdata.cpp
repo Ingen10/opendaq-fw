@@ -253,7 +253,7 @@ void CommDataClass::processStream(void) {
             resp_len = 1;
             response[2] = 80;
             response[3] = resp_len; //number of bytes
-            response[4] = 1; //channel #1
+            response[4] = i; //channel #1
 
             my_crc16 = crc16(resp_len + 2, response + 2);
             response[0] = make8(my_crc16, 1);
@@ -346,9 +346,6 @@ void CommDataClass::processCommand(void) {
 
         case C_SET_ANALOG:
             my_vout = make16(input_data + 4);
-#if HW_VERSION==2
-            my_vout *= 2;
-#endif
 
             SetDacOutput(my_vout);
 
