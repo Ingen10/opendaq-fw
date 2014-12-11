@@ -15,20 +15,20 @@ A couple of files have to be modified in the Arduino system directories to add
 the openDAQ board:
 
  * Add the openDAQ board definition to the end of the `boards.txt` file
- * Create a new "variant" folder with the pin definition file `pins_arduino.h`
+ * Create two new "variant" folders containing the pin definition files
+   of the two openDAQ models ("M" and "S")
 
 In Debian/Ubuntu (use superuser rights):
 
 ```bash
 apt-get install arduino
-mkdir /usr/share/arduino/hardware/arduino/variants/opendaq
-cp arduino/pins_arduino.h /usr/share/arduino/hardware/arduino/variants/opendaq/
+cp -r arduino/variants /usr/share/arduino/hardware/arduino/
 cat arduino/board.txt >> /usr/share/arduino/hardware/arduino/boards.txt
 ```
 
 Now you can select the board "openDAQ" in the menu Tools->Boards of the IDE.
 
-If you love the terminal way of living, the provided Makefile will let you
+If you love the command-line way of living, the provided Makefile will let you
 build the project and flash your board without opening the Arduino IDE.
 Simply call:
 
@@ -37,9 +37,8 @@ make
 make program
 ```
 
-If it doesn't work, maybe you'll have to tweak some definitions inside the
+If it doesn't work, maybe you'll have to tweak some definitions in the
 Makefile for your specific environment.
-
 
 Coding style
 ------------

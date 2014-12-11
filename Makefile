@@ -42,7 +42,7 @@ VERSION = 0.1
 ARDLIBS =
 
 # User-specified (in ~/sketchbook/libraries/) libraries (untested):
-USERLIBS = 
+USERLIBS =
 
 # Where do you keep the official Arduino software package?
 ARDUINO_DIR = /usr/share/arduino
@@ -80,16 +80,21 @@ endif
 # This has only been tested on standard variants. I'm guessing
 # at what mega and micro might need; other possibilities are
 # leonardo and "eightanaloginputs".
+VARIANTS_PATH=$(ARDUINO_DIR)/hardware/arduino/variants
 ifeq "$(ARDUINO_MODEL)" "mega"
-ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/arduino/variants/mega
+ARDUINO_VARIANT=$(VARIANTS_PATH)/mega
 else
 ifeq "$(ARDUINO_MODEL)" "micro"
-ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/arduino/variants/micro
+ARDUINO_VARIANT=$(VARIANTS_PATH)/micro
 else
 ifeq "$(ARDUINO_MODEL)" "opendaq_m"
-ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/variants/openDAQ_M
+ARDUINO_VARIANT=$(VARIANTS_PATH)/opendaq_m
 else
-ARDUINO_VARIANT=$(ARDUINO_DIR)/hardware/arduino/variants/standard
+ifeq "$(ARDUINO_MODEL)" "opendaq_s"
+ARDUINO_VARIANT=$(VARIANTS_PATH)/opendaq_s
+else
+ARDUINO_VARIANT=$(VARIANTS_PATH)/standard
+endif
 endif
 endif
 endif
@@ -148,7 +153,7 @@ CTUNING = -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 
 CFLAGS = $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) $(CWARN) $(CSTANDARD) $(CEXTRA)
 CXXFLAGS = $(CDEFS) $(CINCS) -O$(OPT)
-#ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs 
+#ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs
 LDFLAGS = -lm
 
 # Programming support using avrdude. Settings and variables.
@@ -171,7 +176,7 @@ REMOVE = rm -f
 MV = mv -f
 
 # Define all object files.
-OBJ = $(SRC:.c=.o) $(CXXSRC:.cpp=.o) $(ASRC:.S=.o) 
+OBJ = $(SRC:.c=.o) $(CXXSRC:.cpp=.o) $(ASRC:.S=.o)
 
 # Define all listing files.
 LST = $(ASRC:.S=.lst) $(CXXSRC:.cpp=.lst) $(SRC:.c=.lst)
@@ -188,7 +193,7 @@ all: build sizeafter
 test:
 	@echo CXXSRC = $(CXXSRC)
 
-build: elf hex 
+build: elf hex
 
 applet/$(TARGET).cpp: $(TARGET).ino
 	# Here is the "preprocessing".
@@ -198,7 +203,7 @@ applet/$(TARGET).cpp: $(TARGET).ino
 	# plus special magic to get around the pure virtual error
 	# undefined reference to `__cxa_pure_virtual' from Print.o.
 	# Then the .cpp file will be compiled. Errors during compile will
-	# refer to this new, automatically generated, file. 
+	# refer to this new, automatically generated, file.
 	# Not the original .ino file you actually edit...
 
 	test -d applet || mkdir applet
@@ -210,10 +215,10 @@ applet/$(TARGET).cpp: $(TARGET).ino
 elf: applet/$(TARGET).elf
 hex: applet/$(TARGET).hex
 eep: applet/$(TARGET).eep
-lss: applet/$(TARGET).lss 
+lss: applet/$(TARGET).lss
 sym: applet/$(TARGET).sym
 
-# Program the device.  
+# Program the device.
 program: applet/$(TARGET).hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 
@@ -231,7 +236,7 @@ COFFCONVERT=$(OBJCOPY) --debugging \
 	--change-section-address .data-0x800000 \
 	--change-section-address .bss-0x800000 \
 	--change-section-address .noinit-0x800000 \
-	--change-section-address .eeprom-0x810000 
+	--change-section-address .eeprom-0x810000
 
 coff: applet/$(TARGET).elf
 	$(COFFCONVERT) -O coff-avr applet/$(TARGET).elf $(TARGET).cof
@@ -258,7 +263,7 @@ extcoff: $(TARGET).elf
 	$(NM) -n $< > $@
 
 	# Link: create ELF output file from library.
-applet/$(TARGET).elf: applet/$(TARGET).cpp applet/core.a 
+applet/$(TARGET).elf: applet/$(TARGET).cpp applet/core.a
 	$(CC) $(ALL_CFLAGS) -o $@ applet/$(TARGET).cpp -L. applet/core.a $(LDFLAGS)
 
 
@@ -270,11 +275,11 @@ applet/core.a: $(OBJ)
 
 # Compile: create object files from C++ source files.
 .cpp.o:
-	$(CXX) -c $(ALL_CXXFLAGS) $< -o $@ 
+	$(CXX) -c $(ALL_CXXFLAGS) $< -o $@
 
 # Compile: create object files from C source files.
 .c.o:
-	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 
 # Compile: create assembler files from C source files.
@@ -294,11 +299,11 @@ clean:
 
 tar: $(TARFILE)
 
-$(TARFILE): 
+$(TARFILE):
 	( cd .. && \
-	  tar czvf $(TARFILE) --exclude=applet --owner=root $(CWDBASE) && \
-	  mv $(TARFILE) $(CWD) && \
-	  echo Created $(TARFILE) \
+		tar czvf $(TARFILE) --exclude=applet --owner=root $(CWDBASE) && \
+		mv $(TARFILE) $(CWD) && \
+		echo Created $(TARFILE) \
 	)
 
 depend:
