@@ -3,6 +3,7 @@
 opendaq_s.name=openDAQ [S]
 
 opendaq_s.upload.protocol=arduino
+opendaq_s.upload.tool=avrdude
 opendaq_s.upload.maximum_size=63488
 opendaq_s.upload.speed=38400
 
@@ -24,6 +25,7 @@ opendaq_s.build.variant=opendaq_s
 opendaq_m.name=openDAQ [M]
 
 opendaq_m.upload.protocol=arduino
+opendaq_m.upload.tool=avrdude
 opendaq_m.upload.maximum_size=63488
 opendaq_m.upload.speed=38400
 
@@ -39,3 +41,5 @@ opendaq_m.build.mcu=atmega644p
 opendaq_m.build.f_cpu=16000000L
 opendaq_m.build.core=arduino
 opendaq_m.build.variant=opendaq_m
+
+
