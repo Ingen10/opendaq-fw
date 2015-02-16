@@ -561,7 +561,7 @@ ISR(PCINT0_vect) {
         interrupt = 0;
         return;
     }
-    //This is a bucle for waiting and avoid fake edges
+    //This is a loop to wait and avoid fake edges
     for (i = 0; i < 200; i++) {
         refreshValue = PINA;
         for (j = 0; j < 200; j++) {

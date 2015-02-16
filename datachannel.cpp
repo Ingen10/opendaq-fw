@@ -102,9 +102,9 @@ void DataChannel::Action() {
         Read();
 
     if(stabilitation_points>0){
-	stabilitation_points --;
-	writeindex = 0;
-	return;
+        stabilitation_points --;
+        writeindex = 0;
+        return;
     }
     ndata++;
     if (ndata == maxndata) {
@@ -464,7 +464,7 @@ int DataChannel::waitStabilization() {
     int dummy, i, j;
 
     //call ReadACD to adapt analog input
-    ReadADC();
+    dummy = ReadNADC(2);
     for (i = 0; i < stabilization_time; i++) {
         for (j = 0; j < 8000; j++)
             dummy = dummyfunction(j);
