@@ -212,7 +212,7 @@ Byte    Description         Value           Notes
 9       nsamples            1-255
 ======= =================== ==============  ====================================================
 
-AIN_ALL
+AINALL
 -------
 Read all analog inputs.
 

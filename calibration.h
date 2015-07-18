@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    150717
+ *  Version:    150701
  *  Author:     JRB
  *  Revised by: AV (17/07/15)
  */
