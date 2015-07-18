@@ -15,11 +15,17 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
+ /**
+ * @file commdata.cpp
+ * Source code for CommData Class
+ */
+ 
+ 
 #include "commdata.h"
 #include "debug.h"
 
@@ -329,6 +335,27 @@ void CommDataClass::processCommand(void) {
             _DEBUG("AIN_CFG: %d\r\n", word1);
             _DEBUG("P: %d ", my_chp);
             _DEBUG("N: %d ", my_chn);
+            _DEBUG("GAIN: %d ", my_gain);
+            _DEBUG("NSAMPLES: %d\r\n", my_nsamples);
+            break;
+
+        case C_AIN_ALL:
+            if (data_len > 0)
+                my_nsamples = input_data[4];
+            if (data_len > 1)
+                my_gain = input_data[5];
+
+            _DEBUG("AIN_ALL:\r\n",i+1, word1);
+            for(i=0;i<8;i++){
+                ConfigAnalog(i+1, 0, my_gain);
+                ReadNADC(my_nsamples);
+                word1 = ReadNADC(my_nsamples);
+                response[2*i+4] = make8(word1, 1);
+                response[2*i+5] = make8(word1, 0);
+                _DEBUG("[%d] %d\r\n",i+1, word1);
+            }
+            resp_len = 16;
+
             _DEBUG("GAIN: %d ", my_gain);
             _DEBUG("NSAMPLES: %d\r\n", my_nsamples);
             break;
@@ -884,9 +911,8 @@ void CommDataClass::processCommand(void) {
  *  Send output buffer taking account of initial character x7E and escape
  *  character x7D
  *
- *  \param
- *  response: response to be sent to the serial port
- *  size: size of response
+ *  \param response: response to be sent to the serial port
+ *  \param size: size of response
  */
 void CommDataClass::sendCommand(byte* response, int size) {
     byte a;
@@ -925,9 +951,8 @@ void CommDataClass::systemReset(void) {
 /** \brief
  *  Create the crc from the packet
  *
- *  \param
- *  packet: packet to create the crc
- *  size: size of the packet
+ *  \param  packet: packet to create the crc
+ *  \param size: size of the packet
  */
 uint16_t CommDataClass::crc16(int size, byte *packet) {
     uint16_t crccode = 0;
@@ -965,9 +990,8 @@ uint32_t CommDataClass::make32(byte* a) {
 /** \brief
  *  Transform data to 8 bit format
  *
- *  \param
- *  a: data to transfrorm to 8 bit format
- *  position: position to get data
+ *  \param  a: data to transfrorm to 8 bit format
+ *  \param position: position to get data
  */
 byte CommDataClass::make8(uint16_t a, byte position) {
     byte aux;

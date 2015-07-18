@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #ifndef CALIBRATION_H
@@ -38,7 +38,10 @@
 #define CID_POS 	80
 
 #define NCAL_POS    17
-
+/**
+ * @file calibration.h
+ * Header file for Calibration Class
+ */
 class CalibrationClass {
 public:
     // properties
@@ -49,20 +52,20 @@ public:
 
     // methods
 
-    //! class constructor
+    // class constructor
     CalibrationClass();
 
     uint8_t read(int);
-    void write(int, uint8_t);
+    int write(int, uint8_t);
 
     uint32_t ID_Recall();
-    void ID_Save(uint32_t device_id);
+    int ID_Save(uint32_t device_id);
 
-    void SaveCalibration();
+    int SaveCalibration();
     int RecallCalibration();
 
 
-    void Reset_calibration();
+    int Reset_calibration();
 };
 
 extern CalibrationClass Cal;

@@ -15,16 +15,22 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
+ */
+
+
+/**
+ * @file Timer1.cpp
+ * Source code for Timer1 class
  */
 
 #include "Timer1.h"
 
 TimerOne Timer1; // preinstatiate
 /** \brief
- *  interrupt service routine that wraps a user defined function supplied by
+ *  Interrupt service routine that wraps a user defined function supplied by
  *  attachInterrupt
  *
  */
@@ -34,7 +40,7 @@ ISR(TIMER1_OVF_vect) {
         Timer1.isrCallback();
 }
 
-/** \brief
+/** 
  *  Initialize the timer
  *
  *  \param
@@ -46,7 +52,7 @@ void TimerOne::initialize(long microseconds) {
     setPeriod(microseconds);
 }
 
-/** \brief
+/** 
  *  Set the timer period
  *
  *  \param
@@ -75,9 +81,8 @@ void TimerOne::setPeriod(unsigned long microseconds) // AR modified for atomic a
 /** \brief
  *  Set the pwm duty
  *
- *  \param
- *  pin: timer pin
- *  duty: duty to set up
+ *  \param   pin: timer pin
+ *  \param duty: duty to set up
  */
 void TimerOne::setPwmDuty(char pin, int duty) {
     unsigned long dutyCycle = pwmPeriod;
@@ -95,10 +100,9 @@ void TimerOne::setPwmDuty(char pin, int duty) {
 /** \brief
  *  Set the pwm duty and the timer period
  *
- *  \param
- *  pin: timer pin
- *  duty: duty to set up
- *  microseconds: microseconds to set the timer period
+ *  \param  pin: timer pin
+ *  \param duty: duty to set up
+ *  \param microseconds: microseconds to set the timer period
  */
 void TimerOne::pwm(char pin, int duty, long microseconds) // expects duty cycle to be 10 bit (1024 max)
 {
@@ -138,9 +142,8 @@ void TimerOne::disablePwm(char pin) {
 /** \brief
  *  Attach an interruption
  *
- *  \param
- *  isr: the real isr
- *  microseconds: microseconds to set the timer period
+ *  \param  isr: the real isr
+ *  \param microseconds: microseconds to set the timer period
  */
 void TimerOne::attachInterrupt(void (*isr)(), long microseconds) {
     if (microseconds > 0) setPeriod(microseconds);

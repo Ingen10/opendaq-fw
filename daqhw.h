@@ -15,10 +15,16 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
+
+
+/**
+ * @file daqhw.h
+ * Header file for source code in daqhw.cpp
+*/
 #ifndef DAQHW_H
 #define DAQHW_H
 

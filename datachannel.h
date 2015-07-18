@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #ifndef DATACHANNEL_H
@@ -76,6 +76,14 @@
 
 // DataChannel Class defines all the variables and functions used for managing
 // the automated data acquisition for openDAQ 
+
+
+/**
+ * @file datachannel.h
+ * Header for DataChannel Class, wich defines all the variables and functions
+ * used for managing the automated data acquisition for openDAQ
+ */
+
 
 class DataChannel {
 private:

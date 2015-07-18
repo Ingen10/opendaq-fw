@@ -1,4 +1,4 @@
-
+﻿
 .. _`Serial protocol`:
 
 
@@ -103,13 +103,14 @@ Command          Code Description
 ---------------- ---- --------------------------------------------------------------------------------
 AIN_             1    Read ADC with current settings
 AINCFG_          2    Read ADC after configuring analog settings: positive input, negative input, gain
+AINALL_          4    Read all analog inputs
 PIO_             3    Write/read PIO output: 1 or 0
 PIODIR_          5    Configure PIO direction: 1 output, 0 input
 PORT_            7    Write/read the port including all PIOS
 PORTDIR_         9    Configure/read all PIOs direction
 LEDW_            18   Set LED color. (0=off, 1=green, 2=red, 3=orange)
 SETDAC_          13   Set output voltage (-4096 to +4096mV)
-SETANALOG_		 24   Set output voltage (-8192 to +8192)
+SETANALOG_	 24   Set output voltage (-8192 to +8192)
 PWMINIT_         10   Init PWM: period, duty
 PWMSTOP_         11   Disable PWM
 PWMDUTY_         12   Configure PWM duty
@@ -209,6 +210,35 @@ Byte    Description         Value           Notes
 7       n-input             0, 5-8, 25
 8       gain                0-4
 9       nsamples            1-255
+======= =================== ==============  ====================================================
+
+AIN_ALL
+-------
+Read all analog inputs.
+
+**Command:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      1
+3       number of bytes     2
+4       nsamples            1-255
+5       gain                0-4
+======= =================== ==============  ====================================================
+
+**Response:**
+
+======= =================== ==============  ====================================================
+Byte    Description         Value           Notes
+------- ------------------- --------------  ----------------------------------------------------
+0       CRC16H
+1       CRC16L                              Sum of all bytes complemented with 0xFFFF
+2       command number      1
+3       number of bytes     16
+4:19    AINx (byteH:byteL)                  Analog inputs readings RAW value (big-endian)
 ======= =================== ==============  ====================================================
 
 PIO

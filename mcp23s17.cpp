@@ -15,10 +15,17 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
+
+/**
+ * @file mcp23s17.cpp
+ * 
+*/
+
+
 
 #include "mcp23s17.h"
 #include "Arduino.h"
@@ -48,10 +55,9 @@ void spi_transfer(uint8_t data) {
 /** \brief
  *  Send a command to the MCP23S17 port expander
  *
- *  \param
- *  ss_pin to digital write
- *  addr: address to transfer
- *  data: input data
+ *  \param  ss_pin to digital write
+ *  \param addr: address to transfer
+ *  \param data: input data
  */
 void mcp23s17_write(int ss_pin, uint8_t addr, uint16_t data) {
     digitalWrite(ss_pin, 0);

@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #ifndef COMMDATA_H
@@ -26,7 +26,7 @@
 #define byte uint8_t
 //#define SERIAL_DEBUG
 //Firmware version:
-#define FVER     115
+#define FVER     120
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -48,6 +48,7 @@
 
 #define C_AIN           1
 #define C_AIN_CFG       2
+#define C_AIN_ALL       4
 
 #define C_PIO           3
 #define C_PIO_DIR       5
@@ -120,6 +121,12 @@
 
 // CommData Class defines all the variables and functions used for managing the
 // serial communications for openDAQ 
+
+/**
+ * @file commdata.h
+ * Header file for CommData Class. It defines all the variables and functions used for
+ * managing the serial communications for openDAQ
+ */ 
 
 class CommDataClass {
 private:

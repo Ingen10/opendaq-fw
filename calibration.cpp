@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 
@@ -26,11 +26,13 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-/** \brief
- *  Calibration constructor
- *
- *  \return
- *  Calibration objetc created
+/** 
+ * @file calibration.cpp 
+ * Methods of Calibration Class
+*/
+/**
+ * Calibration constructor
+ * \return  Calibration objetc created
  */
 CalibrationClass::CalibrationClass(void) {
     Reset_calibration();
@@ -38,11 +40,11 @@ CalibrationClass::CalibrationClass(void) {
     my_id = 0;
 }
 
-/** \brief
+/** 
  *  Reset the calibration
- *
+ * \return none
  */
-void CalibrationClass::Reset_calibration() {
+int CalibrationClass::Reset_calibration() {
     //DAC CALIBRATION DEFAULTS
     gain_m[0] = 1000;
     gain_b[0] = 0;
@@ -71,11 +73,11 @@ void CalibrationClass::Reset_calibration() {
 
 ///////ID-SERIAL NB STORAGE FUNCTIONS
 
-/** \brief
+/** 
  *  Get ID-SERIAL
  *
- *  \return
- *  ID-SERIAL readed
+ *  \return   ID-SERIAL readed
+ 
  */
 uint32_t CalibrationClass::ID_Recall() {
     unsigned char p;
@@ -97,13 +99,12 @@ uint32_t CalibrationClass::ID_Recall() {
     return i32;
 }
 
-/** \brief
+/** 
  *  Save ID-SERIAL
  *
- *  \param
- *  ID-SERIAL to write
+ *  \param device_id:  ID-SERIAL to write
  */
-void CalibrationClass::ID_Save(uint32_t device_id) {
+int CalibrationClass::ID_Save(uint32_t device_id) {
     unsigned char p;
     uint32_t i32;
     int i;
@@ -122,11 +123,11 @@ void CalibrationClass::ID_Save(uint32_t device_id) {
 
 // Calibration storage functions 
 
-/** \brief
+/** 
  *  Save calibration
- *
+ * 
  */
-void CalibrationClass::SaveCalibration() {
+int CalibrationClass::SaveCalibration() {
     long *p;
     uint8_t value;
     int i;
@@ -152,11 +153,10 @@ void CalibrationClass::SaveCalibration() {
     write(CW_MARK, CW_IND);
 }
 
-/** \brief
+/**
  *  Get calibration
  *
- *  \return
- *  Calibration readed
+ *  \return   Calibration readed
  */
 int CalibrationClass::RecallCalibration() {
     long *p;
@@ -195,25 +195,22 @@ int CalibrationClass::RecallCalibration() {
 
 // Low level eeprom calls 
 
-/** \brief
+/** 
  *  Read data from eeprom
  *
- *  \param
- *  address: address to read the data
- *  \return
- *  Data readed
+ *  \param   address: address to read the data
+ *  \return   Data readed
  */
 uint8_t CalibrationClass::read(int address) {
     return eeprom_read_byte((unsigned char *) address);
 }
 
-/** \brief
+/**
  *  Write data from eeprom
  *
- *  \param
- *  value: data to write in eeprom
+ *  \param  value: data to write in eeprom
  */
-void CalibrationClass::write(int address, uint8_t value) {
+int CalibrationClass::write(int address, uint8_t value) {
     eeprom_write_byte((unsigned char *) address, value);
 }
 

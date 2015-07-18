@@ -15,16 +15,19 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #include "odstream.h"
 
 #define T2_RESOLUTION 256   // Timer2 is 8 bit
 
-
+/**
+ * @file odstream.cpp
+ * Source code for DStream Class
+*/
 const int DC_PCINT[] = {PCINT7, PCINT6, PCINT5, PCINT4};
 const int DC_DD[] = {DDA7, DDA6, DDA5, DDA4};
 const int DC_PTNB[] = {0X80, 0X40, 0X20, 0X10};
@@ -111,9 +114,8 @@ void DStream::Resume() {
 /** \brief
  *  Create a stream channel
  *
- *  \param
- *  nb: channel number
- *  ms_period: channel period
+ *  \param  nb: channel number
+ *  \param ms_period: channel period
  */
 void DStream::CreateStreamChannel(uint8_t nb, unsigned long ms_period) {
     channels[nb - 1].Destroy();
@@ -133,9 +135,8 @@ void DStream::CreateStreamChannel(uint8_t nb, unsigned long ms_period) {
 /** \brief
  *  Create an external channel
  *
- *  \param
- *  nb: channel number
- *  edge: channel edge
+ *  \param  nb: channel number
+ *  \param edge: channel edge
  */
 void DStream::CreateExternalChannel(uint8_t nb, uint8_t edge) {
 
@@ -238,9 +239,8 @@ void DStream::CheckTriggers() {
 /** \brief
  *  Set the max points of the channel and the repeats number
  *
- *  \param
- *  maxpoints: max number of points of the channel
- *  repeat: number of repeats
+ *  \param  maxpoints: max number of points of the channel
+ *  \param repeat: number of repeats
  */
 void DStream::SetupChan(uint8_t nb, unsigned long maxpoints, int repeat) {
     channels[nb - 1].Setup(maxpoints, repeat);
@@ -249,10 +249,9 @@ void DStream::SetupChan(uint8_t nb, unsigned long maxpoints, int repeat) {
 /** \brief
  *  Set the trigger mode of the channel
  *
- *  \param
- *  nb: channel number
- *  trigger_mode: mode of the trigger
- *  trigger_value: value of the trigger
+ *  \param nb: channel number
+ *  \param trigger_mode: mode of the trigger
+ *  \param trigger_value: value of the trigger
  */
 void DStream::TriggerMode(uint8_t nb, int trigger_mode, int16_t trigger_value) {
     channels[nb - 1].TriggerConfig(trigger_mode, trigger_value);
@@ -261,9 +260,8 @@ void DStream::TriggerMode(uint8_t nb, int trigger_mode, int16_t trigger_value) {
 /** \brief
  *  Set the mode of the channel
  *
- *  \param
- *  nb: channel number
- *  mode: mode to configure the channel
+ *  \param  nb: channel number
+ *  \param mode: mode to configure the channel
  */
 void DStream::ConfigChan(uint8_t nb, int mode) {
     channels[nb - 1].Configure(mode);
@@ -272,10 +270,9 @@ void DStream::ConfigChan(uint8_t nb, int mode) {
 /** \brief
  *  Set the mode of the channel
  *
- *  \param
- *  nb: channel number
- *  mode: mode to configure the channel
- *  pchan: channel of the stream
+ *  \param  nb: channel number
+ *  \param mode: mode to configure the channel
+ *  \param pchan: channel of the stream
  */
 void DStream::ConfigChan(uint8_t nb, int mode, int pchan) {
     channels[nb - 1].Configure(mode, pchan);
@@ -284,11 +281,10 @@ void DStream::ConfigChan(uint8_t nb, int mode, int pchan) {
 /** \brief
  *  Set the mode of the channel
  *
- *  \param
- *  nb: channel number
- *  mode: mode to configure the channel
- *  pchan: channel of the stream
- *  nchan: channel number
+ *  \param  nb: channel number
+ *  \param mode: mode to configure the channel
+ *  \param pchan: channel of the stream
+ *  \param nchan: channel number
  */
 void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan) {
     channels[nb - 1].Configure(mode, pchan, nchan);
@@ -297,12 +293,11 @@ void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan) {
 /** \brief
  *  Set the mode and gain of the channel
  *
- *  \param
- *  nb: channel number
- *  mode: mode to configure the channel
- *  pchan: channel of the stream
- *  nchan: channel number
- *  gain: gain to set to the channel
+ *  \param  nb: channel number
+ *  \param mode: mode to configure the channel
+ *  \param pchan: channel of the stream
+ *  \param nchan: channel number
+ *  \param gain: gain to set to the channel
  */
 void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain) {
     channels[nb - 1].Configure(mode, pchan, nchan, gain);
@@ -311,13 +306,12 @@ void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain) {
 /** \brief
  *  Set the modem, gain and number of samples of the channel
  *
- *  \param
- *  nb: channel number
- *  mode: mode to configure the channel
- *  pchan: channel of the stream
- *  nchan: channel number
- *  gain: gain to set to the channel
- *  nsamples: number of samples of the channel
+ *  \param  nb: channel number
+ *  \param mode: mode to configure the channel
+ *  \param pchan: channel of the stream
+ *  \param nchan: channel number
+ *  \param gain: gain to set to the channel
+ *  \param nsamples: number of samples of the channel
  */
 void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain, int nsamples) {
     channels[nb - 1].Configure(mode, pchan, nchan, gain, nsamples);
@@ -454,10 +448,9 @@ int DStream::endReached(uint8_t nb) {
 /** \brief
  *  Put a value into the stream
  *
- *  \param
- *  nb: channel number
- *  index: index to put the value
- *  value: data to put in the stream
+ *  \param  nb: channel number
+ *  \param index: index to put the value
+ *  \param value: data to put in the stream
  */
 void DStream::Put(uint8_t nb, unsigned int index, signed int value) {
     channels[nb - 1].Put(index, value);
@@ -512,9 +505,8 @@ void burst_sm() {
 /** \brief
  *  Execute an action using an external stream
  *
- *  \params
- *  bit_changes: value to detect the bits changes
- *  value: value to detect the stream edge
+ *  \params  bit_changes: value to detect the bits changes
+ *  \param value: value to detect the stream edge
  */
 void ext_sm(int bit_changes, int value) {
     for (int i = 0; i < 4; i++) {
@@ -561,7 +553,7 @@ ISR(PCINT0_vect) {
         interrupt = 0;
         return;
     }
-    //This is a loop to wait and avoid fake edges
+    //This is a bucle for waiting and avoid fake edges
     for (i = 0; i < 200; i++) {
         refreshValue = PINA;
         for (j = 0; j < 200; j++) {

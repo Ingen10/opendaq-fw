@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #ifndef ODSTREAM_H
@@ -49,8 +49,14 @@ void ext_sm(int bit_changes, int value);
 // Class
 //*****************************************************************************
 
-//! DStream Class
-// DStream Class defines all the variables and functions used for managing the automated data acquisition for openDAQ
+
+
+/**
+* @file odstream.h
+ * DStream Class. It defines all the variables and functions used for managing the 
+ * automated data acquisition for openDAQ
+ */
+
 
 class DStream {
 public:

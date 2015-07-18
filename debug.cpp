@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #include <avr/pgmspace.h>
@@ -26,13 +26,20 @@
 // program memory version of printf - copy of format string and result share a
 // buffer to reduce memory use
 
+
+/**
+ * @file debug.cpp
+ * Program memory version of printf - copy of format string and result share a 
+ * buffer to reduce memory use
+ */
+
+
 /** \brief
  *  program memory version of printf - copy of format string and result share a
  *  buffer to reduce memory use
  *
- *  \param
- *  out: outflow
- *  format: format of the output string
+ *  \param  out: outflow
+ *  \param format: format of the output string
  */
 void StreamPrint_progmem(Print &out, PGM_P format, ...) {
     char formatString[128], *ptr;

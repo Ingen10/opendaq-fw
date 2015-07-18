@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #include "datachannel.h"
@@ -26,6 +26,12 @@
 extern "C" {
 #include <stdlib.h>
 }
+
+/**
+ * @file datachannel.cpp
+ * Source code for DataChannel Class
+ */
+
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -45,9 +51,8 @@ DataChannel::DataChannel(int dtype) {
 /** \brief
  *  DataChannel constructor
  *
- *  \param
- *  dtype: type of DataChannel
- *  dperiod: period of DataChannel
+ *  \param   dtype: type of DataChannel
+ *  \param dperiod: period of DataChannel
  *  \return
  *  DataChannel created
  */
@@ -60,9 +65,8 @@ DataChannel::DataChannel(int dtype, unsigned long dperiod) {
 /** \brief
  *  DataChannel constructor
  *
- *  \param
- *  dtype: type of DataChannel
- *  dpin: unused
+ *  \param  dtype: type of DataChannel
+ *  \param dpin: unused
  *  \return
  *  DataChannel created
  */
@@ -75,10 +79,9 @@ DataChannel::DataChannel(int dtype, int dpin) {
 /** \brief
  *  DataChannel constructor
  *
- *  \param
- *  dtype: type of DataChannel
- *  dpin: unused
- *  dedge: edge of DataChannel
+ *  \param  dtype: type of DataChannel
+ *  \param dpin: unused
+ *  \param dedge: edge of DataChannel
  *  \return
  *  DataChannel created
  */
@@ -102,9 +105,9 @@ void DataChannel::Action() {
         Read();
 
     if(stabilitation_points>0){
-        stabilitation_points --;
-        writeindex = 0;
-        return;
+	stabilitation_points --;
+	writeindex = 0;
+	return;
     }
     ndata++;
     if (ndata == maxndata) {
@@ -180,9 +183,8 @@ signed int DataChannel::Get() {
 /** \brief
  *  Write a value in the buffer of the DataChannel
  *
- *  \param
- *  index: position of the buffer to write the value
- *  value: value to wrtie in the buffer of the DataChannel
+ *  \param  index: position of the buffer to write the value
+ *  \param value: value to wrtie in the buffer of the DataChannel
  */
 void DataChannel::Put(unsigned int index, signed int value) {
     databuffer[index] = value;
@@ -191,9 +193,8 @@ void DataChannel::Put(unsigned int index, signed int value) {
 /** \brief
  *  Setup the max number of points and max number of repeats of DataChannel
  *
- *  \param
- *  maxpoints: max number of points of the DataChannel
- *  maxrepeat: max number of repeats of the DataChannel
+ *  \param  maxpoints: max number of points of the DataChannel
+ *  \param maxrepeat: max number of repeats of the DataChannel
  */
 void DataChannel::Setup(unsigned long maxpoints, int maxrepeat) {
     maxndata = maxpoints;
@@ -206,9 +207,8 @@ void DataChannel::Setup(unsigned long maxpoints, int maxrepeat) {
 /** \brief
  *  Configure the trigger of the DataChannel
  *
- *  \param
- *  trigger_mode: mode of the trigger to setup in the DataChannel
- *  trigger_value_ value of the trigger to setup in the DataChannel
+ *  \param  trigger_mode: mode of the trigger to setup in the DataChannel
+ *  \param trigger_value_ value of the trigger to setup in the DataChannel
  */
 void DataChannel::TriggerConfig(int trigger_mode, int16_t trigger_value) {
     trg_mode = trigger_mode;
@@ -259,10 +259,9 @@ void DataChannel::Configure(int mode) {
 /** \brief
  *  Configure the DataChannel
  *
- *  \param
- *  mode: mode of the DataChannel
- *  pchan: channel of the DataChannel
- *  nchan: channel number
+ *  \param  mode: mode of the DataChannel
+ *  \param pchan: channel of the DataChannel
+ *  \param nchan: channel number
  */
 void DataChannel::Configure(int mode, int pchan, int nchan) {
     dcmode = mode;
@@ -274,11 +273,10 @@ void DataChannel::Configure(int mode, int pchan, int nchan) {
 /** \brief
  *  Configure the DataChannel
  *
- *  \param
- *  mode: mode of the DataChannel
- *  pchan: channel of the DataChannel
- *  nchan: channel number
- *  gain: gain of the DataChannel
+ *  \param  mode: mode of the DataChannel
+ *  \param pchan: channel of the DataChannel
+ *  \param nchan: channel number
+ *  \param gain: gain of the DataChannel
  */
 void DataChannel::Configure(int mode, int pchan, int nchan, int gain) {
     dcmode = mode;
@@ -290,12 +288,11 @@ void DataChannel::Configure(int mode, int pchan, int nchan, int gain) {
 /** \brief
  *  Configure the DataChannel
  *
- *  \param
- *  mode: mode of the DataChannel
- *  pchan: channel of the DataChannel
- *  nchan: channel number
- *  gain: gain of the DataChannel
- *  nsamples: number of samples of the DataChannel
+ *  \param  mode: mode of the DataChannel
+ *  \param pchan: channel of the DataChannel
+ *  \param nchan: channel number
+ *  \param gain: gain of the DataChannel
+ *  \param nsamples: number of samples of the DataChannel
  */
 void DataChannel::Configure(int mode, int pchan, int nchan, int gain, int nsamples) {
     dcmode = mode;
@@ -308,9 +305,8 @@ void DataChannel::Configure(int mode, int pchan, int nchan, int gain, int nsampl
 /** \brief
  *  Configure the DataChannel
  *
- *  \param
- *  mode: mode of the DataChannel
- *  channel: channel of the DataChannel
+ *  \param  mode: mode of the DataChannel
+ *  \param channel: channel of the DataChannel
  */
 void DataChannel::Configure(int mode, int channel) {
     dcmode = mode;
@@ -464,7 +460,7 @@ int DataChannel::waitStabilization() {
     int dummy, i, j;
 
     //call ReadACD to adapt analog input
-    dummy = ReadNADC(2);
+    ReadADC();
     for (i = 0; i < stabilization_time; i++) {
         for (j = 0; j < 8000; j++)
             dummy = dummyfunction(j);

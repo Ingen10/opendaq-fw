@@ -15,16 +15,19 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #include "daqhw.h"
 
 ////////////////////////////////////////////
 //fake functions for time counting verification
-
+/**
+ * @file daqhw.cpp
+ * Fake functions for time counting verification
+ */
 /** \brief
  *  fake functions for time counting verification
  *
@@ -52,9 +55,8 @@ signed int ReadAnalog() {
 /** \brief
  *  Set pio mode
  *
- *  \param
- *  pio: digital input number
- *  mode: mode to set pio
+ *  \param  pio: digital input number
+ *  \param mode: mode to set pio
  */
 void SetpioMode(uint8_t pio, uint8_t mode) {
     uint8_t bit = digitalPinToBitMask(pio);
@@ -86,9 +88,8 @@ int GetpioMode(uint8_t pio) {
 /** \brief
  *  Write a value into pio
  *
- *  \param
- *  pio: digital input number
- *  val: value to write into pio
+ *  \param  pio: digital input number
+ *  \param val: value to write into pio
  */
 void pioWrite(uint8_t pio, uint8_t val) {
     uint8_t bit = digitalPinToBitMask(pio);
@@ -188,9 +189,8 @@ int GetDigitalDir() {
 /** \brief
  *  Set the led value
  *
- *  \param
- *  nb: led value
- *  val: value to set
+ *  \param  nb: led value
+ *  \param val: value to set
  */
 void ledSet(uint8_t nb, uint8_t val) {
     if (val == 0)
@@ -330,9 +330,8 @@ void ConfigAnalogGain(uint8_t gain) {
 /** \brief
  *  Setup the analog channels to be readed
  *
- *  \param
- *  chp: positive channel
- *  chm: second channel to take a differential reading
+ *  \param  chp: positive channel
+ *  \param chm: second channel to take a differential reading
  */
 void ConfigAnalogChannels(uint8_t chp, uint8_t chm) {
 #if HW_VERSION==2
@@ -368,10 +367,9 @@ void ConfigAnalogChannels(uint8_t chp, uint8_t chm) {
 /** \brief
  *  Setup the analog gain and channels to be readed
  *
- *  \param
- *  chp: positive channel
- *  chm: second channel to take a differential reading
- *  gain: gain value
+ *  \param  chp: positive channel
+ *  \param chm: second channel to take a differential reading
+ *  \param gain: gain value
  */
 void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
 #if HW_VERSION==2

@@ -15,15 +15,22 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    140207
+ *  Version:    150717
  *  Author:     JRB
- *  Revised by: AV (07/02/14)
+ *  Revised by: AV (17/07/15)
  */
 
 #ifndef BBSPI_H
 #define BBSPI_H
-
+/** 
+ * @file bbspi.h 
+ * Header for the BbspiClass  
+ */
 class BbspiClass {
+
+/*
+ * Private variables 
+ */
 private:
     // Use PIO pins to implement a "bitbang" SPI port:
     int bb_clk; // clock pin
@@ -33,15 +40,16 @@ private:
     int bb_cpol; // clock polarity: clk value when inactive
     int bb_cpha; // clock phase: data valid on clock leading (0) or trailing (1) edges
 
-public:
-    // methods
-    //! class constructor
-    BbspiClass();
+/*
+ * Public Methods
+ */
 
-    //General transfer function
-    int setup();
+public:
+    
+    BbspiClass();  
+    int setup(); 
     int setup(uint8_t my_clk, uint8_t my_mosi, uint8_t my_miso);
-    int configure(uint8_t my_cpol, uint8_t my_cpha);
+    int configure(uint8_t my_cpol, uint8_t my_cpha); 
     uint8_t transfer(uint8_t data);
 };
 
