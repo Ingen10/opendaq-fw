@@ -1,5 +1,7 @@
 applet/
 doc/_build
+build-opendaq_m
+build-opendaq_s
 
 # Compiled Object files
 *.slo

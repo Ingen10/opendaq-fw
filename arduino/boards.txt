@@ -2,6 +2,7 @@
 
 opendaq_s.name=openDAQ [S]
 
+opendaq_s.upload.tool=avrdude
 opendaq_s.upload.protocol=arduino
 opendaq_s.upload.maximum_size=63488
 opendaq_s.upload.speed=38400
@@ -9,8 +10,7 @@ opendaq_s.upload.speed=38400
 opendaq_s.bootloader.low_fuses=0xFF
 opendaq_s.bootloader.high_fuses=0xC8
 opendaq_s.bootloader.extended_fuses=0xFD
-opendaq_s.bootloader.path=atmega644p
-opendaq_s.bootloader.file=opendaq_boot.hex
+opendaq_s.bootloader.file=atmega/opendaq_boot.hex
 opendaq_s.bootloader.unlock_bits=0x3F
 opendaq_s.bootloader.lock_bits=0x0F
 
@@ -18,11 +18,13 @@ opendaq_s.build.mcu=atmega644p
 opendaq_s.build.f_cpu=16000000L
 opendaq_s.build.core=arduino
 opendaq_s.build.variant=opendaq_s
+opendaq_s.build.board=AVR_OPENDAQ_S
 
 ##############################################################
 
 opendaq_m.name=openDAQ [M]
 
+opendaq_m.upload.tool=avrdude
 opendaq_m.upload.protocol=arduino
 opendaq_m.upload.maximum_size=63488
 opendaq_m.upload.speed=38400
@@ -30,8 +32,7 @@ opendaq_m.upload.speed=38400
 opendaq_m.bootloader.low_fuses=0xFF
 opendaq_m.bootloader.high_fuses=0xC8
 opendaq_m.bootloader.extended_fuses=0xFD
-opendaq_m.bootloader.path=atmega644p
-opendaq_m.bootloader.file=opendaq_boot.hex
+opendaq_m.bootloader.file=atmega/opendaq_boot.hex
 opendaq_m.bootloader.unlock_bits=0x3F
 opendaq_m.bootloader.lock_bits=0x0F
 
@@ -39,3 +40,5 @@ opendaq_m.build.mcu=atmega644p
 opendaq_m.build.f_cpu=16000000L
 opendaq_m.build.core=arduino
 opendaq_m.build.variant=opendaq_m
+opendaq_m.build.board=AVR_OPENDAQ_M
+
