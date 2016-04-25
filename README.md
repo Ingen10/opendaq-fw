@@ -1,53 +1,60 @@
 openDAQ firmware
 ================
 
-This is the firmware of the [openDAQ](http://www.open-daq.com) board. It is based
+This is the firmware of the [openDAQ](http://open-daq.com) board. It is based
 on [Arduino](http://arduino.cc/).
 
 OpenDAQ is an USB measurement and automation device which provides
 multifunction data-logging capabilities, analog inputs and outputs, digital
 inputs and outputs, timer, counter and many more features.
 
-You can control openDAQ using the [opendaq-python](http://opendaq-python.readthedocs.org/en/latest/opendaq.html) package, and using any of our GUI demos. 
-
+You can control openDAQ using the
+[opendaq-python](http://opendaq-python.readthedocs.org/en/latest/opendaq.html)
+package, and using any of the [GUI demos](https://github.com/openDAQ/opendaq-gui).
 
 How to setup the Arduino environment
------------------------------------
-First of all, you must get Arduino 1.0.4, or newer, installed. Once you have it, go to the installation folder of Arduino. 
+------------------------------------
+First of all, you must have Arduino 1.0.4 or newer installed.
 
-A couple of files have to be modified in the Arduino system directories to add the openDAQ board definitions and compile programs for it:
+A couple of files have to be modified in the Arduino system directories to add
+the openDAQ boards:
 
- * Add the openDAQ board definition (content of `boards.txt`) to the end of the `\Arduino\hardware\arduino\avr\boards.txt` file
- * Go to the `\Arduino\hardware\arduino\avr\variants\` folder and copy the two variant folders available in this repository (`\openDAQ_M` and `\openDAQ_S`)
+ * Add the openDAQ board definition to the end of the `boards.txt` file
+ * Copy the two "variant" folders containing the pin definition files of the
+   two openDAQ models ("M" and "S") to the proper directory in the Arduino
+   environment.
+ * Copy the file `bootloader/opendaq_boot.hex` to the proper directory in the
+   Arduino environment.
 
-Now, launch the Arduino IDE, and you should be able to select the board "openDAQ" in the menu `Tools->Boards`.
+As an example, these are the commands you can use in Ubuntu 14.04 to install
+Arduino and setup its environment:
 
-To compile the openDAQ package in Windows, you will need to download the project code directly to the Arduino work directory (usually in "My Documents"), where it stores all the user sketches. 
-In any other case, you would face problems with the dependencies between files.
-
-After these steps, you should be able to compile the firmware of openDAQ in the Arduino IDE. 
-
-*This was tested with Arduino 1.6.0*
-
-In Debian/Ubuntu (use superuser rights):
-
-```bash
+```
 apt-get install arduino
+cat arduino/boards.txt >> /usr/share/arduino/hardware/arduino/boards.txt
 cp -r arduino/variants /usr/share/arduino/hardware/arduino/
-cat arduino/board.txt >> /usr/share/arduino/hardware/arduino/boards.txt
+cp bootloader/opendaq_boot.hex /usr/share/arduino/hardware/arduino/bootloaders/atmega/
 ```
 
-If you love the command-line way of living, the provided Makefile will let you
-build the project and flash your board without opening the Arduino IDE.
-Simply call:
+Now you can select the board "openDAQ" in the menu Tools->Boards of the IDE.
 
-```bash
-make
-make program
-```
+Using Make (optional)
+---------------------
+If you prefer using the command-line, the provided Makefile will let you build
+the project and flash your board without opening the Arduino IDE. You will
+need to have the Arduino IDE and
+[Arduino-Makefile](https://github.com/sudar/Arduino-Makefile) installed.
 
-If it doesn't work, maybe you'll have to tweak some definitions in the
-Makefile for your specific environment.
+The provided Makefile was tested in Ubuntu 14.04 with the Arduino and
+Arduino-Makefile installed from the default APT packages.
+
+You may need modify some variables inside de provided Makefile depending on your
+OS and Arduino setup. Please read the documentation of the
+[Arduino-Makefile project](https://github.com/sudar/Arduino-Makefile).
+
+If everything is OK, type `make upload`. The code should be compiled and your
+OpenDAQ programmed.
+
 
 Coding style
 ------------
@@ -55,6 +62,6 @@ Code is formatted with 4 space indentation. Tabs are expanded to spaces.
 
 The code can be automatically formated using [astyle](http://astyle.sourceforge.net/):
 
-```bash
+```
 astyle --style=stroustrup -p -c -s4 *.cpp *.h
 ```
