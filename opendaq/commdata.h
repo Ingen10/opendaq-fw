@@ -88,6 +88,9 @@
 #define C_CHANNEL_CFG   22      //Configure one of the measurement experiments (analog +IN,-IN, GAIN)
 #define C_CHANNEL_SETUP 32      //Configure experiment number of points and repeat mode
 #define C_TRIGGER_SETUP 33      //Configure experiment initial trigger mode and conditions
+#define C_GET_TRIGGER_MODE 34   //Return trigger mode 
+#define C_GET_STATE_CHANNEL 35   //Return state channel 
+
 
 #define C_SIGNAL_LOAD   23      //Load an array of values to preload DAC output
 

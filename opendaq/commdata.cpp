@@ -739,14 +739,38 @@ void CommDataClass::processCommand(void) {
 
         case C_TRIGGER_SETUP:
             byte1 = input_data[4]; //Nb of channel
-            byte2 = input_data[5]; //repetition setup
-            word1 = make16(input_data + 6); //nb of total points
+            byte2 = input_data[5]; //Trigger mode
+            word1 = make16(input_data + 6); //value of trigger
             ODStream.TriggerMode(byte1, byte2, word1);
 
             memcpy(&response[4], &input_data[4], 4);
             resp_len = 4;
 
             _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\r\n", byte1, byte2, word1);
+            break;
+            
+        case C_GET_TRIGGER_MODE:
+            byte1 = input_data[4];//Nb of channel
+            word1 = ODStream.GetTriggerMode(byte1);//trigger mode
+            
+            response[4] = make8(word1, 1);
+            response[5] = make8(word1, 0);
+            resp_len = 2;
+       
+            
+            _DEBUG("C_GET_TRIGGER_MODE [ %d ]:%d", byte1,word1);
+            break;
+            
+        case C_GET_STATE_CHANNEL:
+            byte1 = input_data[4];//Nb of channel
+            word1 = ODStream.GetStateChan(byte1);//state channel
+            
+            response[4] = make8(word1, 1);
+            response[5] = make8(word1, 0);
+            resp_len = 2;
+       
+            
+            _DEBUG("C_GET_STATE_CHANNEL [ %d ]:%d", byte1,word1);
             break;
 
         case C_SIGNAL_LOAD:

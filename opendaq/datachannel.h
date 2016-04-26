@@ -41,16 +41,17 @@
 #define BURST_TYPE  3
 
 //DATACHANNEL STATES
-#define CH_IDLE     0
-#define CH_READY    1
-#define CH_RUN      2
-#define CH_STOP     3
+#define CH_INI      0
+#define CH_IDLE     1
+#define CH_READY    2
+#define CH_RUN      3
+#define CH_STOP     4
 
 //DATACHANNEL MODES
 #define ANALOG_INPUT        0
 #define ANALOG_OUTPUT       1
 #define DIGITAL_INPUT       2
-#define DIGITAL_OUTPUT  3
+#define DIGITAL_OUTPUT      3
 #define COUNTER_INPUT       4
 #define CAPTURE_INPUT       5
 
@@ -140,9 +141,11 @@ public:
     int waitStabilization();
 
     void Setup(unsigned long maxpoints, int maxrepeat);
+    int GetState();
 
     void TriggerConfig(int trigger_mode, int16_t trigger_value);
     int CheckMyTrigger();
+    int GetTriggerModeCh();
 
     void Configure(int mode);
     void Configure(int mode, int pchan, int nchan);

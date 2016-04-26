@@ -46,6 +46,7 @@ extern "C" {
 DataChannel::DataChannel(int dtype) {
     dctype = dtype;
     Initialize();
+    state=0;
 }
 
 /** \brief
@@ -205,6 +206,16 @@ void DataChannel::Setup(unsigned long maxpoints, int maxrepeat) {
 }
 
 /** \brief
+ *  Get the state of the DataChannel
+ *
+ *  \return state: state of the DataChannel
+ */
+int DataChannel::GetState(){
+    return state;
+}
+
+
+/** \brief
  *  Configure the trigger of the DataChannel
  *
  *  \param  trigger_mode: mode of the trigger to setup in the DataChannel
@@ -213,6 +224,15 @@ void DataChannel::Setup(unsigned long maxpoints, int maxrepeat) {
 void DataChannel::TriggerConfig(int trigger_mode, int16_t trigger_value) {
     trg_mode = trigger_mode;
     trg_value = trigger_value;
+}
+
+/** \brief
+ *  Get the trigger mode of the DataChannel
+ *
+ *  \return trigger_mode: mode of the trigger to setup in the DataChannel
+ */
+int DataChannel::GetTriggerModeCh(){
+    return trg_mode;
 }
 
 /** \brief
@@ -225,6 +245,9 @@ int DataChannel::CheckMyTrigger() {
     signed int value;
 
     if (state > CH_READY)
+        return 1;
+        
+    if (trg_mode == 0)
         return 1;
 
     if ((trg_mode >= 1) && (trg_mode <= 6)) {
@@ -240,7 +263,7 @@ int DataChannel::CheckMyTrigger() {
         return (value < trg_value);
     }
 
-    return 1;
+    return 0;
 }
 
 /** \brief
@@ -436,6 +459,7 @@ void DataChannel::Flush() {
     readindex = 0;
     ndata = 0;
     nrepeat = 0;
+    state = CH_READY;
 }
 
 /** \brief
@@ -478,7 +502,7 @@ int DataChannel::waitStabilization() {
  */
 void DataChannel::Initialize() {
     stabilization_time = 100; // 100 times 0.508 us
-    state = CH_READY;
+    state = CH_IDLE;
     dcmode = ANALOG_INPUT;
     trg_mode = Sw_TRG;
     maxndata = 0;

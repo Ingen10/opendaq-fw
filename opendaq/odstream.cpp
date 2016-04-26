@@ -56,14 +56,18 @@ void DStream::Initialize() {
 
 }
 
+
 /** \brief
  *  Start the stream channel
  *
  */
 void DStream::Start() {
 
-    for (int i = 0; i < 4; i++)
-        channels[i].Flush();
+    for (int i = 0; i < 4; i++){
+        if(channels[i].state>=CH_IDLE){
+            channels[i].Flush();
+        }
+    }
 
     if ((channels[0].dctype >= STREAM_TYPE) ||
             (channels[1].dctype >= STREAM_TYPE) ||
@@ -258,6 +262,26 @@ void DStream::TriggerMode(uint8_t nb, int trigger_mode, int16_t trigger_value) {
 }
 
 /** \brief
+ *  Get state of the channel
+ *
+ *  \param nb: channel number
+ *  \return: state of the channel
+ */
+int DStream::GetStateChan(uint8_t nb) {
+    return channels[nb - 1].GetState();
+}
+
+/** \brief
+ *  Get the trigger mode of the channel
+ *
+ *  \param nb: channel number
+ *  \return: mode of the trigger
+ */
+int DStream::GetTriggerMode(uint8_t nb) {
+    return channels[nb - 1].GetTriggerModeCh();
+}
+
+/** \brief
  *  Set the mode of the channel
  *
  *  \param  nb: channel number
@@ -326,7 +350,7 @@ void DStream::ConfigChan(uint8_t nb, int mode, int pchan, int nchan, int gain, i
 void DStream::FlushChan(uint8_t nb) {
     if ((nb > 0) && (nb < 5))
         channels[nb - 1].Flush();
-    else {
+    else if (nb == 0) {
         for (int i = 0; i < 4; i++)
             channels[i].Flush();
     }

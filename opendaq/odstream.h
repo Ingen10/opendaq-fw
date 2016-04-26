@@ -86,6 +86,8 @@ public:
 
     void TriggerMode(uint8_t nb, int trigger_mode, int16_t trigger_value);
     void CheckTriggers();
+    int GetTriggerMode(uint8_t nb);
+    int GetStateChan(uint8_t nb);
 
     void SetupChan(uint8_t nb, unsigned long maxpoints, int repeat);
 
