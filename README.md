@@ -14,16 +14,16 @@ package, and using any of the [GUI demos](https://github.com/openDAQ/opendaq-gui
 
 How to setup the Arduino environment
 ------------------------------------
-First of all, you must have Arduino 1.0.4 or newer installed.
+First of all, you must have Arduino 1.6.0 or newer installed.
 
 A couple of files have to be modified in the Arduino system directories to add
 the openDAQ boards:
 
  * Add the openDAQ board definition to the end of the `boards.txt` file
  * Copy the two "variant" folders containing the pin definition files of the
-   two openDAQ models ("M" and "S") to the proper directory in the Arduino
+   two openDAQ models ("M" and "S") to the proper `/hardware/arduino/avr/variants` in the Arduino
    environment.
- * Copy the file `bootloader/opendaq_boot.hex` to the proper directory in the
+ * Copy the file `bootloader/opendaq_boot.hex` to the `Arduino/hardware/arduino/avr/bootloaders/atmega` directory in the
    Arduino environment.
 
 As an example, these are the commands you can use in Ubuntu 14.04 to install
