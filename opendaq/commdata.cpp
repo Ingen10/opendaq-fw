@@ -298,6 +298,23 @@ void CommDataClass::processCommand(void) {
 #endif
 
     switch (next_command) {
+        
+        case C_ID_CONFIG:
+            if (data_len == ID_OVERWRITE) {
+                my_id = make32(input_data + 4);
+                Cal.ID_Save(my_id);
+            }
+
+            my_id = Cal.ID_Recall();
+
+            response[4] = HW_VERSION;
+            response[5] = FVER;
+            memcpy(&response[6], &my_id, 4);
+            resp_len = 6;
+
+            _DEBUG("C_ID_CONFIG: ID = %d  x%X\r\n", my_id, my_id);
+            break;   
+    
         case C_AIN:
             word1 = ReadNADC(my_nsamples);
 
@@ -362,29 +379,30 @@ void CommDataClass::processCommand(void) {
 
         case C_SET_DAC:
             my_vout = make16(input_data + 4);
-            SetAnalogVoltage(my_vout);
+            SetDacOutput(my_vout);
 
             response[4] = make8(my_vout, 1);
             response[5] = make8(my_vout, 0);
-            resp_len = 2;
+            response[6] = make8(byte1, 0);
+            resp_len = data_len;
 
             _DEBUG("C_SET_DAC: %d\r\n", my_vout);
             break;
 
         case C_SET_ANALOG:
+            //Debug utility
             my_vout = make16(input_data + 4);
-
-            SetDacOutput(my_vout);
+            SetAnalogVoltage(my_vout);
 
             response[4] = make8(my_vout, 1);
             response[5] = make8(my_vout, 0);
-            resp_len = 2;
+            response[6] = make8(byte1, 0);
+            resp_len = data_len;
 
             _DEBUG("C_SET_ANALOG: %d\r\n", my_vout);
             break;
 
-            ///// PIO & PORT COMMANDS  /////////////////////////////////////
-
+        ///// PIO & PORT COMMANDS  /////////////////////////////////////
         case C_PIO:
             byte1 = input_data[4];
             if (data_len > 1) {
@@ -445,81 +463,62 @@ void CommDataClass::processCommand(void) {
             _DEBUG("C_PORT_DIR: %d\r\n", byte1);
             break;
 
-            ///// EEPROM COMMANDS         /////////////////////////////////////
+        ///// BIT BANG SPI COMMANDS         //////////////////////////////////////
+        case C_SPISW_CONFIG:
+            if (data_len > 0)
+                byte1 = input_data[4] > 0;
+            else
+                byte1 = 0;
+            if (data_len > 1)
+                byte2 = input_data[5] > 0;
+            else
+                byte2 = 1;
 
-        case C_EEPROM_WRITE:
-            byte1 = input_data[4];
-            byte2 = input_data[5];
-            Cal.write(byte1, byte2);
+            spisw.configure(byte1, byte2);
 
-            memcpy(&response[4], &input_data[4], 2);
-            resp_len = 2;
-
-            _DEBUG("EEPROM_WRITE: [%d] = %d\r\n", byte1, byte2);
-            break;
-
-        case C_EEPROM_READ:
-            byte1 = input_data[4];
-            byte2 = Cal.read(byte1);
-
-            memcpy(&response[4], &input_data[4], 2);
-            resp_len = 2;
-
-            _DEBUG("EEPROM_READ: [%d] = %d\r\n", byte1, byte2);
-            break;
-
-        case C_ID_CONFIG:
-            if (data_len == ID_OVERWRITE) {
-                my_id = make32(input_data + 4);
-                Cal.ID_Save(my_id);
-            }
-
-            my_id = Cal.ID_Recall();
-
-            response[4] = HW_VERSION;
-            response[5] = FVER;
-            memcpy(&response[6], &my_id, 4);
-            resp_len = 6;
-
-            _DEBUG("C_ID_CONFIG: ID = %d  x%X\r\n", my_id, my_id);
-            break;
-
-        case C_GET_CALIB:
-        case C_SET_CALIB:
-        case C_RESET_CALIB:
-            resp_len = 5;
-
-            byte1 = input_data[4]; //gain channel
             response[4] = byte1;
+            response[5] = byte2;
+            resp_len = 2;
 
-            if (next_command == C_SET_CALIB) {
-                word1 = make16(input_data + 5);
-                Cal.gain_m[byte1] = word1;
-                word2 = make16(input_data + 7);
-                Cal.gain_b[byte1] = word2;
-                Cal.SaveCalibration();
-            } else if (next_command == C_RESET_CALIB) {
-                Cal.Reset_calibration();
-                Cal.SaveCalibration();
-            }
-
-            word1 = Cal.gain_m[byte1];
-            word2 = Cal.gain_b[byte1];
-
-            response[5] = make8(word1, 1);
-            response[6] = make8(word1, 0);
-            response[7] = make8(word2, 1);
-            response[8] = make8(word2, 0);
-
-#ifdef SERIAL_DEBUG
-            for (i = 0; i < NCAL_POS; i++) {
-                _DEBUG("m[%d]: %d\r\n", i, Cal.gain_m[i]);
-                _DEBUG("b[%d]: %d\r\n", i, Cal.gain_b[i]);
-            }
-#endif
+            _DEBUG("C_SPISW_CONFIG: CPOL %d CPHA %d\r\n", byte1, byte2);
             break;
 
-            ///// COUNTER COMMANDS        /////////////////////////////////////
+
+        case C_SPISW_SETUP:
+            if (data_len > 0)
+                byte1 = input_data[4];
+            else
+                byte1 = 1;
+            if (data_len > 1)
+                byte2 = input_data[5];
+            else
+                byte2 = 2;
+            if (data_len > 2)
+                byte3 = input_data[6];
+            else
+                byte3 = 3;
+
+            spisw.setup(byte1, byte2, byte3);
+
+            response[4] = byte1;
+            response[5] = byte2;
+            response[6] = byte3;
+            resp_len = 3;
+
+            _DEBUG("C_SPISW_SETUP: CLK %d MOSI %d MISO %d\r\n", byte1, byte2, byte3);
+            break;
+
+        case C_SPISW_TRANSFER:
+            _DEBUG("C_SPISW_TRANSFER:\r\n");
+            for (i = 0; i < data_len; i++) {
+                response[4 + i] = spisw.transfer(input_data[4 + i]);
+                _DEBUG(">%d> <%d<\r\n", input_data[4 + i], response[4 + i]);
+            }
+            resp_len = data_len;
+            break;
+
+
+        ///// COUNTER COMMANDS        /////////////////////////////////////
         case C_COUNTER_INIT:
             byte1 = input_data[4];
             counterInit(byte1);
@@ -541,7 +540,7 @@ void CommDataClass::processCommand(void) {
             _DEBUG("C_GET_COUNTER: %d\r\n", word1);
             break;
 
-            ///// PWM COMMANDS       /////////////////////////////////////
+        ///// PWM COMMANDS       /////////////////////////////////////
         case C_PWM_INIT:
             word1 = make16(input_data + 4);
             word2 = make16(input_data + 6);
@@ -571,7 +570,8 @@ void CommDataClass::processCommand(void) {
             _DEBUG("C_PWM_STOP");
             break;
 
-            ///// CAPTURE COMMANDS        //////////////////////////////////////
+
+        ///// CAPTURE COMMANDS        //////////////////////////////////////
         case C_CAPTURE_INIT:
             word1 = make16(input_data + 4);
 
@@ -603,7 +603,8 @@ void CommDataClass::processCommand(void) {
             _DEBUG("C_GET_CAPTURE (%d): %d\r\n", byte1, word1);
             break;
 
-            ///// ENCODER COMMANDS        //////////////////////////////////////
+
+        ///// ENCODER COMMANDS        //////////////////////////////////////
         case C_ENCODER_INIT:
             word1 = input_data[4];
 
@@ -632,7 +633,8 @@ void CommDataClass::processCommand(void) {
             _DEBUG("C_GET_ENCODER: (%d): %d\r\n", byte1, word1);
             break;
 
-            ///// STREAM CONTROL COMMANDS      ///////////////////////////////////
+
+        ///// STREAM CONTROL COMMANDS      ///////////////////////////////////
         case C_STREAM_CREATE:
             byte1 = input_data[4];
             word1 = make16(input_data + 5);
@@ -704,7 +706,8 @@ void CommDataClass::processCommand(void) {
             _DEBUG("C_CHANNEL_DESTROY: %d\r\n", byte1);
             break;
 
-            ///// DATA CHANNEL CONFIGURATION        //////////////////////////////////////
+
+        ///// DATA CHANNEL CONFIGURATION        //////////////////////////////////////
         case C_CHANNEL_SETUP:
             byte1 = input_data[4]; //Nb of channel
             word1 = make16(input_data + 5); //nb of total points
@@ -789,62 +792,7 @@ void CommDataClass::processCommand(void) {
             break;
 
 
-            ///// BIT BANG SPI COMMANDS         //////////////////////////////////////
-        case C_SPISW_CONFIG:
-            if (data_len > 0)
-                byte1 = input_data[4] > 0;
-            else
-                byte1 = 0;
-            if (data_len > 1)
-                byte2 = input_data[5] > 0;
-            else
-                byte2 = 1;
-
-            spisw.configure(byte1, byte2);
-
-            response[4] = byte1;
-            response[5] = byte2;
-            resp_len = 2;
-
-            _DEBUG("C_SPISW_CONFIG: CPOL %d CPHA %d\r\n", byte1, byte2);
-            break;
-
-
-        case C_SPISW_SETUP:
-            if (data_len > 0)
-                byte1 = input_data[4];
-            else
-                byte1 = 1;
-            if (data_len > 1)
-                byte2 = input_data[5];
-            else
-                byte2 = 2;
-            if (data_len > 2)
-                byte3 = input_data[6];
-            else
-                byte3 = 3;
-
-            spisw.setup(byte1, byte2, byte3);
-
-            response[4] = byte1;
-            response[5] = byte2;
-            response[6] = byte3;
-            resp_len = 3;
-
-            _DEBUG("C_SPISW_SETUP: CLK %d MOSI %d MISO %d\r\n", byte1, byte2, byte3);
-            break;
-
-        case C_SPISW_TRANSFER:
-            _DEBUG("C_SPISW_TRANSFER:\r\n");
-            for (i = 0; i < data_len; i++) {
-                response[4 + i] = spisw.transfer(input_data[4 + i]);
-                _DEBUG(">%d> <%d<\r\n", input_data[4 + i], response[4 + i]);
-            }
-            resp_len = data_len;
-            break;
-
-
-            ///// ALTERNATIVE COMMANDS         //////////////////////////////////////
+        ///// OTHER GENERAL COMMANDS         //////////////////////////////////////
         case C_ENABLE_CRC:
             byte1 = input_data[4];
             crc_enabled = (byte1 > 0);
@@ -860,7 +808,8 @@ void CommDataClass::processCommand(void) {
             ledSet(LEDRED, byte1 & 0x02);
 
             response[4] = byte1;
-            resp_len = 1;
+            response[5] = input_data[5];
+            resp_len = data_len;
 
             _DEBUG("C_LED_W: %d\r\n", byte1);
             break;
@@ -890,22 +839,68 @@ void CommDataClass::processCommand(void) {
 
             _DEBUG("C_WAIT_MS: %d\r\n", word1);
             break;
-            /*
-                case C_MCP23S17:
-                    // Emulate an SPI port using some PIOs for controlling a MCP23S17
-                    // port expander: PIO1=CLK, PIO2=MOSI, PIO4=SS
-                    word1 = make16(input_data + 4);
-                    SetDigitalDir(0X0F);		    // set PIO 1-4 as outputs
-                    mcp23s17_write(PIO4, IODIR, 0);	    // set all GPIOs as outputs
-                    mcp23s17_write(PIO4, GPIO, word1);  // write 16 bits to GPIOs
 
-                    response[4] = make8(word1, 1);
-                    response[5] = make8(word1, 0);
-                    resp_len = 2;
 
-                    _DEBUG("C_MCP23S17: %d\r\n", word1);
-                    break;
-             */
+        ///// EEPROM COMMANDS         /////////////////////////////////////
+
+        case C_EEPROM_WRITE:
+            byte1 = input_data[4];
+            byte2 = input_data[5];
+            Cal.write(byte1, byte2);
+
+            memcpy(&response[4], &input_data[4], 2);
+            resp_len = 2;
+
+            _DEBUG("EEPROM_WRITE: [%d] = %d\r\n", byte1, byte2);
+            break;
+
+        case C_EEPROM_READ:
+            byte1 = input_data[4];
+            byte2 = Cal.read(byte1);
+
+            memcpy(&response[4], &input_data[4], 2);
+            resp_len = 2;
+
+            _DEBUG("EEPROM_READ: [%d] = %d\r\n", byte1, byte2);
+            break;
+
+        case C_GET_CALIB:
+        case C_SET_CALIB:
+        case C_RESET_CALIB:
+            resp_len = 5;
+
+            byte1 = input_data[4]; //gain channel
+            response[4] = byte1;
+
+            if (next_command == C_SET_CALIB) {
+                word1 = make16(input_data + 5);
+                Cal.gain_m[byte1] = word1;
+                word2 = make16(input_data + 7);
+                Cal.gain_b[byte1] = word2;
+                Cal.SaveCalibration();
+            } else if (next_command == C_RESET_CALIB) {
+                Cal.Reset_calibration();
+                Cal.SaveCalibration();
+            }
+
+            word1 = Cal.gain_m[byte1];
+            word2 = Cal.gain_b[byte1];
+
+            response[5] = make8(word1, 1);
+            response[6] = make8(word1, 0);
+            response[7] = make8(word2, 1);
+            response[8] = make8(word2, 0);
+
+#ifdef SERIAL_DEBUG
+            for (i = 0; i < NCAL_POS; i++) {
+                _DEBUG("m[%d]: %d\r\n", i, Cal.gain_m[i]);
+                _DEBUG("b[%d]: %d\r\n", i, Cal.gain_b[i]);
+            }
+#endif
+
+            break;
+
+        ///// DEFAULT CASE         /////////////////////////////////////
         case NACK:
         default:
             break;

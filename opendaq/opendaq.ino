@@ -62,6 +62,7 @@ void loop()
 
 #ifdef SERIAL_DEBUG
     delay(300);
+    _DEBUG("a\r\n");
 #endif
     ODStream.CheckTriggers();
     Comm.processStream();   

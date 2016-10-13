@@ -476,19 +476,23 @@ void setupLTC2630() {
  *  \return
  *  0
  */
-int SetDacOutput(int value) {
+int SetDacOutput(int16_t value) {
+    int32_t rawcode;
+    
     PORTB &= ~(0X01 << 3);
-#if HW_VERSION==2
+#if HW_VERSION==2   //[S] -> 0..65536 0V..4.096V
+    rawcode = (value>0)? value*2:0;
     SPDR = 0x30; //Write to and Update (Power up) DAC Register
     while (!(SPSR & (1 << SPIF)));
-    SPDR = (value & 0xFF00) >> 8;
+    SPDR = (rawcode & 0xFF00) >> 8;
     while (!(SPSR & (1 << SPIF)));
-    SPDR = value & 0xF0;
+    SPDR = rawcode & 0xF0;
     while (!(SPSR & (1 << SPIF)));
-#else
-    SPDR = (value & 0xFF00) >> 8;
+#else       //[M] -> 0..16384 -4.096V..+4.096V 
+    rawcode = value/4 + 8192;
+    SPDR = (rawcode & 0xFF00) >> 8;
     while (!(SPSR & (1 << SPIF)));
-    SPDR = value & 0xFF;
+    SPDR = rawcode & 0xFF;
     while (!(SPSR & (1 << SPIF)));
 #endif
     PORTB |= 0X01 << 3;
@@ -504,15 +508,15 @@ int SetDacOutput(int value) {
  *  raw voltage value
  */
 int SetAnalogVoltage(signed int mv) {
-#if HW_VERSION==2
+#if HW_VERSION==2       //[S]
     unsigned int aux;
 
     if (mv < 0)
         aux = 0;
     else if (mv > 4096)
-        aux = 65536;
+        aux = 32768;
     else
-        aux = 16 * mv;
+        aux = 8 * mv;
 
     SetDacOutput(aux);
 
@@ -525,10 +529,9 @@ int SetAnalogVoltage(signed int mv) {
     else if (mv > 4096)
         mv = 4096;
 
-    aux = 2 * (mv + 4096);
-    SetDacOutput(aux);
+    SetDacOutput(8*aux);
 
-    return (int) aux;
+    return (int) 8*aux;
 #endif
 }
 
