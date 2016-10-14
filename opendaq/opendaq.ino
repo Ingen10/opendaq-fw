@@ -54,6 +54,8 @@ void setup()
     ledSet(LEDRED, 0);
 
     wdt_enable(WDTO_2S);
+    
+    encoder.Start(200);
 }
 
 

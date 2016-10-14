@@ -606,13 +606,14 @@ void CommDataClass::processCommand(void) {
 
         ///// ENCODER COMMANDS        //////////////////////////////////////
         case C_ENCODER_INIT:
-            word1 = input_data[4];
+            word1 = make16(input_data + 4);
 
-            response[4] = word1;
-            resp_len = 1;
+            response[4] = make8(word1, 1);
+            response[5] = make8(word1, 0);
+            resp_len = 2;
 
             encoder.Start(word1);
-            _DEBUG("C_ENCODER_INIT: T = %d\r\n", byte1, word1);
+            _DEBUG("C_ENCODER_INIT: T = %d\r\n", word1);
             break;
 
         case C_ENCODER_STOP:

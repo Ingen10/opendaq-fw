@@ -15,10 +15,12 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    150701
+ *  Version:    160901
  *  Author:     JRB
- *  Revised by: AV (17/07/15)
+ *  Revised by: 
  */
+
+
 
 #include "encoder.h"
 #include "commdata.h"
@@ -40,12 +42,11 @@ void Encoder::Start(unsigned int res) {
     position = 0;
     resolution = res;
     stabilizationTime = 100;
-    //Digital pin 5 as input
+    //Digital pin 5 as input for direction sense
     DDRD &= ~(_BV(DDD5)); //input direction
-    //  PORTD &= ~(_BV(PD5));
 
-    EICRA = _BV(ISC11);
-    EIMSK |= _BV(INT1);
+    EICRA = _BV(ISC11); //The rising edge of INT1 generates an interrupt request.
+    EIMSK |= _BV(INT1); //INT1: External Interrupt Request 1 Enable (INT1->PD3/PIO6)
 }
 
 /** \brief
@@ -102,62 +103,23 @@ void Encoder::decrement_position() {
         position = resolution;
 }
 
-/** \brief
- *  Wait for the encoder stabilization
- *
- */
-int Encoder::waitStabilization() {
-    int dummy, i, j;
-    for (i = 0; i < stabilizationTime; i++) {
-        for (j = 0; j < 10; j++) {
-            if (UCSR0A & _BV(RXC0)) {
-                Comm.parseInput(1);
-                ledSet(LEDGREEN, 0);
-                ledSet(LEDRED, 1);
-            }
-        }
-    }
-    return dummy;
-}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // INTERRUPT GENERAL ROUTINES:
 /////////////////////////////////////////////////////////////////////////////
 
 /** \brief
- *  Routine to process interrupts
- *
+ *  Routine to process INT1 (PIO6) interrupts
+ *  If PIO5=0 decrement, else increment
  */
 ISR(INT1_vect) {
-    static unsigned interrupt;
-    if (interrupt) {
-        interrupt = 0;
-        return;
-    }
-
-    encoder.waitStabilization();
-
-    if (PIND & _BV(PIND5)) {
+    delay(1);
+    if (PIND & _BV(PIND5)) {    //If PIO5=0 decrement, else increment
         encoder.increment_position();
     } else {
         encoder.decrement_position();
     }
-    while (!(PIND & _BV(PIND3))) {
-        if (UCSR0A & _BV(RXC0)) {
-            Comm.parseInput(1);
-            ledSet(LEDGREEN, 0);
-            ledSet(LEDRED, 1);
-        }
-    }
-
-    encoder.waitStabilization();
-
-    //if a interrupt was caused, next re-entry will return inmediatly
-    if (EIFR != 0) {
-        interrupt = 1;
-    } else
-        interrupt = 0;
-
-    ledSet(LEDGREEN, 1);
-    ledSet(LEDRED, 0);
 }
+
+

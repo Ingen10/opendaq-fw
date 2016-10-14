@@ -77,7 +77,7 @@ void ConfigAnalogChannels(uint8_t chp, uint8_t chm);
 void ConfigAnalogGain(uint8_t gain);
 void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain);
 
-int SetDacOutput(int value);
+int SetDacOutput(int16_t value);
 int SetAnalogVoltage(signed int mv);
 
 void pwmInit(int duty, long microseconds);

@@ -209,7 +209,7 @@ void ledSet(uint8_t nb, uint8_t val) {
  *  ADC value
  */
 signed int ReadADC() {
-#if HW_VERSION==2
+#if HW_VERSION==2 //[S]
     unsigned long result;
     signed int a;
 
@@ -232,7 +232,10 @@ signed int ReadADC() {
     PORTB |= 0X01 << 2;
 
     a = (signed int) result & 0xFFFC;
-    a /= 4;
+
+    //    a /= 4;
+    a -= 16384;
+    a *= 2;
 
     return a;
 
@@ -258,7 +261,7 @@ signed int ReadADC() {
 
     result >>= 2;
 
-    return (signed int) result & 0xFFFF;
+    return (signed int) -(result & 0xFFFF);
 #endif
 }
 
