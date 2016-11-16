@@ -347,7 +347,7 @@ void DataChannel::Begin() {
     if (dcmode == ANALOG_INPUT)
         ConfigAnalog(pch, nch, g);
     else if (dcmode == ANALOG_OUTPUT)
-	SetDacOutput(databuffer[0]);
+        SetDacOutput(databuffer[0]);
     else if (dcmode == COUNTER_INPUT) {
         option = pch;
         counterInit(option);
@@ -399,16 +399,13 @@ void DataChannel::Enable() {
             actionCallback = SetDacOutput; //SetAnalogVoltage;
             break;
         case COUNTER_INPUT:
-            actionCallback = getCounter;
+            //actionCallback = getCounter;
             break;
         case DIGITAL_OUTPUT:
             //actionCallback = OutputDigital;
             break;
         case DIGITAL_INPUT:
             //actionCallback = pioRead;
-            break;
-        case CAPTURE_INPUT:
-            actionCallback = getCapture;
             break;
         default:
             break;

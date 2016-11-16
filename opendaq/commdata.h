@@ -26,7 +26,7 @@
 #define byte uint8_t
 //#define SERIAL_DEBUG
 //Firmware version:
-#define FVER     130
+#define FVER     131
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -154,8 +154,8 @@ private:
 
     uint16_t make16(byte* a);
     uint32_t make32(byte* a);
+    byte make8(uint32_t a, byte position);
 
-    byte make8(uint16_t a, byte position);
     void processCommand(void);
     void sendCommand(byte* response, int size);
 

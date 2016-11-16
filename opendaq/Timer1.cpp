@@ -203,8 +203,8 @@ void TimerOne::start() // AR addition, renamed by Lex to reflect it's actual rol
         SREG = oldSREG;
     } while (tcnt1 == 0);
 
-    //  TIFR1 = 0xff;                   // AR - Clear interrupt flags
-    //  TIMSK1 = _BV(TOIE1);              // sets the timer overflow interrupt enable bit
+    TIFR1 = 0xff;                   // AR - Clear interrupt flags
+    //TIMSK1 = _BV(TOIE1);              // sets the timer overflow interrupt enable bit
 }
 
 /** \brief
@@ -323,14 +323,14 @@ void TimerOne::icpCallback()
         if (nOverflows > 0) {
             lValue += nOverflows * 65536;
         }
-        pioWrite(2, HIGH);
+        //pioWrite(2, HIGH);
 
     } else { // falling edge detected
         hValue = ICR1; // save the input capture value
         if (nOverflows > 0) {
             hValue += nOverflows * 65536;
         }
-        pioWrite(2, LOW);
+        //pioWrite(2, LOW);
     }
     nOverflows = 0;
     TCCR1B ^= _BV(ICES1); // toggle bit value to trigger on the other edge
@@ -398,14 +398,13 @@ void TimerOne::startCounter(int edge) {
     if (edge > 0)
         clockSelectBits |= _BV(CS10); // clock on rising edge
 
-    nOverflows = 0;
-
     oldSREG = SREG; // AR - save status register
     cli(); // AR - Disable interrupts
     TCNT1 = 0;
+    nOverflows = 0;
+    TIMSK1 = _BV(TOIE1); // enable overflow interrupt to detect missing input pulses
     SREG = oldSREG; // AR - Restore status register
 
-    TIMSK1 = _BV(TOIE1); // enable overflow interrupt to detect missing input pulses
 
     resume();
 }
@@ -419,15 +418,16 @@ void TimerOne::startCounter(int edge) {
  *  Timer counter
  */
 unsigned long TimerOne::getCounter(int reset) {
-    unsigned long tcnt1;
+    unsigned long tcnt1_val,aux;
 
     oldSREG = SREG;
     cli();
 
-    tcnt1 = TCNT1;
+    tcnt1_val = TCNT1;
 
     if (nOverflows > 0) {
-        tcnt1 += nOverflows * 65536;
+        aux = nOverflows;
+        tcnt1_val += aux * 65536;
     }
 
     if (reset > 0) {
@@ -437,5 +437,7 @@ unsigned long TimerOne::getCounter(int reset) {
 
     SREG = oldSREG;
 
-    return tcnt1;
+    resume();
+
+    return tcnt1_val;
 }

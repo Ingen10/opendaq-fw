@@ -281,6 +281,7 @@ void CommDataClass::processStream(void) {
  */
 void CommDataClass::processCommand(void) {
     uint16_t word1, word2, word3;
+    uint32_t lword1;
     byte byte1, byte2, byte3;
     byte i;
     byte resp_len = 0;
@@ -531,13 +532,15 @@ void CommDataClass::processCommand(void) {
 
         case C_GET_COUNTER:
             byte1 = input_data[4];
-            word1 = getCounter(byte1);
+            lword1 = (uint32_t) getCounter(byte1);
 
-            response[4] = make8(word1, 1);
-            response[5] = make8(word1, 0);
-            resp_len = 2;
+            response[4] = make8(lword1, 3);
+            response[5] = make8(lword1, 2);
+            response[6] = make8(lword1, 1);
+            response[7] = make8(lword1, 0);
+            resp_len = 4;
 
-            _DEBUG("C_GET_COUNTER: %d\r\n", word1);
+            _DEBUG("C_GET_COUNTER: %ld\r\n", lword1);
             break;
 
         ///// PWM COMMANDS       /////////////////////////////////////
@@ -573,14 +576,17 @@ void CommDataClass::processCommand(void) {
 
         ///// CAPTURE COMMANDS        //////////////////////////////////////
         case C_CAPTURE_INIT:
-            word1 = make16(input_data + 4);
+            lword1 = make32(input_data + 4);
 
-            captureInit(word1);
+            captureInit(lword1);
 
-            memcpy(&response[4], &input_data[4], 4);
-            resp_len = 2;
+            response[4] = make8(lword1, 3);
+            response[5] = make8(lword1, 2);
+            response[6] = make8(lword1, 1);
+            response[7] = make8(lword1, 0);
+            resp_len = 4;
 
-            _DEBUG("C_CAPTURE_INIT: T = %d\r\n", word1);
+            _DEBUG("C_CAPTURE_INIT: T = %ld\r\n", lword1);
             break;
 
         case C_CAPTURE_STOP:
@@ -593,27 +599,28 @@ void CommDataClass::processCommand(void) {
 
         case C_GET_CAPTURE:
             byte1 = input_data[4];
-            word1 = getCapture(byte1);
+            lword1 = getCapture(byte1);
 
             response[4] = byte1;
-            response[5] = make8(word1, 1);
-            response[6] = make8(word1, 0);
-            resp_len = 3;
+            response[5] = make8(lword1, 3);
+            response[6] = make8(lword1, 2);
+            response[7] = make8(lword1, 1);
+            response[8] = make8(lword1, 0);
+            resp_len = 5;
 
-            _DEBUG("C_GET_CAPTURE (%d): %d\r\n", byte1, word1);
+            _DEBUG("C_GET_CAPTURE (%d): %ld\r\n", byte1, lword1);
             break;
 
 
         ///// ENCODER COMMANDS        //////////////////////////////////////
         case C_ENCODER_INIT:
-            word1 = make16(input_data + 4);
+            lword1 = make32(input_data + 4);
 
-            response[4] = make8(word1, 1);
-            response[5] = make8(word1, 0);
-            resp_len = 2;
+            memcpy(&response[4], &input_data[4], 4);
+            resp_len = 4;
 
-            encoder.Start(word1);
-            _DEBUG("C_ENCODER_INIT: T = %d\r\n", word1);
+            encoder.Start(lword1);
+            _DEBUG("C_ENCODER_INIT: T = %ld\r\n", lword1);
             break;
 
         case C_ENCODER_STOP:
@@ -625,13 +632,15 @@ void CommDataClass::processCommand(void) {
             break;
 
         case C_GET_ENCODER:
-            word1 = encoder.get_position();
+            lword1 = encoder.get_position();
 
-            response[4] = make8(word1, 1);
-            response[5] = make8(word1, 0);
-            resp_len = 2;
+            response[4] = make8(lword1, 3);
+            response[5] = make8(lword1, 2);
+            response[6] = make8(lword1, 1);
+            response[7] = make8(lword1, 0);
+            resp_len = 4;
 
-            _DEBUG("C_GET_ENCODER: (%d): %d\r\n", byte1, word1);
+            _DEBUG("C_GET_ENCODER: (%d): %ld\r\n", byte1, lword1);
             break;
 
 
@@ -1013,11 +1022,15 @@ uint32_t CommDataClass::make32(byte* a) {
  *  \param  a: data to transfrorm to 8 bit format
  *  \param position: position to get data
  */
-byte CommDataClass::make8(uint16_t a, byte position) {
+byte CommDataClass::make8(uint32_t a, byte position) {
     byte aux;
 
-    if (position == 1)
-        aux = (a & 0xFF00) >> 8;
+    if (position == 3)
+        aux = (a & 0xFF000000) >> 24;
+    else if (position == 2)
+        aux = (a & 0xFF0000) >> 16;
+    else if (position == 1)
+        aux = (a & 0xFF00) >> 8;        
     else
         aux = a & 0x00FF;
 

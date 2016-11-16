@@ -84,16 +84,12 @@ void pwmInit(int duty, long microseconds);
 void PwmStop();
 void setPwmDuty(int duty);
 
-void captureInit(unsigned long microseconds);
+void captureInit(uint32_t microseconds);
 void captureStop();
-int getCapture(int state);
-
-void encoderInit(unsigned int secondChannelPIO, unsigned int resolution);
-void encoderStop();
-int getEncoder();
+uint32_t getCapture(int state);
 
 void counterInit(int edge);
-int getCounter(int reset);
+uint32_t getCounter(int reset);
 
 void daqInit();
 int availableMemory();

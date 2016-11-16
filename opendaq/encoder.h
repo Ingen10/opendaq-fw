@@ -45,9 +45,9 @@
 */
 class Encoder {
 private:
-    int position;
-    int resolution;
-    unsigned int stabilizationTime;
+    uint32_t position;
+    uint32_t resolution;
+    uint16_t stabilizationTime;
 
 public:
     void Start(unsigned int res);
@@ -55,7 +55,7 @@ public:
     void Pause();
     void Resume();
 
-    int get_position();
+    uint32_t get_position();
     void increment_position();
     void decrement_position();
     int waitStabilization();

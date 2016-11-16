@@ -54,18 +54,21 @@ void setup()
     ledSet(LEDRED, 0);
 
     wdt_enable(WDTO_2S);
-    
-    encoder.Start(200);
+#ifdef SERIAL_DEBUG 
+    //counterInit(1);
+    encoder.Start(10000);
+#endif
 }
 
 
 void loop()
 {
-
 #ifdef SERIAL_DEBUG
     delay(300);
-    _DEBUG("a\r\n");
+    _DEBUG("e= %ld\r\n", encoder.get_position());
+    //_DEBUG("c= %ld\r\n", getCounter(0));
 #endif
+    getCounter(0);
     ODStream.CheckTriggers();
     Comm.processStream();   
     

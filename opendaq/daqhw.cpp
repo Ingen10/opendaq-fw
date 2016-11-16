@@ -594,8 +594,8 @@ void captureStop() {
  *  \param
  *  state: high (1) or low (0)
  */
-int getCapture(int state) {
-    return (int) Timer1.getCapture(state);
+uint32_t getCapture(int state) {
+    return (uint32_t) Timer1.getCapture(state);
 }
 
 /** \brief
@@ -615,8 +615,8 @@ void counterInit(int edge) {
  *  \param
  *  reset: flag to reset the counter
  */
-int getCounter(int reset) {
-    return (int) Timer1.getCounter(reset);
+uint32_t getCounter(int reset) {
+    return (uint32_t) Timer1.getCounter(reset);
 }
 
 

@@ -38,7 +38,7 @@ Encoder encoder;
  *  \param
  *  res: encoder resolution
  */
-void Encoder::Start(unsigned int res) {
+void Encoder::Start(uint16_t res) {
     position = 0;
     resolution = res;
     stabilizationTime = 100;
@@ -79,7 +79,7 @@ void Encoder::Resume() {
  *  \return
  *  The encoder position
  */
-int Encoder::get_position() {
+uint32_t Encoder::get_position() {
     return position;
 }
 
@@ -98,9 +98,10 @@ void Encoder::increment_position() {
  *
  */
 void Encoder::decrement_position() {
-    position--;
-    if (position < 0 && resolution > 0)
+    if (position == 0 && resolution > 0)
         position = resolution;
+    else
+        position--;
 }
 
 
