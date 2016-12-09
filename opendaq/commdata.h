@@ -26,7 +26,7 @@
 #define byte uint8_t
 //#define SERIAL_DEBUG
 //Firmware version:
-#define FVER     131
+#define FVER     140
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
