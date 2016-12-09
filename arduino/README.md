@@ -17,6 +17,6 @@ In any other case, you would face problems with the dependencies between files.
 
 After these steps, you should be able to compile the firmware of openDAQ in the Arduino IDE. 
 
-*This was tested with Arduino 1.6.0*
+*This was tested with Arduino 1.6.5*
 
 

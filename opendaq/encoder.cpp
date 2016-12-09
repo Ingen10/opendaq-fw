@@ -30,7 +30,10 @@ Encoder encoder;
  * @file encoder.cpp
  * Source code for Encoder Class
 */
-// Public Methods //////////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section Public Public methods
+ *
+ */
 
 /** \brief
  *  Start the encoder
@@ -106,21 +109,35 @@ void Encoder::decrement_position() {
 
 
 
-/////////////////////////////////////////////////////////////////////////////
-// INTERRUPT GENERAL ROUTINES:
-/////////////////////////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section Interrupt Interrupt general routines
+ *
+ */
 
 /** \brief
  *  Routine to process INT1 (PIO6) interrupts
  *  If PIO5=0 decrement, else increment
  */
 ISR(INT1_vect) {
-    delay(1);
+    static uint8_t interrupt = 0;
+    
+    if (interrupt) {
+        interrupt = 0;
+        return;
+    }
+    
+    delayMicroseconds(50);
+    
     if (PIND & _BV(PIND5)) {    //If PIO5=0 decrement, else increment
         encoder.increment_position();
     } else {
         encoder.decrement_position();
     }
+    
+    if (EIFR != 0) 
+        interrupt = 1;
+    else
+        interrupt = 0;
 }
 
 

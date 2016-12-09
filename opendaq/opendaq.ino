@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    150701
+ *  Version:    161203
  *  Author:     JRB
- *  Revised by: AV (17/07/15)
+ *  Revised by: 
  */
 
 /**
@@ -55,8 +55,8 @@ void setup()
 
     wdt_enable(WDTO_2S);
 #ifdef SERIAL_DEBUG 
-    //counterInit(1);
-    encoder.Start(10000);
+    SetAnalogVoltage(1000);
+    ConfigAnalog(8,0,0);
 #endif
 }
 
@@ -64,11 +64,10 @@ void setup()
 void loop()
 {
 #ifdef SERIAL_DEBUG
+    SetAnalogVoltage(1000);
     delay(300);
-    _DEBUG("e= %ld\r\n", encoder.get_position());
-    //_DEBUG("c= %ld\r\n", getCounter(0));
+    _DEBUG("Read= %d\r\n", ReadADC());
 #endif
-    getCounter(0);
     ODStream.CheckTriggers();
     Comm.processStream();   
     

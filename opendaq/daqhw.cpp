@@ -15,19 +15,22 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    150701
+ *  Version:    161207
  *  Author:     JRB
- *  Revised by: AV (17/07/15)
+ *  Revised by: 
  */
 
-#include "daqhw.h"
-
-////////////////////////////////////////////
-//fake functions for time counting verification
 /**
- * @file daqhw.cpp
- * Fake functions for time counting verification
- */
+ * @file daqhw.c
+ * Low level hardware control functions
+*/
+
+
+//#define SERIAL_DEBUG
+#include "daqhw.h"
+#include "debug.h"
+
+
 /** \brief
  *  fake functions for time counting verification
  *
@@ -48,9 +51,11 @@ signed int ReadAnalog() {
 }
 
 
-// DIGITAL PIOS:    ///////////////////////////////////////////////
-
-// !! for all functions: pio indicates Digital input number - 1 (from 0 to 5)
+/** **************************************************************************************
+ * \section DIOs Digital IO pins control funtions
+ *
+ * \note For all functions: pio indicates Digital input number - 1 (from 0 to 5)
+ */
 
 /** \brief
  *  Set pio mode
@@ -200,25 +205,32 @@ void ledSet(uint8_t nb, uint8_t val) {
 }
 
 
-// ANALOG CHANNELS & SPI: /////////////////////////////////////////////
+/** **************************************************************************************
+ * \section AIN Analog input channels and SPI communications with the ADC
+ *
+ */
+
 
 /** \brief
  *  Read ADC
  *
  *  \return
- *  ADC value
+ *  Raw ADC value 16 bits (-32768..+32767 on input range)
  */
 signed int ReadADC() {
 #if HW_VERSION==2 //[S]
-    unsigned long result;
+    unsigned long result = 0;
     signed int a;
 
     PORTB &= ~(0X01 << 2);
 
+    //SPDR = 0x04;        //Gain-Mux register
+    //while (!(SPSR & (1 << SPIF)));
+
     SPDR = 0x80 | myGains | myChannels;
     while (!(SPSR & (1 << SPIF)));
 
-    SPDR = 0x61;
+    SPDR = 0x61;    //??
     while (!(SPSR & (1 << SPIF)));
 
     SPDR = 0;
@@ -230,11 +242,12 @@ signed int ReadADC() {
     result = (result << 8) + SPDR;
 
     PORTB |= 0X01 << 2;
-
+    
     a = (signed int) result & 0xFFFC;
 
-    //    a /= 4;
-    a -= 16384;
+    if(de_mode == 0)
+        a -= 0x4000; //16384  - Substract 0V code
+
     a *= 2;
 
     return a;
@@ -258,7 +271,7 @@ signed int ReadADC() {
     result = (result << 8) + SPDR;
 
     PORTB |= 0X01 << 2;
-
+    
     result >>= 2;
 
     return (signed int) -(result & 0xFFFF);
@@ -287,25 +300,21 @@ signed int ReadNADC(int nsamples) {
 }
 
 /** \brief
- *  Read ADC n times, and returns the average calibrated
+ *  Read ADC n times, and returns the teorical voltage value in mV (not calibrated)
  *
  *  \param
  *  n: number of times the ADC will be read
  *  \return
- *  ADC value average calibrated
+ *  ADC value average in mV
  */
 signed int ReadAnalogIn(int n) {
     signed long r;
 
     r = ReadNADC(n);
 
-#if HW_VERSION==2
-    r *= 2500;
-    r /= 8192;
-#else
-    r *= -153;
-    r /= 1000;
-#endif
+    r *= 12000;
+    r /= 32768;
+
     return (signed int) r;
 }
 
@@ -349,8 +358,10 @@ void ConfigAnalogChannels(uint8_t chp, uint8_t chm) {
         c = 8;
 
     if (chm == 0) {
+        de_mode = 0;
         myChannels = ainToSEChan(chp - 1);
     } else {
+        de_mode = 1;
         myChannels = ainToDEChan(chp - 1);
     }
 #else
@@ -382,8 +393,10 @@ void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
     ConfigAnalogGain(gain);
 }
 
-
-////////////////////////////////////////////////
+/** **************************************************************************************
+ * \subsection ADS7871 ADS7871 Config functions
+ *
+ */
 
 #if HW_VERSION==2
 
@@ -447,7 +460,10 @@ void set7871PIO(int x) {
 
 
 
-// DAC functions ///////////////////////////////////////////////
+/** **************************************************************************************
+ * \section DAC DAC control & config functions
+ *
+ */
 
 #if HW_VERSION==2
 
@@ -493,6 +509,8 @@ int SetDacOutput(int16_t value) {
     while (!(SPSR & (1 << SPIF)));
 #else       //[M] -> 0..16384 -4.096V..+4.096V 
     rawcode = value/4 + 8192;
+    _DEBUG("value= %d, rawcode= %x\r\n", value,rawcode);
+    
     SPDR = (rawcode & 0xFF00) >> 8;
     while (!(SPSR & (1 << SPIF)));
     SPDR = rawcode & 0xFF;
@@ -511,34 +529,22 @@ int SetDacOutput(int16_t value) {
  *  raw voltage value
  */
 int SetAnalogVoltage(signed int mv) {
-#if HW_VERSION==2       //[S]
-    unsigned int aux;
-
-    if (mv < 0)
-        aux = 0;
-    else if (mv > 4096)
-        aux = 32768;
-    else
-        aux = 8 * mv;
-
-    SetDacOutput(aux);
-
-    return (int) aux;
-#else
-    unsigned long aux;
+    int16_t aux;
 
     if (mv < -4096)
         mv = -4096;
     else if (mv > 4096)
         mv = 4096;
 
-    SetDacOutput(8*aux);
-
-    return (int) 8*aux;
-#endif
+    aux = 8*mv;
+    SetDacOutput(aux);
+    return (int) aux;
 }
 
-// TIMER1 based functions ///////////////////////////////////////////////
+/** **************************************************************************************
+ * \section TIMER1 TIMER1 control & config functions
+ *
+ */
 
 /** \brief
  *  Initialize pwm
@@ -547,7 +553,7 @@ int SetAnalogVoltage(signed int mv) {
  *  microseconds: value in microseconds to initialize the timer
  */
 void pwmInit(int duty, long microseconds) {
-    //SetpioMode(4, OUTPUT);        //SI ponemos el pin del PIO5/OC1A/PD5 como salida, no funciona el PWM??!!
+    //SetpioMode(4, OUTPUT);        
     Timer1.pwm(5, duty, microseconds * 2);
 }
 
@@ -620,9 +626,11 @@ uint32_t getCounter(int reset) {
 }
 
 
-// GENERAL FUNCTIONS //////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section HWGeneral General hardware configuration and initialitation
+ *
+ */
 
-//Hardware init:
 
 /** \brief
  *  Initialize DAC

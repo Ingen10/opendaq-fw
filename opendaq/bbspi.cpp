@@ -27,7 +27,6 @@
 #include "bbspi.h"
 #define NPIOPINS 6
 
-// Constructors ////////////////////////////////////////////////////////////////
 /**
  * @file bbspi.cpp
  */ 
@@ -46,7 +45,10 @@ BbspiClass::BbspiClass() {
     bb_cpha = 1; /* data valid on clock trailing edges*/
 }
 
-// Public Methods //////////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section SPISWPublic BB-SPI Public methods
+ *
+ */
 
 /**
  *  Setup Bbspi (pin numbers and functions)

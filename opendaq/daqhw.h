@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:    150701
+ *  Version:    161207
  *  Author:     JRB
- *  Revised by: AV (17/07/15)
+ *  Revised by: 
  */
 
 
@@ -108,7 +108,7 @@ int availableMemory();
 #define ADCPGAX16 0X60
 #define ADCPGAX20 0X70
 
-static int myChannels = 0, myGains = 0;
+static int myChannels = 0, myGains = 0, de_mode = 0;
 void setupLTC2630();
 
 void Config7871();

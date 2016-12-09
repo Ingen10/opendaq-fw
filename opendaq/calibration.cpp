@@ -71,7 +71,10 @@ int CalibrationClass::Reset_calibration() {
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-///////ID-SERIAL NB STORAGE FUNCTIONS
+/** **************************************************************************************
+ * \section ID  Device ID/serial number manipulation methods
+ *
+ */
 
 /** 
  *  Get ID-SERIAL
@@ -121,7 +124,10 @@ int CalibrationClass::ID_Save(uint32_t device_id) {
 }
 
 
-// Calibration storage functions 
+/** **************************************************************************************
+ * \section Calibration Calibration storage & recall methods
+ *
+ */
 
 /** 
  *  Save calibration
@@ -193,7 +199,10 @@ int CalibrationClass::RecallCalibration() {
 
 
 
-// Low level eeprom calls 
+/** **************************************************************************************
+ * \section eeprom Low level eeprom calls
+ *
+ */
 
 /** 
  *  Read data from eeprom

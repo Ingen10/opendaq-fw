@@ -43,7 +43,10 @@ DataChannel channels[] = {Channel1, Channel2, Channel3, Channel4};
 
 
 
-// Public Methods //////////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section Public Public methods
+ *
+ */
 
 /** \brief
  *  Initialize the stream channel
@@ -357,9 +360,10 @@ void DStream::FlushChan(uint8_t nb) {
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Access to DataChannels internal variables:
-///////////////////////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section DataChannels Access to DataChannels internal variables
+ *
+ */
 
 /** \brief
  *  Get the read index of the stream
@@ -490,7 +494,10 @@ void DStream::Reset(uint8_t nb) {
     channels[nb - 1].reset();
 }
 
-// External functions //////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section External External interrupt control functions
+ *
+ */
 
 /** \brief
  *  Execute an action using a normal stream
@@ -547,9 +554,10 @@ void ext_sm(int bit_changes, int value) {
 }
 
 
-/////////////////////////////////////////////////////////////////////////////
-// INTERRUPT GENERAL ROUTINES:
-/////////////////////////////////////////////////////////////////////////////
+/** **************************************************************************************
+ * \section Interrupts Interrupts general routines
+ *
+ */
 
 /** \brief
  *  Timer 2 interrupt: Stream And Burst experiments

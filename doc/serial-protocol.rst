@@ -371,6 +371,7 @@ Byte    Description         Value           Notes
 2       command number      18
 3       number of bytes     1
 4       LED color           0-3             0: off, 1: green, 2: red, 3: orange
+5       LED number          (0)             Led number (default:0 for available devices)
 ======= =================== ==============  ====================================================
 
 **Response:** Same as command.
@@ -396,8 +397,8 @@ Byte    Description         Value           Notes
 
 SETANALOG
 ---------
-Set DAC output voltage (RAW value). DAC resolution depends on device model 
-(14 bits for openDAQ [M], 12bits for openDAQ[S]).
+Set DAC output voltage (RAW value). Analog range depends on device model 
+(+-4.096V for openDAQ [M], 0V..+4.096V for openDAQ[S]).
 
 **Command:**
 
@@ -408,7 +409,7 @@ Byte    Description         Value           Notes
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      24
 3       number of bytes     2
-4,5     value               -8192 to 8191   Signed word (16 bit) value for output voltage
+4,5     value               -4096 to 4096   Signed word (16 bit) value for output voltage in mV
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
@@ -479,8 +480,8 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      14
-3       number of bytes     2
-4       period              0-65535         Aproximate period of the wave (microseconds)
+3       number of bytes     4
+4       period              0-2^32          Aproximate period of the wave (microseconds). Int32
 ======= =================== ==============  ====================================================
 
 **Response:** Same as command.
@@ -526,9 +527,9 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      14
-3       number of bytes     2
+3       number of bytes     5
 4       edge                0-1-2
-5       period              0:65535         Period (microseconds)
+5       period              0-2^32         Period (microseconds). Int32 format
 ======= =================== ==============  ====================================================
 
 ENCODERINIT
@@ -543,8 +544,8 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      50
-3       number of bytes     1
-4       resolution          0:255           Max. number of ticks per round
+3       number of bytes     4
+4       resolution          0-2^32          Max. number of encoder edges (Int32)
 ======= =================== ==============  ====================================================
 
 **Response:** Same as command.
@@ -589,8 +590,8 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      52
-3       number of bytes     2
-4		position			0:65535			Actual encoder value (must be<resolution)
+3       number of bytes     4
+4		position			0-2^32          Encoder value now (must be less than resolution)
 ======= =================== ==============  ====================================================
 
 COUNTERINIT
@@ -635,8 +636,8 @@ Byte    Description         Value           Notes
 0       CRC16H              
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      42
-3       number of bytes     2
-4       count               0:65535         Number of edges actually detected
+3       number of bytes     4
+4       count               0:2^32         Number of counted edges (Int32)
 ======= =================== ==============  ====================================================
 
 EEPROMWRITE
