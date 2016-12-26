@@ -26,7 +26,7 @@
 */
 
 
-//#define SERIAL_DEBUG
+#define SERIAL_DEBUG
 #include "daqhw.h"
 #include "debug.h"
 
@@ -394,6 +394,92 @@ void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
 }
 
 /** **************************************************************************************
+ * \section MCP6S26 control functions for configuration
+ *
+ */
+
+/** \brief
+ *  Setup MCP6S26 gain control register
+ *  CS lines are not controlled inside this function
+ *
+ *  \param
+ *  gain: gain selection [+1, +2, +4, +5, +8, +10, +16 or +32 V/V]
+ */
+void SetupMcp6s26_Gain(uint8_t gain) {
+
+    SPDR = 0x40; //Write on gain register
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0x07 & gain; //setup gain
+    while (!(SPSR & (1 << SPIF)));
+
+}
+
+/** \brief
+ *  Setup MCP6S26 channel control register
+ *  CS lines are not controlled inside this function
+ *
+ *  \param
+ *  ch: analog input channel [0 .. 5]
+ */
+void SetupMcp6s26_Channel(uint8_t ch) {
+    SPDR = 0x41; //Write on channel register
+    while (!(SPSR & (1 << SPIF)));
+
+    SPDR = 0x07 & ch; //setup channel
+    while (!(SPSR & (1 << SPIF)));
+
+}
+
+
+static int invert = 0;
+const int k_ainch_to_mcp[] = {5, 3, 2, 1, 0, 3, 2, 1, 0};
+
+void TestConfig(uint8_t chp, uint8_t chm, uint8_t gain) {
+    int chm_gain =0;
+    if (chm >0)
+        chm_gain = gain;
+    else
+        chm_gain = 0;
+        
+    if(chp>4){
+        invert = 1;
+        PORTA &= ~(0X01 << 1);
+        SetupMcp6s26_Channel(k_ainch_to_mcp[chp]); 
+        PORTA |= 0X01 << 1;
+        PORTA &= ~(0X01 << 1);
+        SetupMcp6s26_Gain(gain);
+        PORTA |= 0X01 << 1;
+
+        PORTA &= ~(0X01 << 2);
+        SetupMcp6s26_Channel(k_ainch_to_mcp[chm]); 
+        PORTA |= 0X01 << 2;
+        PORTA &= ~(0X01 << 2);
+        SetupMcp6s26_Gain(chm_gain);
+        PORTA |= 0X01 << 2;
+    }
+    else{
+        invert = 0;
+        PORTA &= ~(0X01 << 2);
+        SetupMcp6s26_Channel(k_ainch_to_mcp[chp]); 
+        PORTA |= 0X01 << 2;
+        PORTA &= ~(0X01 << 2);
+        SetupMcp6s26_Gain(gain);
+        PORTA |= 0X01 << 2;    
+        
+        PORTA &= ~(0X01 << 1);
+        SetupMcp6s26_Channel(k_ainch_to_mcp[chm]); 
+        PORTA |= 0X01 << 1;
+        PORTA &= ~(0X01 << 1);
+        SetupMcp6s26_Gain(chm_gain);
+        PORTA |= 0X01 << 1;
+    }
+
+}
+
+
+
+/** **************************************************************************************
  * \subsection ADS7871 ADS7871 Config functions
  *
  */
@@ -626,6 +712,8 @@ uint32_t getCounter(int reset) {
 }
 
 
+
+
 /** **************************************************************************************
  * \section HWGeneral General hardware configuration and initialitation
  *
@@ -657,7 +745,10 @@ void daqInit() {
     setupLTC2630();
     Config7871();
 #else
-    SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4
+    //SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4
+    SPCR = (1 << SPE) | (1 << MSTR) | (0x0C) | 1; //fclk/16, CLK HIGH inactive, trailing edge
+    
+    PORTA |= 0X03;    
 #endif
 
 

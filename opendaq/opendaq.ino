@@ -25,7 +25,7 @@
  * Main loop and device initialization with Arduino type extension
  */
 
-//#define SERIAL_DEBUG
+#define SERIAL_DEBUG
 
 #include <avr/wdt.h>
 #include "calibration.h"
@@ -54,19 +54,23 @@ void setup()
     ledSet(LEDRED, 0);
 
     wdt_enable(WDTO_2S);
+    SetDacOutput(20000);
 #ifdef SERIAL_DEBUG 
-    SetAnalogVoltage(1000);
-    ConfigAnalog(8,0,0);
+    /*PORTA &= ~(0X01 << 1);
+    SetupMcp6s26_Channel(1); 
+    PORTA |= 0X01 << 1;*/
+    TestConfig(7,0,2);
 #endif
 }
 
 
 void loop()
 {
+    static int i = 0;
 #ifdef SERIAL_DEBUG
-    SetAnalogVoltage(1000);
-    delay(300);
-    _DEBUG("Read= %d\r\n", ReadADC());
+    delay(500);
+    i++;
+    _DEBUG("Read2= %d\r\n", ReadADC());
 #endif
     ODStream.CheckTriggers();
     Comm.processStream();   

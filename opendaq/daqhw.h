@@ -94,6 +94,11 @@ uint32_t getCounter(int reset);
 void daqInit();
 int availableMemory();
 
+void SetupMcp6s26_Gain(uint8_t gain);
+void SetupMcp6s26_Channel(uint8_t ch);
+void TestConfig(uint8_t chp, uint8_t chm, uint8_t gain);
+
+
 #if HW_VERSION==2       //OPENDAQ-S
 
 //#error
@@ -114,6 +119,7 @@ void setupLTC2630();
 void Config7871();
 void config7871PIO(int x);
 void set7871PIO(int x);
+
 
 const uint8_t PROGMEM ain_to_deadc_PGM[] = {
     0x00,
