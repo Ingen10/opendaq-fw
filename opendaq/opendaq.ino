@@ -54,24 +54,14 @@ void setup()
     ledSet(LEDRED, 0);
 
     wdt_enable(WDTO_2S);
-    SetDacOutput(20000);
-#ifdef SERIAL_DEBUG 
-    /*PORTA &= ~(0X01 << 1);
-    SetupMcp6s26_Channel(1); 
-    PORTA |= 0X01 << 1;*/
-    TestConfig(7,0,2);
-#endif
+    SetAnalogVoltage(1000);
 }
 
 
 void loop()
 {
     static int i = 0;
-#ifdef SERIAL_DEBUG
-    delay(500);
-    i++;
-    _DEBUG("Read2= %d\r\n", ReadADC());
-#endif
+
     ODStream.CheckTriggers();
     Comm.processStream();   
     

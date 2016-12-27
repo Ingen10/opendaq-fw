@@ -26,7 +26,7 @@
 */
 
 
-#define SERIAL_DEBUG
+//#define SERIAL_DEBUG
 #include "daqhw.h"
 #include "debug.h"
 
@@ -218,11 +218,36 @@ void ledSet(uint8_t nb, uint8_t val) {
  *  Raw ADC value 16 bits (-32768..+32767 on input range)
  */
 signed int ReadADC() {
-#if HW_VERSION==2 //[S]
+
+#if HW_VERSION==1 //[M] 
+    unsigned long result;
+
+    PORTB &= ~ADC_CS;
+
+    SPDR = 0;
+    while (!(SPSR & (1 << SPIF)));
+    result = SPDR;
+
+    SPDR = 0;
+    while (!(SPSR & (1 << SPIF)));
+    result = (result << 8) + SPDR;
+
+    SPDR = 0;
+    while (!(SPSR & (1 << SPIF)));
+    result = (result << 8) + SPDR;
+
+    PORTB |= ADC_CS;
+    
+    result >>= 2;
+
+    return (signed int) -(result & 0xFFFF);
+    
+   
+#elif HW_VERSION==2 //[S]
     unsigned long result = 0;
     signed int a;
 
-    PORTB &= ~(0X01 << 2);
+    PORTB &= ~ADC_CS;
 
     //SPDR = 0x04;        //Gain-Mux register
     //while (!(SPSR & (1 << SPIF)));
@@ -241,7 +266,7 @@ signed int ReadADC() {
     while (!(SPSR & (1 << SPIF)));
     result = (result << 8) + SPDR;
 
-    PORTB |= 0X01 << 2;
+    PORTB |= ADC_CS;
     
     a = (signed int) result & 0xFFFC;
 
@@ -252,11 +277,10 @@ signed int ReadADC() {
 
     return a;
 
-#else
-
+#elif HW_VERSION==3 //[N] 
     unsigned long result;
 
-    PORTB &= ~(0X01 << 2);
+    PORTB &= ~ADC_CS;
 
     SPDR = 0;
     while (!(SPSR & (1 << SPIF)));
@@ -270,11 +294,14 @@ signed int ReadADC() {
     while (!(SPSR & (1 << SPIF)));
     result = (result << 8) + SPDR;
 
-    PORTB |= 0X01 << 2;
+    PORTB |= ADC_CS;
     
     result >>= 2;
-
-    return (signed int) -(result & 0xFFFF);
+    
+    if(invert)
+        return (signed int) -(result & 0xFFFF);
+    else
+        return (signed int) (result & 0xFFFF);   
 #endif
 }
 
@@ -319,52 +346,14 @@ signed int ReadAnalogIn(int n) {
 }
 
 /** \brief
- *  Set analog gain
- *
- *  \param
- *  gain: value to set the gain
- */
-void ConfigAnalogGain(uint8_t gain) {
-#if HW_VERSION==2
-    myGains = gainToAdcset(gain);
-#else
-    PORTC &= ~0X03;
-    PORTC &= ~(0X01 << 4);
-
-    if (gain == 0) {
-        PORTC |= (0X01 << 4);
-    } else {
-        PORTC |= ((gain - 1) & 0X03);
-    }
-#endif
-}
-
-/** \brief
- *  Setup the analog channels to be readed
+ *  Setup the analog gain and channels to be readed
  *
  *  \param  chp: positive channel
  *  \param chm: second channel to take a differential reading
+ *  \param gain: gain value
  */
-void ConfigAnalogChannels(uint8_t chp, uint8_t chm) {
-#if HW_VERSION==2
-    //If chm channel is different from ground (0), a differential reading will be taken
-    //The firmware automatically selects the complementary channel to chp
-    uint8_t c;
-
-    c = chp;
-    if (c < 1)
-        c = 1;
-    if (c > 8)
-        c = 8;
-
-    if (chm == 0) {
-        de_mode = 0;
-        myChannels = ainToSEChan(chp - 1);
-    } else {
-        de_mode = 1;
-        myChannels = ainToDEChan(chp - 1);
-    }
-#else
+void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
+#if HW_VERSION==1   //[M]
     uint8_t ain_pos, ain_neg;
 
     ain_pos = ainToPort(chp);
@@ -375,22 +364,64 @@ void ConfigAnalogChannels(uint8_t chp, uint8_t chm) {
 
     PORTA |= (ain_neg & 0X07);
     PORTC |= (ain_pos & 0X07) << 5;
-#endif
-}
 
-/** \brief
- *  Setup the analog gain and channels to be readed
- *
- *  \param  chp: positive channel
- *  \param chm: second channel to take a differential reading
- *  \param gain: gain value
- */
-void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
-#if HW_VERSION==2
+    PORTC &= ~0X03;
+    PORTC &= ~(0X01 << 4);
+
+    if (gain == 0) {
+        PORTC |= (0X01 << 4);
+    } else {
+        PORTC |= ((gain - 1) & 0X03);
+    }
+
+#elif HW_VERSION==2       //[S]
     Config7871();
+    //If chm channel is different from ground (0), a differential reading will be taken
+    //The firmware automatically selects the complementary channel to chp
+    if (chp < 1)
+        chp = 1;
+    if (chp > 8)
+        chp = 8;
+
+    if (chm == 0) {
+        de_mode = 0;
+        myChannels = ainToSEChan(chp - 1);
+    } else {
+        de_mode = 1;
+        myChannels = ainToDEChan(chp - 1);
+    }
+    myGains = gainToAdcset(gain);
+
+#elif HW_VERSION==3       //[N]
+    int chm_gain =0;
+    if (chm >0)
+        chm_gain = gain;
+    else
+        chm_gain = 0;
+    //set special SPI settings for MCP6S26: CPOl=1 CPHA=1
+    SPCR = (1 << SPE) | (1 << MSTR) | (0x0C) | 1; //fclk/16, CLK HIGH inactive, trailing edge
+    
+    if(chp>4){
+        invert = 1;
+        SetupMcp6s26_Channel(PGA2_CS, ainToMcpChan(chp)); 
+        SetupMcp6s26_Gain(PGA2_CS, gain);
+
+        SetupMcp6s26_Channel(PGA1_CS, ainToMcpChan(chm)); 
+        SetupMcp6s26_Gain(PGA1_CS, chm_gain);
+    }
+    else{
+        invert = 0;
+        SetupMcp6s26_Channel(PGA1_CS, ainToMcpChan(chp)); 
+        SetupMcp6s26_Gain(PGA1_CS, gain);
+        
+        SetupMcp6s26_Channel(PGA2_CS, ainToMcpChan(chm)); 
+        SetupMcp6s26_Gain(PGA2_CS, chm_gain);
+    }
+    //Restore SPI settings to default: CPOl=0 CPHA=1
+    SPCR = (1 << SPE) | (1 << MSTR) | 0x04; //fclk/4, CLK low inactive, trailing edge
+
 #endif
-    ConfigAnalogChannels(chp, chm);
-    ConfigAnalogGain(gain);
+
 }
 
 /** **************************************************************************************
@@ -398,21 +429,23 @@ void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain) {
  *
  */
 
+#if HW_VERSION==3   //[N]
+
 /** \brief
  *  Setup MCP6S26 gain control register
  *  CS lines are not controlled inside this function
  *
  *  \param
+ *  chip: bit adress of the MCP6S26 chip on Port A
  *  gain: gain selection [+1, +2, +4, +5, +8, +10, +16 or +32 V/V]
  */
-void SetupMcp6s26_Gain(uint8_t gain) {
-
+void SetupMcp6s26_Gain(uint8_t chip, uint8_t gain) {
+    PORTA &= ~chip;
     SPDR = 0x40; //Write on gain register
     while (!(SPSR & (1 << SPIF)));
-
     SPDR = 0x07 & gain; //setup gain
     while (!(SPSR & (1 << SPIF)));
-
+    PORTA |= chip;
 }
 
 /** \brief
@@ -420,64 +453,19 @@ void SetupMcp6s26_Gain(uint8_t gain) {
  *  CS lines are not controlled inside this function
  *
  *  \param
+ *  chip: bit adress of the MCP6S26 chip on Port A
  *  ch: analog input channel [0 .. 5]
  */
-void SetupMcp6s26_Channel(uint8_t ch) {
+void SetupMcp6s26_Channel(uint8_t chip, uint8_t ch) {
+    PORTA &= ~chip;
     SPDR = 0x41; //Write on channel register
     while (!(SPSR & (1 << SPIF)));
-
     SPDR = 0x07 & ch; //setup channel
     while (!(SPSR & (1 << SPIF)));
-
+    PORTA |= chip;
 }
 
-
-static int invert = 0;
-const int k_ainch_to_mcp[] = {5, 3, 2, 1, 0, 3, 2, 1, 0};
-
-void TestConfig(uint8_t chp, uint8_t chm, uint8_t gain) {
-    int chm_gain =0;
-    if (chm >0)
-        chm_gain = gain;
-    else
-        chm_gain = 0;
-        
-    if(chp>4){
-        invert = 1;
-        PORTA &= ~(0X01 << 1);
-        SetupMcp6s26_Channel(k_ainch_to_mcp[chp]); 
-        PORTA |= 0X01 << 1;
-        PORTA &= ~(0X01 << 1);
-        SetupMcp6s26_Gain(gain);
-        PORTA |= 0X01 << 1;
-
-        PORTA &= ~(0X01 << 2);
-        SetupMcp6s26_Channel(k_ainch_to_mcp[chm]); 
-        PORTA |= 0X01 << 2;
-        PORTA &= ~(0X01 << 2);
-        SetupMcp6s26_Gain(chm_gain);
-        PORTA |= 0X01 << 2;
-    }
-    else{
-        invert = 0;
-        PORTA &= ~(0X01 << 2);
-        SetupMcp6s26_Channel(k_ainch_to_mcp[chp]); 
-        PORTA |= 0X01 << 2;
-        PORTA &= ~(0X01 << 2);
-        SetupMcp6s26_Gain(gain);
-        PORTA |= 0X01 << 2;    
-        
-        PORTA &= ~(0X01 << 1);
-        SetupMcp6s26_Channel(k_ainch_to_mcp[chm]); 
-        PORTA |= 0X01 << 1;
-        PORTA &= ~(0X01 << 1);
-        SetupMcp6s26_Gain(chm_gain);
-        PORTA |= 0X01 << 1;
-    }
-
-}
-
-
+#endif
 
 /** **************************************************************************************
  * \subsection ADS7871 ADS7871 Config functions
@@ -491,7 +479,7 @@ void TestConfig(uint8_t chp, uint8_t chm, uint8_t gain) {
  *
  */
 void Config7871() {
-    PORTB &= ~(0X01 << 2);
+    PORTB &= ~ADC_CS;
 
     SPDR = 0x07; //REF/OSC REGISTER
     while (!(SPSR & (1 << SPIF)));
@@ -499,7 +487,7 @@ void Config7871() {
     SPDR = 0x3C; //INTERNAL OSC, CCLK OUTPUT ON, REF ON, BUF ON, 2.5V REF
     while (!(SPSR & (1 << SPIF)));
 
-    PORTB |= 0X01 << 2;
+    PORTB |= ADC_CS;
 }
 
 /** \brief
@@ -511,7 +499,7 @@ void Config7871() {
 void config7871PIO(int x) {
     int result;
 
-    PORTB &= ~(0X01 << 2);
+    PORTB &= ~ADC_CS;
 
     SPDR = 0x06; //PIO control register
     while (!(SPSR & (1 << SPIF)));
@@ -519,7 +507,7 @@ void config7871PIO(int x) {
     SPDR = 0x0F & x; //All outputs
     while (!(SPSR & (1 << SPIF)));
 
-    PORTB |= 0X01 << 2;
+    PORTB |= ADC_CS;
 
 }
 
@@ -532,15 +520,11 @@ void config7871PIO(int x) {
 void set7871PIO(int x) {
     int result;
 
-    PORTB &= ~(0X01 << 2);
-
+    PORTB &= ~ADC_CS;
     SPDR = 0x05; //PIO state register
     while (!(SPSR & (1 << SPIF)));
-
     SPDR = 0x0F & x; //Set outputs
-    while (!(SPSR & (1 << SPIF)));
-
-    PORTB |= 0X01 << 2;
+    PORTB |= ADC_CS;
 }
 #endif
 
@@ -558,18 +542,16 @@ void set7871PIO(int x) {
  *
  */
 void setupLTC2630() {
-    PORTB &= ~(0X01 << 3);
+    PORTB &= ~DAC_CS;
 
     SPDR = 0x60; //Select Internal Reference (Power-on Reset Default)
     while (!(SPSR & (1 << SPIF)));
-
+    SPDR = 0;
+    while (!(SPSR & (1 << SPIF)));
     SPDR = 0;
     while (!(SPSR & (1 << SPIF)));
 
-    SPDR = 0;
-    while (!(SPSR & (1 << SPIF)));
-
-    PORTB |= 0X01 << 3;
+    PORTB |= DAC_CS;
 }
 #endif
 
@@ -577,15 +559,15 @@ void setupLTC2630() {
  *  Set DAC output
  *
  *  \param
- *  value: value to set DAC output
+ *  value: value to set DAC output (-32767..32768)
  *  \return
  *  0
  */
 int SetDacOutput(int16_t value) {
     int32_t rawcode;
     
-    PORTB &= ~(0X01 << 3);
-#if HW_VERSION==2   //[S] -> 0..65536 0V..4.096V
+    PORTB &= ~DAC_CS;
+#if HW_VERSION==2   //[S] -> 0..65536 0V..4.096V 12bits
     rawcode = (value>0)? value*2:0;
     SPDR = 0x30; //Write to and Update (Power up) DAC Register
     while (!(SPSR & (1 << SPIF)));
@@ -593,16 +575,14 @@ int SetDacOutput(int16_t value) {
     while (!(SPSR & (1 << SPIF)));
     SPDR = rawcode & 0xF0;
     while (!(SPSR & (1 << SPIF)));
-#else       //[M] -> 0..16384 -4.096V..+4.096V 
-    rawcode = value/4 + 8192;
-    _DEBUG("value= %d, rawcode= %x\r\n", value,rawcode);
-    
+#else       //[M]/[N] -> 0..16384 -4.096V..+4.096V 14bits
+    rawcode = value/4 + 8192;   
     SPDR = (rawcode & 0xFF00) >> 8;
     while (!(SPSR & (1 << SPIF)));
     SPDR = rawcode & 0xFF;
     while (!(SPSR & (1 << SPIF)));
 #endif
-    PORTB |= 0X01 << 3;
+    PORTB |= DAC_CS;
     return 0;
 }
 
@@ -610,9 +590,9 @@ int SetDacOutput(int16_t value) {
  *  Set analog voltage
  *
  *  \param
- *  mv: voltage to setup
+ *  mv: voltage to setup in millivolts (-4096..4096mV [M]&[N], 0..4096mV [S])
  *  \return
- *  raw voltage value
+ *  raw binary code applied to the DAC function
  */
 int SetAnalogVoltage(signed int mv) {
     int16_t aux;
@@ -745,9 +725,7 @@ void daqInit() {
     setupLTC2630();
     Config7871();
 #else
-    //SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4
-    SPCR = (1 << SPE) | (1 << MSTR) | (0x0C) | 1; //fclk/16, CLK HIGH inactive, trailing edge
-    
+    SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4, CLK low, trailing edge
     PORTA |= 0X03;    
 #endif
 

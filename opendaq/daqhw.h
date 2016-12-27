@@ -73,8 +73,6 @@ signed int ReadADC();
 signed int ReadNADC(int nsamples);
 signed int ReadAnalogIn(int n);
 
-void ConfigAnalogChannels(uint8_t chp, uint8_t chm);
-void ConfigAnalogGain(uint8_t gain);
 void ConfigAnalog(uint8_t chp, uint8_t chm, uint8_t gain);
 
 int SetDacOutput(int16_t value);
@@ -94,14 +92,53 @@ uint32_t getCounter(int reset);
 void daqInit();
 int availableMemory();
 
-void SetupMcp6s26_Gain(uint8_t gain);
-void SetupMcp6s26_Channel(uint8_t ch);
-void TestConfig(uint8_t chp, uint8_t chm, uint8_t gain);
+#if HW_VERSION==1       //OPENDAQ-M
+
+#define ADC_CS (0X01 << 2)
+#define DAC_CS (0X01 << 3)
 
 
-#if HW_VERSION==2       //OPENDAQ-S
+//Analog input channel definitions (MMA-MMB-MMC-MPA-MPB-MPC bits select)
+#define AIN1    0X0
+#define AIN2    0X4
+#define AIN3    0X2
+#define AIN4    0X6
+#define AIN5    0X1
+#define AIN6    0X5
+#define AIN7    0X3
+#define AIN8    0X7
+#define AGND    0X0
+#define AREF    0X4
 
-//#error
+//Analog gain definitions
+#define GAINX0_5    0
+#define GAINX001    1
+#define GAINX002    2
+#define GAINX010    3
+#define GAINX100    4
+
+const uint8_t PROGMEM ain_to_port_PGM[] = {
+    AGND,
+    AIN1,
+    AIN2,
+    AIN3,
+    AIN4,
+    AIN5,
+    AIN6,
+    AIN7,
+    AIN8,
+    AREF
+};
+
+#define ainToPort(P) ( pgm_read_byte( ain_to_port_PGM + (P) ) )
+
+
+
+#elif HW_VERSION==2       //OPENDAQ-S
+
+#define ADC_CS (0X01 << 2)
+#define DAC_CS (0X01 << 3)
+
 
 //ADS7871 gain constants
 #define ADCPGAX01 0X00
@@ -147,41 +184,25 @@ const uint8_t PROGMEM gain_to_adcset_PGM[] = {
 #define ainToSEChan(P) ( 0x08 + (P) )
 #define gainToAdcset(P) ( pgm_read_byte( gain_to_adcset_PGM + (P) ) )
 
-#else               //OPENDAQ-M
 
-//Analog input channel definitions (MMA-MMB-MMC-MPA-MPB-MPC bits select)
-#define AIN1    0X0
-#define AIN2    0X4
-#define AIN3    0X2
-#define AIN4    0X6
-#define AIN5    0X1
-#define AIN6    0X5
-#define AIN7    0X3
-#define AIN8    0X7
-#define AGND    0X0
-#define AREF    0X4
 
-//Analog gain definitions
-#define GAINX0_5    0
-#define GAINX001    1
-#define GAINX002    2
-#define GAINX010    3
-#define GAINX100    4
+#elif HW_VERSION==3     //OPENDAQ-N
 
-const uint8_t PROGMEM ain_to_port_PGM[] = {
-    AGND,
-    AIN1,
-    AIN2,
-    AIN3,
-    AIN4,
-    AIN5,
-    AIN6,
-    AIN7,
-    AIN8,
-    AREF
-};
+#define ADC_CS (0X01 << 2)
+#define DAC_CS (0X01 << 3)
 
-#define ainToPort(P) ( pgm_read_byte( ain_to_port_PGM + (P) ) )
+#define PGA1_CS (0X01 << 2)
+#define PGA2_CS (0X01 << 1)
+
+void SetupMcp6s26_Gain(uint8_t chip, uint8_t gain);
+void SetupMcp6s26_Channel(uint8_t chip, uint8_t ch);
+
+const uint8_t PROGMEM ainch_to_mcp_PGM[] = {5, 3, 2, 1, 0, 3, 2, 1, 0};
+
+static int invert = 0;
+
+
+#define ainToMcpChan(P) ( pgm_read_byte( ainch_to_mcp_PGM + (P) ) )
 
 #endif
 

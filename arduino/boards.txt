@@ -43,3 +43,27 @@ opendaq_m.build.f_cpu=16000000L
 opendaq_m.build.core=arduino
 opendaq_m.build.variant=opendaq_m
 opendaq_m.build.board=AVR_OPENDAQ_M
+
+##############################################################
+
+opendaq_n.name=openDAQ [N]
+
+opendaq_n.upload.tool=avrdude
+opendaq_n.upload.protocol=arduino
+opendaq_n.upload.tool=avrdude
+opendaq_n.upload.maximum_size=63488
+opendaq_n.upload.speed=38400
+
+opendaq_n.bootloader.low_fuses=0xFF
+opendaq_n.bootloader.high_fuses=0xC8
+opendaq_n.bootloader.extended_fuses=0xFD
+opendaq_n.bootloader.file=atmega/opendaq_boot.hex
+opendaq_n.bootloader.unlock_bits=0x3F
+opendaq_n.bootloader.lock_bits=0x0F
+
+opendaq_n.build.mcu=atmega644p
+opendaq_n.build.f_cpu=16000000L
+opendaq_n.build.core=arduino
+opendaq_n.build.variant=opendaq_n
+opendaq_n.build.board=AVR_OPENDAQ_N
+
