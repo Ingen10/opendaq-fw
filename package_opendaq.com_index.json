@@ -17,7 +17,7 @@
           "help": {
             "online": "http://www.github.com/openDAQ/opendaq-fw"
           },
-	  "url": "https://github.com/opendaq/opendaq_fw/releases/download/v1.4.0/opendaq_boards.zip",
+	  "url": "https://github.com/openDAQ/opendaq-fw/releases/download/v1.4.0/opendaq_boards.zip",
           "archiveFileName": "opendaq_boards.zip",
           "checksum": "SHA-256:82444f5b4be921b0dd2834e709d615c2b764ae82c881d9ee0b796e008005c391",
           "size": "7567",
