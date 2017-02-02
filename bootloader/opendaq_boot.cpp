@@ -104,8 +104,6 @@
 #define LED      PINC3
 #define LEDGREEN   PINC2
 
-#define __AVR_ATmega644P__
-
 /* define various device id's */
 /* manufacturer byte is always the same */
 #define SIG1	0x1E	// Yep, Atmel is the only manufacturer of AVR micros.  Single source :(

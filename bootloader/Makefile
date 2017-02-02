@@ -1,72 +1,52 @@
-###############################################################################
-# Makefile for the project bootloader
-###############################################################################
+###############################################
+# Makefile for building the openDAQ bootloader
+###############################################
 
-## General Flags
-PROJECT = bootloader
-MCU = atmega644p
-TARGET = bootloader.elf
-CC = 
+NAME=opendaq_boot
+MCU=atmega644p
 
-CPP = avr-g++
+CPP=avr-g++
+OBJCOPY=avr-objcopy
 
-## Options common to compile, link and assembly rules
-COMMON = -mmcu=$(MCU)
+# Options common to compile, link and assembly rules
+COMMON=-mmcu=$(MCU)
 
-## Compile options common for all C compilation units.
-CFLAGS = $(COMMON)
-CFLAGS += -Wall -gdwarf-2 -Os -std=gnu99 -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums 
-CFLAGS += -MD -MP -MT $(*F).o -MF $(@F).d 
+# Compile options common for all C compilation units.
+CFLAGS= $(COMMON)
+CFLAGS+=-Wall -gdwarf-2 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+CFLAGS+=-MD -MP -MT $(*F).o
 
-## Assembly specific flags
-ASMFLAGS = $(COMMON)
-ASMFLAGS += $(CFLAGS)
-ASMFLAGS += -x assembler-with-cpp -Wa,-gdwarf2
+# Linker flags
+LDFLAGS=$(COMMON)
+LDFLAGS+=-Wl,-Map=$(NAME).map
+LDFLAGS+=-Wl,-section-start=.text=0xe000
 
-## Linker flags
-LDFLAGS = $(COMMON)
-LDFLAGS +=  -Wl,-Map=bootlaoder.map
-LDFLAGS += -Wl,-section-start=.text=0xe000
-
-
-## Intel Hex file production flags
-HEX_FLASH_FLAGS = -R .eeprom -R .fuse -R .lock -R .signature
-
-HEX_EEPROM_FLAGS = -j .eeprom
-HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
-HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
-
+# Intel Hex file production flags
+HEX_FLASH_FLAGS=-R .eeprom -R .fuse -R .lock -R .signature
+HEX_EEPROM_FLAGS=-j .eeprom
+HEX_EEPROM_FLAGS+=--set-section-flags=.eeprom="alloc,load"
+HEX_EEPROM_FLAGS+=--change-section-lma .eeprom=0 --no-change-warnings
 
 ## Objects that must be built in order to link
-OBJECTS = boot.o 
+OBJECTS=$(NAME).o
 
-## Objects explicitly added by the user
-LINKONLYOBJECTS = 
+all: $(NAME).hex $(NAME).eep $(NAME).lss
 
-## Build
-all: $(TARGET) bootloader.hex bootloader.eep bootloader.lss## Compile
-boot.o: ./boot.cpp
-	$(CPP) $(INCLUDES) $(CFLAGS) -c  $<
+$(NAME).hex: $(NAME).elf
+	$(OBJCOPY) -O ihex $(HEX_FLASH_FLAGS) $< $@
 
-##Link
-$(TARGET): $(OBJECTS)
-	 $(CPP) $(LDFLAGS) $(OBJECTS) $(LINKONLYOBJECTS) $(LIBDIRS) $(LIBS) -o $(TARGET)
+$(NAME).elf: $(OBJECTS)
+	$(CPP) $(LDFLAGS) $(OBJECTS) $(LIBDIRS) $(LIBS) -o $@
 
-%.hex: $(TARGET)
-	avr-objcopy -O ihex $(HEX_FLASH_FLAGS)  $< $@
+.cpp.o:
+	$(CPP) $(INCLUDES) $(CFLAGS) -c $<
 
-%.eep: $(TARGET)
-	-avr-objcopy $(HEX_EEPROM_FLAGS) -O ihex $< $@ || exit 0
+%.eep: $(NAME).elf
+	$(OBJCOPY) $(HEX_EEPROM_FLAGS) -O ihex $< $@ || exit 0
 
-%.lss: $(TARGET)
+%.lss: $(NAME).elf
 	avr-objdump -h -S $< > $@
 
-## Clean target
 .PHONY: clean
 clean:
-	-rm -rf $(OBJECTS) bootloader.elf /* bootloader.hex bootloader.eep bootloader.lss bootloader.map
-
-
-## Other dependencies
--include $(shell mkdir dep 2>NUL) $(wildcard dep/*)
-
+	rm -f $(OBJECTS) *.elf *.hex *.eep *.lss *.map *.d

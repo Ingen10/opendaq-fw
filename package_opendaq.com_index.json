@@ -1,0 +1,47 @@
+{
+  "packages": [
+    {
+      "name": "openDAQ",
+      "maintainer": "Ingen10",
+      "websiteURL": "http://www.open-daq.com",
+      "email": "info@ingen10.com",
+      "help": {
+        "online": "http://www.github.com/openDAQ/opendaq-fw"
+      },
+      "platforms": [
+        {
+          "name": "openDAQ",
+          "architecture": "avr",
+          "version": "1.4.0",
+          "category": "Contributed",
+          "help": {
+            "online": "http://www.github.com/openDAQ/opendaq-fw"
+          },
+	  "url": "https://github.com/opendaq/opendaq_fw/releases/download/v1.4.0/opendaq_boards.zip",
+          "archiveFileName": "opendaq_boards.zip",
+          "checksum": "SHA-256:82444f5b4be921b0dd2834e709d615c2b764ae82c881d9ee0b796e008005c391",
+          "size": "7567",
+          "boards": [
+            {"name": "openDAQ [M]"},
+            {"name": "openDAQ [S]"},
+            {"name": "openDAQ [N]"}
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "arduino",
+              "name": "avr-gcc",
+	      "version": "4.8.1-arduino5"
+            },
+            {
+              "packager": "arduino",
+              "name": "avrdude",
+	      "version": "6.0.1-arduino5"
+            }
+          ]
+        }
+      ],
+      "tools":[]
+    }
+  ]
+}
+
