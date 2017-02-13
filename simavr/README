@@ -1,0 +1,3 @@
+This will emulate an openDAQ with simavr (https://github.com/buserror/simavr).
+
+A pseudo-tty will be created in /tmp/simavr-uart0.
