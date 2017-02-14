@@ -17,7 +17,7 @@
  *
  *  Version:    161118
  *  Author:     JRB
- *  Revised by: 
+ *  Revised by:
  */
 
 #ifndef COMMDATA_H
@@ -83,19 +83,19 @@
 
 #define C_STREAM_START  64      //Start an automated measurement
 #define C_STREAM_STOP   80      //Stop actual measurement
-#define C_CHANNEL_FLUSH 45      //Resets buffer of data in the channel 
+#define C_CHANNEL_FLUSH 45      //Resets buffer of data in the channel
 
 #define C_CHANNEL_CFG   22      //Configure one of the measurement experiments (analog +IN,-IN, GAIN)
 #define C_CHANNEL_SETUP 32      //Configure experiment number of points and repeat mode
 #define C_TRIGGER_SETUP 33      //Configure experiment initial trigger mode and conditions
-#define C_GET_TRIGGER_MODE 34   //Return trigger mode 
-#define C_GET_STATE_CHANNEL 35   //Return state channel 
+#define C_GET_TRIGGER_MODE 34   //Return trigger mode
+#define C_GET_STATE_CHANNEL 35   //Return state channel
 
 
 #define C_SIGNAL_LOAD   23      //Load an array of values to preload DAC output
 
-#define C_RESET         27      //System reset and restart                                                              
-#define C_WAIT_MS       17      //Do nothing until a time has elapsed (milliseconds)                                                                
+#define C_RESET         27      //System reset and restart
+#define C_WAIT_MS       17      //Do nothing until a time has elapsed (milliseconds)
 
 #define C_ID_CONFIG     39      //Read device config:serial number, firmware version, hardware version
 
@@ -123,13 +123,13 @@
 //*****************************************************************************
 
 // CommData Class defines all the variables and functions used for managing the
-// serial communications for openDAQ 
+// serial communications for openDAQ
 
 /**
  * @file commdata.h
  * Header file for CommData Class. It defines all the variables and functions used for
  * managing the serial communications for openDAQ
- */ 
+ */
 
 class CommDataClass {
 private:

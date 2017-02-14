@@ -104,7 +104,7 @@ void DStream::Start() {
  */
 void DStream::Stop() {
     for (int i = 0; i < 4; i++)
-        channels[i].reset();
+        channels[i].Disable();
 
     TIMSK2 &= ~_BV(OCIE2A);
     PCICR &= ~_BV(PCIE0);

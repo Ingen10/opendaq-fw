@@ -17,15 +17,15 @@
  *
  *  Version:    161118
  *  Author:     JRB
- *  Revised by: 
+ *  Revised by:
  */
 
  /**
  * @file commdata.cpp
  * Source code for CommData Class
  */
- 
- 
+
+
 #include "commdata.h"
 #include "debug.h"
 
@@ -107,7 +107,7 @@ int CommDataClass::available(void) {
  *  Read serial port
  *
  *  \return
- *  Data readed from serial port
+ *  Data read from serial port
  */
 int CommDataClass::read(void) {
     return Serial.read();
@@ -201,7 +201,7 @@ void CommDataClass::parseInput(int fl) {
 }
 
 /** \brief
- *  Process a stream readed from serial port
+ *  Process a stream read from serial port
  *
  */
 void CommDataClass::processStream(void) {
@@ -234,16 +234,14 @@ void CommDataClass::processStream(void) {
                 response[9 + 2 * j] = make8(value, 0);
             }
 
+            response[0] = 0;
+            response[1] = 0;
             response[2] = 25;
             response[3] = resp_len; //number of bytes
             response[4] = i; //channel #
             response[5] = ODStream.Pchan(i);
             response[6] = ODStream.Nchan(i);
             response[7] = ODStream.Gain(i);
-
-            my_crc16 = crc16(resp_len + 2, response + 2);
-            response[0] = make8(my_crc16, 1);
-            response[1] = make8(my_crc16, 0);
 
             sendCommand(response, resp_len + 4);
 #endif
@@ -257,19 +255,18 @@ void CommDataClass::processStream(void) {
                 ODStream.endReached(i)) {
             //send stop
             resp_len = 1;
+
+            response[0] = 0;
+            response[1] = 0;
             response[2] = 80;
             response[3] = resp_len; //number of bytes
             response[4] = i; //channel #1
 
-            my_crc16 = crc16(resp_len + 2, response + 2);
-            response[0] = make8(my_crc16, 1);
-            response[1] = make8(my_crc16, 0);
             sendCommand(response, resp_len + 4);
 
             ODStream.Reset(i);
         }
     }
-
 }
 
 
@@ -299,7 +296,7 @@ void CommDataClass::processCommand(void) {
 #endif
 
     switch (next_command) {
-        
+
         case C_ID_CONFIG:
             if (data_len == ID_OVERWRITE) {
                 my_id = make32(input_data + 4);
@@ -314,8 +311,8 @@ void CommDataClass::processCommand(void) {
             resp_len = 6;
 
             _DEBUG("C_ID_CONFIG: ID = %d  x%X\r\n", my_id, my_id);
-            break;   
-    
+            break;
+
         case C_AIN:
             word1 = ReadNADC(my_nsamples);
 
@@ -692,7 +689,7 @@ void CommDataClass::processCommand(void) {
             resp_len = 0;
 
             _DEBUG("C_STREAM_STOP\r\n");
-            break;
+            return;
 
 
         case C_CHANNEL_FLUSH:
@@ -761,28 +758,28 @@ void CommDataClass::processCommand(void) {
 
             _DEBUG("C_TRIGGER_SETUP [ %d ] => mode: %d value: %d\r\n", byte1, byte2, word1);
             break;
-            
+
         case C_GET_TRIGGER_MODE:
             byte1 = input_data[4];//Nb of channel
             word1 = ODStream.GetTriggerMode(byte1);//trigger mode
-            
+
             response[4] = make8(word1, 1);
             response[5] = make8(word1, 0);
             resp_len = 2;
-       
-            
+
+
             _DEBUG("C_GET_TRIGGER_MODE [ %d ]:%d", byte1,word1);
             break;
-            
+
         case C_GET_STATE_CHANNEL:
             byte1 = input_data[4];//Nb of channel
             word1 = ODStream.GetStateChan(byte1);//state channel
-            
+
             response[4] = make8(word1, 1);
             response[5] = make8(word1, 0);
             resp_len = 2;
-       
-            
+
+
             _DEBUG("C_GET_STATE_CHANNEL [ %d ]:%d", byte1,word1);
             break;
 
@@ -832,9 +829,6 @@ void CommDataClass::processCommand(void) {
             resp_len = 0;
 
             _DEBUG("C_RESET\r\n");
-#ifndef SERIAL_DEBUG
-            sendCommand(response, resp_len + 4);
-#endif
             systemReset();
             break;
 
@@ -945,12 +939,19 @@ void CommDataClass::processCommand(void) {
  */
 void CommDataClass::sendCommand(byte* response, int size) {
     byte a;
+
+    for (byte i = 0; i < size; i++) {
+        a = response[i];
+        if ((a == 0x7D) || (a == 0x7E)) {
+            response[3]++;  // add escaped bytes to the packet length
+        }
+    }
+
     pioWrite(1, 1);
     Serial.write(0x7E);
 
     for (byte i = 0; i < size; i++) {
         a = response[i];
-
         if ((a == 0x7D) || (a == 0x7E)) {
             Serial.write(0x7D);
             Serial.write(a ^ 0x20);
@@ -1030,7 +1031,7 @@ byte CommDataClass::make8(uint32_t a, byte position) {
     else if (position == 2)
         aux = (a & 0xFF0000) >> 16;
     else if (position == 1)
-        aux = (a & 0xFF00) >> 8;        
+        aux = (a & 0xFF00) >> 8;
     else
         aux = a & 0x00FF;
 

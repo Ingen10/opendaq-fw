@@ -7,9 +7,9 @@ Serial protocol
 
 For reasons of compatibility with Arduino_ platform, USB handler uses a VCP
 (Virtual COM Port) configuration. Thus, when the device is connected to a
-computer, a new COM port is created, and it can be accessed as any other serial
-port. In order to communicate with openDAQ, the following settings must be
-configured in the terminal program that you are using:
+computer, a new serial port is created, and it can be accessed as any other
+serial port. In order to communicate with openDAQ, the following settings must
+be configured in the terminal program that you are using:
 
 - Rate: 115200 baud
 - Data Bits: 8
@@ -61,38 +61,42 @@ without being asked to do it, and no further response is expected.
 When openDAQ is performing one or more simultaneous experiments, recorded data
 should be transmitted as fast as possible in order not to saturate limited
 internal memory buffers. The device can't wait for the computer to ask for
-data, but instead it will send that data in packets as fast as possible.  In
+data, but instead it will send that data in packets as fast as possible. In
 order to keep synchronization between openDAQ and the host computer, this
-packets use a method called `escaping characters`. An escape character is a
-byte of data which invokes an alternative interpretation on subsequent
-characters in a sequence. It is a common technique, used in many other serial
-protocols, like PPP (the protocol used to control phone modems). 
+packets use a special byte (``0x7E``) for marking the start of a packet.
+No other byte in the packet must have this same value, so we have to `escape`
+this value. When another ``0x7E`` must be transmitted inside the packet, the
+openDAQ will substitute it by ``0x7D 0x5E``. In the same way, the byte ``0x7D``
+will be transmitted as ``0x7D 0x5D``.
 
-In this case, we use hexadecimal number ``0x7E`` (decimal 126) to indicate
-the start of a new packet. To ensure that no other byte in the packet has the
-same value, we use another escape character, ``0x7D`` (decimal 125). When this
-character appears, it indicates that following byte must be modified in order
-to be processed adequately. In this case, the character following a ``0x7D`` must
-be xor'ed with ``0x20``. For example, ``0x7E`` data byte will be transmitted in
-two bytes: ``0x7D 0x5E``.
+**Stream data packet:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       Init Byte           0x7E
-1       CRC16H
-2       CRC16L                              Sum of all bytes complemented with ``0xFFFF``
+0       Init byte           0x7E
+1       unused              0
+2       unused              0
 3       Command number      25
-4       Nb: Number of bytes
-5       Number              1-4             Number of the DataChannel used
-6       P-input             1-8             Positive/SE analog input (default 5)
-7       N-input             0, 5-8, 25      Negative analog input (default 0)
-8       Gain                0-4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100,  (default 1)
+4       Number of bytes                     Size of the packet excluding this header (5 bytes)
+5       Channel number      1-4             Number of the DataChannel used
+6       Positive input      1-8             Positive/SE analog input (default 5)
+7       Negative input      0, 5-8, 25      Negative analog input (default 0)
+8       Gain index          0-4
 9-57    Data                                Data points (16 bit) stored for that DataChannel
 ======= =================== ==============  ====================================================
 
-Summary: All bytes with value ``0x7E`` or ``0x7D`` must be escaped (``byte ^ 0x20``)
-and preceded by ``0x7D``, except init byte.
+**Stream stop packet:**
+
+======= =================== ==============
+Byte    Description         Value
+------- ------------------- --------------
+0       Init byte           0x7E
+1       unused              0
+2       unused              0
+3       Command number      80
+4       Number of bytes     0
+======= =================== ==============
 
 
 List of commands
@@ -186,7 +190,7 @@ Read ADC after configuring analog settings: positive input, negative input, gain
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      2
 3       number of bytes     4
@@ -250,7 +254,7 @@ Write/read PIO output: 1 or 0.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      3
 3       number of bytes     1-2             1: read, 2: write
@@ -263,7 +267,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L
 2       command number      3
 3       number of bytes     2
@@ -280,7 +284,7 @@ Configure/read PIO direction: 1 output, 0 input.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      5
 3       number of bytes     1-2             1: read, 2: configure
@@ -293,7 +297,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      5
 3       number of bytes     2
@@ -310,7 +314,7 @@ Write/read all PIOS in a port.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      7
 3       number of bytes     0-1             0: read port, 1: write port
@@ -322,7 +326,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L
 2       command number      7
 3       number of bytes     1
@@ -338,7 +342,7 @@ Configure/read all PIOs direction.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      9
 3       number of bytes     0-1             0: read directions, 1: write directions
@@ -350,7 +354,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L
 2       command number      9
 3       number of bytes     1
@@ -366,7 +370,7 @@ Set LED color (0=off, 1=green, 2=red, 3=orange).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      18
 3       number of bytes     1
@@ -378,7 +382,7 @@ Byte    Description         Value           Notes
 
 SETDAC
 -------
-Set DAC output voltage (RAW value). DAC resolution depends on device model 
+Set DAC output voltage (RAW value). DAC resolution depends on device model
 (14 bits for openDAQ [M], 12bits for openDAQ[S]).
 
 **Command:**
@@ -386,7 +390,7 @@ Set DAC output voltage (RAW value). DAC resolution depends on device model
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      13
 3       number of bytes     2
@@ -397,7 +401,7 @@ Byte    Description         Value           Notes
 
 SETANALOG
 ---------
-Set DAC output voltage (RAW value). Analog range depends on device model 
+Set DAC output voltage (RAW value). Analog range depends on device model
 (+-4.096V for openDAQ [M], 0V..+4.096V for openDAQ[S]).
 
 **Command:**
@@ -405,7 +409,7 @@ Set DAC output voltage (RAW value). Analog range depends on device model
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      24
 3       number of bytes     2
@@ -423,7 +427,7 @@ Init PWM: period, duty.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      10              Starts PWM at the given frecuency and duty cycle
 3       number of bytes     4
@@ -442,7 +446,7 @@ Disable PWM.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      11				Stops PWM output
 3       number of bytes     0
@@ -459,9 +463,9 @@ Configure PWM duty.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
-2       command number      10				
+2       command number      10
 3       number of bytes     4
 4,5     duty                0:1023          High time of signal: 0 always low, 1023 always high
 ======= =================== ==============  ====================================================
@@ -477,7 +481,7 @@ Start capture mode around a given period.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      14
 3       number of bytes     4
@@ -495,7 +499,7 @@ Stop capture mode.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      15
 3       number of bytes     0
@@ -512,7 +516,7 @@ Get current period length: 0 (low cycle), 1(high cycle), 2(full period).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      16
 3       number of bytes     1
@@ -524,7 +528,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      14
 3       number of bytes     5
@@ -541,7 +545,7 @@ Init encoder function.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      50
 3       number of bytes     4
@@ -559,7 +563,7 @@ Stop encoder function.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      51
 3       number of bytes     0
@@ -576,7 +580,7 @@ Get current encoder relative position.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      52
 3       number of bytes     0
@@ -587,7 +591,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      52
 3       number of bytes     4
@@ -603,7 +607,7 @@ Initialize the edge counter (0 h_to_l, 1 l_to_h).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      41
 3       number of bytes     1
@@ -621,7 +625,7 @@ Get counter value (>0 resets accumulator).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      42
 3       number of bytes     1
@@ -633,7 +637,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      42
 3       number of bytes     4
@@ -649,7 +653,7 @@ Write a byte in EEPROM memory position.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      30
 3       number of bytes     2
@@ -668,7 +672,7 @@ Read byte from EEPROM memory position.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      31
 3       number of bytes     1
@@ -680,7 +684,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L
 2       command number      31
 3       number of bytes     2
@@ -697,7 +701,7 @@ Create stream experiment.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      19
 3       number of bytes     3
@@ -716,7 +720,7 @@ Create external experiment.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      20
 3       number of bytes     2
@@ -735,9 +739,9 @@ Create burst experiment.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
-2       command number      21				
+2       command number      21
 3       number of bytes     2
 4,5     period              100:65535       Period (microseconds)
 ======= =================== ==============  ====================================================
@@ -753,7 +757,7 @@ Start an automated measurement.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      64
 3       number of bytes     0
@@ -763,20 +767,20 @@ Byte    Description         Value           Notes
 
 STREAMSTOP
 -----------
-Stop current measurement.
+Stop running experiments.
 
 **Command:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      80
 3       number of bytes     0
 ======= =================== ==============  ====================================================
 
-**Response:** Same as command.
+**Response:** The openDAQ does not respond to this command.
 
 CHANNELSETUP
 -------------
@@ -787,7 +791,7 @@ Configure Experiment number of points.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      32
 3       number of bytes     4
@@ -807,7 +811,7 @@ Configure one of the experiments (analog +IN,-IN, GAIN).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      22
 3       number of bytes     5
@@ -824,16 +828,16 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      22
 3       number of bytes     5
-4       number              1:4             
-5       mode                1:5             
-6       p-input             1:8             
-7       n-input             0, 25, 5:8      
-8       gain	            0:3, 8          
-9       number of samples   1:255           
+4       number              1:4
+5       mode                1:5
+6       p-input             1:8
+7       n-input             0, 25, 5:8
+8       gain	            0:3, 8
+9       number of samples   1:255
 ======= =================== ==============  ====================================================
 
 TRIGGERSETUP
@@ -845,7 +849,7 @@ Configure experiment trigger.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      33
 3       number of bytes     4
@@ -865,20 +869,20 @@ Delete Datachannel structure.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      57
 3       number of bytes    	1
 4		number				0:4				Number of DataChannel to clear (0=reset all DataChannels)
 ======= =================== ==============  ====================================================
 
-**Response:** 
+**Response:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      57
 3       number of bytes    	3
 4		number				0:4
@@ -893,7 +897,7 @@ Reset buffer of data in the Datachannel.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      45				Flush channel (empty all the buffers and reinitiale)
 3       number of bytes     1
@@ -915,12 +919,12 @@ Load an array of values to preload DAC output.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      23
 3       number of bytes     2
 4,5     number of data		1:400
-6,N		data points		
+6,N		data points
 ======= =================== ==============  ====================================================
 
 **Response:**
@@ -928,7 +932,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      23
 3       number of bytes     5
@@ -944,8 +948,8 @@ System reset and restart.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      27
 3       number of bytes    	0
 ======= =================== ==============  ====================================================
@@ -961,8 +965,8 @@ Do nothing until a time has elapsed (milliseconds).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      17
 3       number of bytes    	2
 4,5		time				0:65535			Period of time to wait without doing anything (miliseconds)
@@ -979,19 +983,19 @@ Read device config: serial number, firmware version, hardware version.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      39
 3       number of bytes    	0
 ======= =================== ==============  ====================================================
 
-**Response:** 
+**Response:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      39
 3       number of bytes    	4
 4       hardware version    0:255
@@ -1008,20 +1012,20 @@ Read device calibration.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      36
 3       number of bytes     1
 4       gain channel        0:4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
 ======= =================== ==============  ====================================================
 
-**Response:** 
+**Response:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      36
 3       number of bytes    	5
 4       gain channel        0:4
@@ -1038,8 +1042,8 @@ Set device calibration.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      37
 3       number of bytes     5
 4       gain channel        0:4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
@@ -1058,20 +1062,20 @@ Reset device calibration.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      38
 3       number of bytes    	1
 4       gain channel        0:4             00:x1/2, 01:x1, 02:x2, 03:x10, 04:x100, (default 1)
 ======= =================== ==============  ====================================================
 
-**Response:** 
+**Response:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      38
 3       number of bytes    	5
 4       gain channel        0:4
@@ -1088,7 +1092,7 @@ Enable/disable cyclic redundancy check.
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      55				Enables CRC16 validation for commands received in openDAQ
 3       number of bytes     1
@@ -1106,12 +1110,12 @@ Bit-Bang SPI configure (clock properties).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      26
 3       number of bytes     2
 4     	CPOL option         0:1             Clock polarity: clock pin state when inactive
-5		CPHA option			0:1				Clock phase: leading (0) or trailing (1) edges read  
+5		CPHA option			0:1				Clock phase: leading (0) or trailing (1) edges read
 ======= =================== ==============  ====================================================
 
 **Response**: Same as command.
@@ -1125,7 +1129,7 @@ Bit-Bang SPI setup (pio numbers to use).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      28
 3       number of bytes     0:3				0: Use default values (BBSCK=1, BBMOSI=2, BBMISO=3)
@@ -1145,7 +1149,7 @@ Bit-Bang SPI transfer (send+receive).
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L                              Sum of all bytes complemented with 0xFFFF
 2       command number      29
 3       number of bytes     1:64            Number of bytes to transmit via SPI
@@ -1157,7 +1161,7 @@ Byte    Description         Value           Notes
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
+0       CRC16H
 1       CRC16L
 2       command number      29
 3       number of bytes     1:64
@@ -1169,13 +1173,13 @@ NACK
 ----
 Invalid command (response only).
 
-**Response:** 
+**Response:**
 
 ======= =================== ==============  ====================================================
 Byte    Description         Value           Notes
 ------- ------------------- --------------  ----------------------------------------------------
-0       CRC16H              
-1       CRC16L                              
+0       CRC16H
+1       CRC16L
 2       command number      160
 3       number of bytes    	0
 ======= =================== ==============  ====================================================

@@ -25,7 +25,7 @@
  * Main loop and device initialization with Arduino type extension
  */
 
-#define SERIAL_DEBUG
+//#define SERIAL_DEBUG
 
 #include <avr/wdt.h>
 #include "calibration.h"
