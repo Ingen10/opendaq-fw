@@ -17,7 +17,6 @@
  *
  *  Version:    161203
  *  Author:     JRB
- *  Revised by: 
  */
 
 /**
@@ -63,8 +62,8 @@ void loop()
     static int i = 0;
 
     ODStream.CheckTriggers();
-    Comm.processStream();   
-    
+    Comm.processStream();
+
     while(Comm.available())
         Comm.parseInput(0);
 

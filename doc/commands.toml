@@ -1,0 +1,379 @@
+[AIN]
+number = 1
+desc = "Read ADC with current settings"
+command = []
+response = [ {name="Value", size=16, desc="Raw value of analog input"} ]
+
+[AINCFG]
+number = 2
+desc = "Read ADC after configuring analog settings"
+command = [
+    {name="Positive input", desc="Positive/Single-ended analog input"},
+    {name="Negative input", desc="Negative analog input"},
+    {name="Gain index", value="0-4"},
+    {name="Samples", value="1-255", desc="Number of averaged samples per measure"},
+]
+response = [ {name="Read value", size=2, desc="ADC response"} ]
+
+[AINALL]
+number = 4
+desc = "Read all analog inputs"
+command = [
+    {name="Samples", value="1-255", desc="Number of averaged samples per measure"},
+    {name="Gain index", value="0-4"}
+]
+response = [ {name="Values", size=16, desc="Raw value of all analog inputs"} ]
+
+[PIO]
+number = 3
+rw = true
+desc = "Read/write PIO value"
+command = [
+    {name="PIO number", value="1-6"},
+    {name="Value", value="0, 1", desc="PIO value"}
+]
+response = "Same as command"
+
+[PIODIR]
+number = 5
+rw = true
+desc = "Read/write PIO direction"
+command = [
+    {name="PIO number", value="1-6"},
+    {name="Direction", value="0, 1", desc="PIO direction: 0=input, 1=output"}
+]
+response = "Same as command"
+
+[PORT]
+number = 7
+rw = true
+desc = "Read/write all PIOs"
+command = [ {name="Value", value="0, 1", desc="Value of all PIOs"} ]
+response = "Same as command"
+
+[PORTDIR]
+number = 9
+rw = true
+desc = "Read/write all PIO directions"
+command = [
+    {name="PIO number", value="1-6"},
+    {name="Directions", value="0, 1", desc="Directions of all PIOs: 0=input 1=output"}
+]
+
+[LEDW]
+number = 18
+desc = "Set LED color"
+command = [
+    {name="LED color", value="0-3", desc="0: off, 1: green, 2: red, 3: orange"},
+    {name="LED number", value="0", desc="LED number (not used)"}
+]
+response = "Same as command"
+
+[SETDAC]
+number = 13
+desc = "Set DAC output voltage"
+command = [ {name="Value", size=2, desc="Raw DAC value. 16 bits, signed"} ]
+response = "Same as command"
+
+[PWMINIT]
+number = 10
+desc = "Initialize PWM"
+command = [
+    {name="Frequency", size=2, value="0-65535", desc="Frequency of the signal, in microseconds"},
+    {name="Duty cycle", size=2, value="0-1023", desc="High time of the signal: 0=always low, 1023=always high"}
+]
+response = "Same as command"
+
+[PWMDUTY]
+number = 12
+desc = "Configure PWM duty cycle"
+command = [
+    {name="Duty cycle", size=2, value="0-1023", desc="High time of the signal: 0=always low, 1023=always high"}
+]
+response = "Same as command"
+
+[PWMSTOP]
+number = 11
+desc = "Disable the PWM"
+command = []
+response = "Same as command"
+
+[CAPTUREINIT]
+number = 14
+desc = "Initialize the capture mode"
+command = [
+    {name="Period", size=4, desc="Approximate period of the wave, in microseconds (int32)"},
+]
+response = "Same as command"
+
+[CAPTURESTOP]
+number = 15
+desc = "Disable the the capture mode"
+command = []
+response = "Same as command"
+
+[GETCAPTURE]
+number = 16
+desc = "Get current period length"
+command = [
+    {name="Edge", value="0, 1, 2", desc="0: low cycle, 1: high cycle, 2: full period"},
+]
+response = [
+    {name="Edge", value="0, 1, 2", desc="0: low cycle, 1: high cycle, 2: full period"},
+    {name="Value", size=4, desc="Period of the wave, in microseconds (int32)"},
+]
+
+[ENCODERINIT]
+number = 50
+desc = "Initialize the encoder mode"
+command = [
+    {name="Resolution", size=4, desc="Maximum number of encoder edges (int32)"},
+]
+response = "Same as command"
+
+[ENCODERSTOP]
+number = 51
+desc = "Disable the the encoder mode"
+command = []
+response = "Same as command"
+
+[GETENCODER]
+number = 52
+desc = "Get current encoder position"
+command = []
+response = [
+    {name="Position", size=4, desc="Current encoder value (int32)"},
+]
+
+[COUNTERINIT]
+number = 41
+desc = "Initialize the edge counter"
+command = [
+    {name="Edge", value="0, 1", desc="Which edge increments the couter: 0=H->L, 1=L->H"},
+]
+response = "Same as command"
+
+[GETCOUNTER]
+number = 42
+desc = "Get current counter value"
+command = [
+    {name="Reset count", value="0, 1", desc="Reset the counter after measuring"},
+]
+response = [
+    {name="Count", size=4, desc="Number of counted edges (int32)"},
+]
+
+[EEPROMWRITE]
+number = 30
+desc = "Write a byte in the EEPROM at a given position"
+command = [
+    {name="Address", desc="Memory address"},
+    {name="Value", desc="Data value"}
+]
+response = "Same as command"
+
+[EEPROMREAD]
+number = 31
+desc = "Read a byte from the EEPROM at a given position"
+command = [
+    {name="Address", value="16-2000", desc="Memory address"},
+]
+response = [
+    {name="Address", desc="Memory address"},
+    {name="Value", desc="Data value"}
+]
+
+[STREAMCREATE]
+number = 19
+desc = "Create a stream experiment"
+command = [
+    {name="Number", value="1-4", desc="DataChannel number"},
+    {name="Period", size=2, value="1-65535", desc="Reading period in microseconds"},
+]
+response = "Same as command"
+
+[EXTERNALCREATE]
+number = 20
+desc = "Create an external experiment"
+command = [
+    {name="Number", value="1-4", desc="DataChannel number"},
+    {name="Edge", value="0, 1"}
+]
+response = "Same as command"
+
+[BURSTCREATE]
+number = 21
+desc = "Create a burst experiment"
+command = [
+    {name="Period", size=2, value="100-65535", desc="Period in microseconds"},
+]
+response = "Same as command"
+
+[STREAMSTART]
+number = 64
+desc = "Start an automated experiment"
+command = []
+response = "Same as command"
+
+
+[STREAMSTOP]
+number = 80
+desc = "Stop running experiments"
+command = []
+response = "This command has no response"
+
+[CHANNELSETUP]
+number = 32
+desc = "Setup an experiment"
+command = [
+    {name="Number", value="1-4", desc="DataChannel number"},
+    {name="Points", size=2, value="0-65535", desc="Number of points. 0: continuous acquisition"},
+    {name="Repetition mode", value="0, 1", desc="0: continuous, 1: run once"},
+]
+response = "Same as command"
+
+[CHANNELCFG]
+number = 22
+desc = "Configure an experiment"
+command = [
+    {name="Number", value="1-4", desc="DataChannel number"},
+    {name="Mode", value="0-5", desc="0=ANALOG_INPUT, 1=ANALOG_OUTPUT, 2=DIGITAL_INPUT, 3=DIGITAL_OUTPUT, 4=COUNTER_INPUT, 5=CAPTURE_INPUT"},
+    {name="Positive input", desc="Positive/Single-ended analog input"},
+    {name="Negative input", desc="Negative analog input"},
+    {name="Gain index", value="0-4"},
+    {name="Samples", value="1-255", desc="Number of averaged samples per measure"},
+]
+response = "Same as command"
+
+[TRIGGERSETUP]
+number = 33
+desc = "Setup a trigger experiment"
+command = [
+    {name="Number", value="1-4", desc="DataChannel number"},
+    {name="Trigger mode", value="1-5", desc="""SW_TRG 0-->Software trigger (run on start) DIN1_TRG 1-->Digital triggers, DIN2_TRG 2, DIN3_TRG 3, DIN4_TRG 4, DIN5_TRG 5, DIN6_TRG 6, ABIG_TRG 10-->Analog triggers (use current channel configuration: chp, chm, gain), ASML_TRG 20"""},
+    {name="Trigger value", size=2, value="1-65535", desc=""},
+]
+response = "Same as command"
+
+[CHANNELDESTROY]
+number = 57
+desc = "Delete an experiment"
+command = [
+    {name="Number", value="0-4", desc="DataChannel number. 0: delete all experiments"},
+]
+response = "Same as command"
+
+[CHANNELFLUSH]
+number = 45
+desc = "Reset the data buffer of an experiment"
+command = [
+    {name="Number", value="0-4", desc="DataChannel number. 0: flush all data buffers"},
+]
+response = "Same as command"
+
+#[STREAMDATA]
+#number = 25
+
+[SIGNALLOAD]
+number = 23
+desc = "Load an array of values to preload DAC output"
+command = [
+    {name="Number of samples", size=2, value="1-400", desc="The packet size depends of this number of samples"},
+    {name="Sample list", size=2, desc="List of samples. Each one is a signed int16"},
+]
+response = [
+    {name="Number of samples", size=2, value="1-400", desc="Number of uploaded samples"},
+]
+
+[RESET]
+number = 27
+desc = "Restart the device"
+command = []
+response = "Same as command"
+
+[IDCONFIG]
+number = 39
+desc = "Read device information"
+command = []
+response = [
+    {name="Hardware version", desc="Hardware version"},
+    {name="Firmware version", desc="Firmware version"},
+    {name="Serial number", size=2, value="0-65535", desc="Serial number"},
+]
+
+[GETCALIB]
+number = 36
+desc = "Read a calibration register"
+command = [
+    {name="Address", desc="Calibration register address"},
+]
+response = [
+    {name="Address", desc="Calibration register address"},
+    {name="Gain", size=2, value="-32768 to 32767", desc="Gain calibration"},
+    {name="Offset", size=2, value="-32768 to 32767", desc="Offset calibration"},
+]
+
+[SETCALIB]
+number = 37
+desc = "Write a calibration register"
+command = [
+    {name="Address", desc="Calibration register address"},
+    {name="Gain", size=2, value="-32768 to 32767", desc="Gain calibration"},
+    {name="Offset", size=2, value="-32768 to 32767", desc="Offset calibration"},
+]
+response = "Same as command"
+
+[RESETCALIB]
+number = 38
+desc = "Reset a calibration register"
+command = [
+    {name="Address", desc="Calibration register address"},
+]
+response = [
+    {name="Address", desc="Calibration register address"},
+    {name="Gain", size=2, value="-32768 to 32767", desc="Gain calibration"},
+    {name="Offset", size=2, value="-32768 to 32767", desc="Offset calibration"},
+]
+
+[ENABLECRC]
+number = 55
+desc = "Enable/disable cyclic redundancy check"
+command = [
+    {name="Number", value="0-4", desc="0: disabled, 1: enabled"},
+]
+response = "Same as command"
+
+[SPISWCONFIG]
+number = 26
+desc = "Configure bit-bang SPI (clock properties)"
+command = [
+    {name="CPOL", value="0, 1", desc="Clock polarity: clock pin state when inactive"},
+    {name="CPHA", value="0, 1", desc="Clock phase (reading edge): 0=leading, 1=trailing"},
+]
+response = "Same as command"
+
+[SPISWSETUP]
+number = 28
+desc = "Configure bit-bang SPI (clock properties)"
+command = [
+    {name="BBSCK pin", value="1-6", desc="Clock pin for bit-bang SPI transfer"},
+    {name="BBMOSI pin", value="1-6", desc="MOSI pin"},
+    {name="BBMISO pin", value="1-6", desc="MISO pin"},
+]
+response = "Same as command"
+
+[SPISWTRANSFER]
+number = 29
+desc = "Transfer SPI data (send and receive)"
+command = [
+    {name="Data to send", size=1, desc="Array of bytes to transfer"},
+]
+response = [
+    {name="Received data", size=1, desc="Array of received bytes"},
+]
+
+[NAK]
+number = 160
+desc = "Invalid command (response only)"
+response = []
+

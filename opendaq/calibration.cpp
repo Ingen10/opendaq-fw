@@ -26,8 +26,8 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-/** 
- * @file calibration.cpp 
+/**
+ * @file calibration.cpp
  * Methods of Calibration Class
 */
 /**
@@ -40,7 +40,7 @@ CalibrationClass::CalibrationClass(void) {
     my_id = 0;
 }
 
-/** 
+/**
  *  Reset the calibration
  * \return none
  */
@@ -76,11 +76,11 @@ int CalibrationClass::Reset_calibration() {
  *
  */
 
-/** 
+/**
  *  Get ID-SERIAL
  *
  *  \return   ID-SERIAL readed
- 
+
  */
 uint32_t CalibrationClass::ID_Recall() {
     unsigned char p;
@@ -102,7 +102,7 @@ uint32_t CalibrationClass::ID_Recall() {
     return i32;
 }
 
-/** 
+/**
  *  Save ID-SERIAL
  *
  *  \param device_id:  ID-SERIAL to write
@@ -129,9 +129,9 @@ int CalibrationClass::ID_Save(uint32_t device_id) {
  *
  */
 
-/** 
+/**
  *  Save calibration
- * 
+ *
  */
 int CalibrationClass::SaveCalibration() {
     long *p;
@@ -204,7 +204,7 @@ int CalibrationClass::RecallCalibration() {
  *
  */
 
-/** 
+/**
  *  Read data from eeprom
  *
  *  \param   address: address to read the data

@@ -11,4 +11,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   opendaq-models
    serial-protocol
+   serial-commands
