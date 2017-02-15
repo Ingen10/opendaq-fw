@@ -4,6 +4,8 @@ openDAQ firmware
 This is the firmware of the [openDAQ](http://open-daq.com) board. It is based
 on [Arduino](http://arduino.cc/).
 
+The complete documentation is [here](http://opendaq.readthedocs.io/en/latest/).
+
 OpenDAQ is an USB measurement and automation device which provides
 multifunction data-logging capabilities, analog inputs and outputs, digital
 inputs and outputs, timer, counter and many more features.
