@@ -1,16 +1,16 @@
-.. _`Serial commands`:
-
 
 Serial commands
 ===============
+
+.. _`List of commands`:
 
 
 List of commands
 ----------------
 
-===============  ========  ===============================================
+===============  ========  ==================================================================================
 Name               Number  Description
-===============  ========  ===============================================
+===============  ========  ==================================================================================
 AIN_                    1  Read ADC with current settings
 AINALL_                 4  Read all analog inputs
 AINCFG_                 2  Read ADC after configuring analog settings
@@ -51,10 +51,13 @@ SPISWCONFIG_           26  Configure bit-bang SPI (clock properties)
 SPISWSETUP_            28  Configure bit-bang SPI (clock properties)
 SPISWTRANSFER_         29  Transfer SPI data (send and receive)
 STREAMCREATE_          19  Create a stream experiment
+STREAMDATA_            25  This packet transmits the data captured by a running experiment (stream mode only)
 STREAMSTART_           64  Start an automated experiment
-STREAMSTOP_            80  Stop running experiments
+STREAMSTOP_            80  This packet marks the end of a running experiment (stream mode only)
 TRIGGERSETUP_          33  Setup a trigger experiment
-===============  ========  ===============================================
+===============  ========  ==================================================================================
+
+.. _AIN:
 
 AIN
 ---
@@ -81,6 +84,8 @@ Read ADC with current settings
          3       1  Packet size          16  Number of bytes, excluding the header
          4      16  Value                    Raw value of analog input
 ==========  ======  ==============  =======  =====================================
+
+.. _AINALL:
 
 AINALL
 ------
@@ -109,6 +114,8 @@ Read all analog inputs
          3       1  Packet size          16  Number of bytes, excluding the header
          4      16  Values                   Raw value of all analog inputs
 ==========  ======  ==============  =======  =====================================
+
+.. _AINCFG:
 
 AINCFG
 ------
@@ -140,6 +147,8 @@ Read ADC after configuring analog settings
          4       2  Read value               ADC response
 ==========  ======  ==============  =======  =====================================
 
+.. _BURSTCREATE:
+
 BURSTCREATE
 -----------
 
@@ -159,6 +168,8 @@ Create a burst experiment
 **Response:**
 
 Same as command
+
+.. _CAPTUREINIT:
 
 CAPTUREINIT
 -----------
@@ -180,6 +191,8 @@ Initialize the capture mode
 
 Same as command
 
+.. _CAPTURESTOP:
+
 CAPTURESTOP
 -----------
 
@@ -198,6 +211,8 @@ Disable the the capture mode
 **Response:**
 
 Same as command
+
+.. _CHANNELCFG:
 
 CHANNELCFG
 ----------
@@ -224,6 +239,8 @@ Configure an experiment
 
 Same as command
 
+.. _CHANNELDESTROY:
+
 CHANNELDESTROY
 --------------
 
@@ -244,6 +261,8 @@ Delete an experiment
 
 Same as command
 
+.. _CHANNELFLUSH:
+
 CHANNELFLUSH
 ------------
 
@@ -263,6 +282,8 @@ Reset the data buffer of an experiment
 **Response:**
 
 Same as command
+
+.. _CHANNELSETUP:
 
 CHANNELSETUP
 ------------
@@ -286,6 +307,8 @@ Setup an experiment
 
 Same as command
 
+.. _COUNTERINIT:
+
 COUNTERINIT
 -----------
 
@@ -305,6 +328,8 @@ Initialize the edge counter
 **Response:**
 
 Same as command
+
+.. _EEPROMREAD:
 
 EEPROMREAD
 ----------
@@ -334,6 +359,8 @@ Read a byte from the EEPROM at a given position
          5       1  Value                    Data value
 ==========  ======  ==============  =======  =====================================
 
+.. _EEPROMWRITE:
+
 EEPROMWRITE
 -----------
 
@@ -355,6 +382,8 @@ Write a byte in the EEPROM at a given position
 
 Same as command
 
+.. _ENABLECRC:
+
 ENABLECRC
 ---------
 
@@ -374,6 +403,8 @@ Enable/disable cyclic redundancy check
 **Response:**
 
 Same as command
+
+.. _ENCODERINIT:
 
 ENCODERINIT
 -----------
@@ -395,6 +426,8 @@ Initialize the encoder mode
 
 Same as command
 
+.. _ENCODERSTOP:
+
 ENCODERSTOP
 -----------
 
@@ -413,6 +446,8 @@ Disable the the encoder mode
 **Response:**
 
 Same as command
+
+.. _EXTERNALCREATE:
 
 EXTERNALCREATE
 --------------
@@ -434,6 +469,8 @@ Create an external experiment
 **Response:**
 
 Same as command
+
+.. _GETCALIB:
 
 GETCALIB
 --------
@@ -464,6 +501,8 @@ Read a calibration register
          7       2  Offset          -32768 to 32767  Offset calibration
 ==========  ======  ==============  ===============  =====================================
 
+.. _GETCAPTURE:
+
 GETCAPTURE
 ----------
 
@@ -492,6 +531,8 @@ Get current period length
          5       4  Value                    Period of the wave, in microseconds (int32)
 ==========  ======  ==============  =======  ===========================================
 
+.. _GETCOUNTER:
+
 GETCOUNTER
 ----------
 
@@ -519,6 +560,8 @@ Get current counter value
          4       4  Count                    Number of counted edges (int32)
 ==========  ======  ==============  =======  =====================================
 
+.. _GETENCODER:
+
 GETENCODER
 ----------
 
@@ -544,6 +587,8 @@ Get current encoder position
          3       1  Packet size           4  Number of bytes, excluding the header
          4       4  Position                 Current encoder value (int32)
 ==========  ======  ==============  =======  =====================================
+
+.. _IDCONFIG:
 
 IDCONFIG
 --------
@@ -573,6 +618,8 @@ Read device information
          6       2  Serial number     0-65535  Serial number
 ==========  ======  ================  =======  =====================================
 
+.. _LEDW:
+
 LEDW
 ----
 
@@ -594,6 +641,8 @@ Set LED color
 
 Same as command
 
+.. _NAK:
+
 NAK
 ---
 
@@ -608,6 +657,8 @@ Invalid command (response only)
          2       1  Command number      160
          3       1  Packet size           0  Number of bytes, excluding the header
 ==========  ======  ==============  =======  =====================================
+
+.. _PIO:
 
 PIO
 ---
@@ -649,6 +700,8 @@ Read/write PIO value
          5       1  Value           0, 1     PIO value
 ==========  ======  ==============  =======  =====================================
 
+.. _PIODIR:
+
 PIODIR
 ------
 
@@ -689,6 +742,8 @@ Read/write PIO direction
          5       1  Direction       0, 1     PIO direction: 0=input, 1=output
 ==========  ======  ==============  =======  =====================================
 
+.. _PORT:
+
 PORT
 ----
 
@@ -725,6 +780,8 @@ Read/write all PIOs
          3       1  Packet size     1        Number of bytes, excluding the header
          4       1  Value           0, 1     Value of all PIOs
 ==========  ======  ==============  =======  =====================================
+
+.. _PORTDIR:
 
 PORTDIR
 -------
@@ -766,6 +823,8 @@ Read/write all PIO directions
          5       1  Directions      0, 1     Directions of all PIOs: 0=input 1=output
 ==========  ======  ==============  =======  ========================================
 
+.. _PWMDUTY:
+
 PWMDUTY
 -------
 
@@ -785,6 +844,8 @@ Configure PWM duty cycle
 **Response:**
 
 Same as command
+
+.. _PWMINIT:
 
 PWMINIT
 -------
@@ -807,6 +868,8 @@ Initialize PWM
 
 Same as command
 
+.. _PWMSTOP:
+
 PWMSTOP
 -------
 
@@ -826,6 +889,8 @@ Disable the PWM
 
 Same as command
 
+.. _RESET:
+
 RESET
 -----
 
@@ -844,6 +909,8 @@ Restart the device
 **Response:**
 
 Same as command
+
+.. _RESETCALIB:
 
 RESETCALIB
 ----------
@@ -874,6 +941,8 @@ Reset a calibration register
          7       2  Offset          -32768 to 32767  Offset calibration
 ==========  ======  ==============  ===============  =====================================
 
+.. _SETCALIB:
+
 SETCALIB
 --------
 
@@ -896,6 +965,8 @@ Write a calibration register
 
 Same as command
 
+.. _SETDAC:
+
 SETDAC
 ------
 
@@ -915,6 +986,8 @@ Set DAC output voltage
 **Response:**
 
 Same as command
+
+.. _SIGNALLOAD:
 
 SIGNALLOAD
 ----------
@@ -944,6 +1017,8 @@ Load an array of values to preload DAC output
          4       2  Number of samples  1-400    Number of uploaded samples
 ==========  ======  =================  =======  =====================================
 
+.. _SPISWCONFIG:
+
 SPISWCONFIG
 -----------
 
@@ -964,6 +1039,8 @@ Configure bit-bang SPI (clock properties)
 **Response:**
 
 Same as command
+
+.. _SPISWSETUP:
 
 SPISWSETUP
 ----------
@@ -986,6 +1063,8 @@ Configure bit-bang SPI (clock properties)
 **Response:**
 
 Same as command
+
+.. _SPISWTRANSFER:
 
 SPISWTRANSFER
 -------------
@@ -1014,6 +1093,8 @@ Transfer SPI data (send and receive)
          4       1  Received data            Array of received bytes
 ==========  ======  ==============  =======  =====================================
 
+.. _STREAMCREATE:
+
 STREAMCREATE
 ------------
 
@@ -1035,6 +1116,35 @@ Create a stream experiment
 
 Same as command
 
+.. _STREAMDATA:
+
+STREAMDATA
+----------
+
+This packet transmits the data captured by a running experiment (stream mode only)
+
+**Command:**
+
+This packet is always sent by the openDAQ
+
+**Response:**
+
+==========  ======  ==============  =======  ====================================================
+  Position    Size  Name            Value    Description
+==========  ======  ==============  =======  ====================================================
+         0       1  Init byte       0x7e
+         1       2  Unused
+         3       1  Command number  25
+         4       1  Packet size     6        Number of bytes, excluding the header
+         5       1  Number          1-4      DataChannel number
+         6       1  Positive input           Positive/Single-ended analog input
+         7       1  Negative input           Negative analog input
+         8       1  Gain index      0-4
+         9       2  Sample list              List of captured samples. Each one is a signed int16
+==========  ======  ==============  =======  ====================================================
+
+.. _STREAMSTART:
+
 STREAMSTART
 -----------
 
@@ -1054,24 +1164,30 @@ Start an automated experiment
 
 Same as command
 
+.. _STREAMSTOP:
+
 STREAMSTOP
 ----------
 
-Stop running experiments
+This packet marks the end of a running experiment (stream mode only)
 
 **Command:**
 
-==========  ======  ==============  =======  =====================================
-  Position    Size  Name              Value  Description
-==========  ======  ==============  =======  =====================================
-         0       2  CRC                      Cyclic redundancy check
-         2       1  Command number       80
-         3       1  Packet size           0  Number of bytes, excluding the header
-==========  ======  ==============  =======  =====================================
+This packet is always sent by the openDAQ
 
 **Response:**
 
-This command has no response
+==========  ======  ==============  =======  =====================================
+  Position    Size  Name            Value    Description
+==========  ======  ==============  =======  =====================================
+         0       1  Init byte       0x7e
+         1       2  Unused
+         3       1  Command number  80
+         4       1  Packet size     1        Number of bytes, excluding the header
+         5       1  Number          1-4      DataChannel number
+==========  ======  ==============  =======  =====================================
+
+.. _TRIGGERSETUP:
 
 TRIGGERSETUP
 ------------

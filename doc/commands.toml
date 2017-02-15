@@ -216,12 +216,6 @@ command = []
 response = "Same as command"
 
 
-[STREAMSTOP]
-number = 80
-desc = "Stop running experiments"
-command = []
-response = "This command has no response"
-
 [CHANNELSETUP]
 number = 32
 desc = "Setup an experiment"
@@ -270,9 +264,6 @@ command = [
     {name="Number", value="0-4", desc="DataChannel number. 0: flush all data buffers"},
 ]
 response = "Same as command"
-
-#[STREAMDATA]
-#number = 25
 
 [SIGNALLOAD]
 number = 23
@@ -377,3 +368,22 @@ number = 160
 desc = "Invalid command (response only)"
 response = []
 
+[STREAMDATA]
+number = 25
+stream = true
+desc = "This packet transmits the data captured by a running experiment (stream mode only)"
+command = "This packet is always sent by the openDAQ"
+response = [
+    {name="Number", value="1-4", desc="DataChannel number"},
+    {name="Positive input", desc="Positive/Single-ended analog input"},
+    {name="Negative input", desc="Negative analog input"},
+    {name="Gain index", value="0-4"},
+    {name="Sample list", size=2, desc="List of captured samples. Each one is a signed int16"}
+]
+
+[STREAMSTOP]
+number = 80
+stream = true
+desc = "This packet marks the end of a running experiment (stream mode only)"
+command = "This packet is always sent by the openDAQ"
+response = [ {name="Number", value="1-4", desc="DataChannel number"} ]
