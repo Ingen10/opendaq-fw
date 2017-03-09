@@ -706,7 +706,7 @@ uint32_t getCounter(int reset) {
  */
 void daqInit() {
     //PORTA: MMA,MMB,MMC as outputs
-    DDRA = 0X07;
+    DDRA = 0X0F;
 
     //PORTB: SCK,SDO, DAC_CS, ADC_CS, SS as outputs
     DDRB = 0XBC;

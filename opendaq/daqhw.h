@@ -191,8 +191,12 @@ const uint8_t PROGMEM gain_to_adcset_PGM[] = {
 #define ADC_CS (0X01 << 2)
 #define DAC_CS (0X01 << 3)
 
+/*
 #define PGA1_CS (0X01 << 2)
 #define PGA2_CS (0X01 << 1)
+*/
+#define PGA1_CS (0X01 << 3)
+#define PGA2_CS (0X01 << 2)
 
 void SetupMcp6s26_Gain(uint8_t chip, uint8_t gain);
 void SetupMcp6s26_Channel(uint8_t chip, uint8_t ch);

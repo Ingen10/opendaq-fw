@@ -53,7 +53,6 @@ void setup()
     ledSet(LEDRED, 0);
 
     wdt_enable(WDTO_2S);
-    SetAnalogVoltage(1000);
 }
 
 
