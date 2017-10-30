@@ -510,7 +510,6 @@ void stream_sm() {
 
     for (int i = 0; i < 4; i++) {
         if ((channels[i].state == CH_RUN) && (channels[i].dctype == STREAM_TYPE) && !(ntemp % channels[i].period)) {
-
             ledSet(LEDRED, 1);
             channels[i].Activate();
             channels[i].waitStabilization();
@@ -543,7 +542,6 @@ void ext_sm(int bit_changes, int value) {
     for (int i = 0; i < 4; i++) {
         if ((channels[i].state == CH_RUN) && (channels[i].dctype == EXTERNAL_TYPE) && //channel external & running
                 ((bit_changes & DC_PTNB[i]) != 0) && (((value & DC_PTNB[i]) != 0) == channels[i].edge)) { //edge detected & correct polarity
-
             ledSet(LEDRED, 1);
             channels[i].Activate();
             channels[i].waitStabilization();
@@ -551,6 +549,7 @@ void ext_sm(int bit_changes, int value) {
             ledSet(LEDRED, 0);
         }
     }
+
 }
 
 
@@ -573,10 +572,10 @@ ISR(TIMER2_COMPA_vect) {
  */
 ISR(PCINT0_vect) {
     static unsigned interrupt;
-    unsigned int i, j;
     static int lastValue = 0xF0;
     int refreshValue;
     int dif;
+
 
     if (PCIFR != 0)
         return;
@@ -585,16 +584,12 @@ ISR(PCINT0_vect) {
         interrupt = 0;
         return;
     }
-    //This is a bucle for waiting and avoid fake edges
-    for (i = 0; i < 200; i++) {
-        refreshValue = PINA;
-        for (j = 0; j < 200; j++) {
-            refreshValue &= PINA;
-        }
-    }
+
+    refreshValue = PINA;
 
     dif = refreshValue^lastValue;
-    ext_sm(dif, refreshValue);
+    if(dif>0)
+        ext_sm(dif, refreshValue);
 
     lastValue = refreshValue;
 
@@ -603,4 +598,6 @@ ISR(PCINT0_vect) {
         interrupt = 1;
     else
         interrupt = 0;
+
+    
 }

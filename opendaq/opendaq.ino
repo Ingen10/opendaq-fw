@@ -66,5 +66,5 @@ void loop()
     while(Comm.available())
         Comm.parseInput(0);
 
-    wdt_reset();
+    wdt_reset(); 
 }
