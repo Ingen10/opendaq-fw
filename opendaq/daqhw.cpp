@@ -724,12 +724,16 @@ void daqInit() {
     SPCR = (1 << SPE) | (1 << MSTR) | (0x0C) | 1; //fclk/16, CLK HIGH inactive, trailing edge
     setupLTC2630();
     Config7871();
+    
+    // Fix ADC setup problem in opendaq S
+    ConfigAnalog(1, 0, 0);
+    ReadNADC(20);
+    ConfigAnalog(1, 0, 0);
+    ReadNADC(20);
 #else
     SPCR = (1 << SPE) | (1 << MSTR) | (0x04); //fclk/4, CLK low, trailing edge
     PORTA |= 0X03;    
 #endif
-
-
 }
 
 /** \brief
